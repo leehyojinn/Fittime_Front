@@ -1,0 +1,183 @@
+'use client';
+import React, { useState } from 'react';
+
+function FindModal({ open, onClose }) {
+    const [tab, setTab] = useState('id'); // 'id' 또는 'pw'
+    const [email, setEmail] = useState('');
+    const [userId, setUserId] = useState('');
+    const [result, setResult] = useState(null); // 결과 화면 상태
+
+    // "아이디 찾기" 버튼 클릭 시
+    const handleFindId = () => {
+        // 실제로는 서버에서 아이디를 받아와야 함. 여기선 예시로 처리.
+        setResult({
+            type: 'id',
+            message: `입력하신 이메일로 가입된 아이디는 "exampleUser123" 입니다.`
+        });
+    };
+
+    // "비밀번호 재설정" 버튼 클릭 시
+    const handleResetPw = () => {
+        // 실제로는 서버에서 처리 후 안내 메시지를 받아야 함. 여기선 예시로 처리.
+        setResult({
+            type: 'pw',
+            message: `비밀번호 재설정 링크가 입력하신 이메일로 전송되었습니다. 이메일을 확인해주세요.`
+        });
+    };
+
+    // 모달이 닫힐 때 상태 초기화
+    const handleClose = () => {
+        setResult(null);
+        setEmail('');
+        setUserId('');
+        setTab('id');
+        onClose();
+    };
+
+    if (!open) return null;
+
+    return (
+        <div
+            className="modal_overlay"
+            style={{
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                width: '100vw',
+                height: '100vh',
+                background: 'rgba(0,0,0,0.3)',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}
+        >
+            <div
+                className="modal_content"
+                style={{
+                    background: '#fff',
+                    borderRadius: '10px',
+                    padding: '40px 30px',
+                    minWidth: '320px',
+                    position: 'relative',
+                    width: '350px'
+                }}
+            >
+                <button
+                    style={{
+                        position: 'absolute',
+                        right: 20,
+                        top: 20,
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.3rem',
+                        cursor: 'pointer'
+                    }}
+                    onClick={handleClose}
+                >
+                    ×
+                </button>
+                <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>아이디/비밀번호 찾기</h3>
+                {/* 결과 화면 */}
+                {result ? (
+                    <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                        <div style={{ fontSize: '1.1rem', marginBottom: 20, color: '#007bff', fontWeight: 'bold' }}>
+                            {result.type === 'id' ? '아이디 찾기 결과' : '비밀번호 재설정 안내'}
+                        </div>
+                        <div style={{ marginBottom: 24 }}>{result.message}</div>
+                        <button
+                            className="btn label white_color bg_primary_color_2"
+                            onClick={handleClose}
+                        >
+                            닫기
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {/* 탭 버튼 */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '12px',
+                            marginBottom: '24px'
+                        }}>
+                            <button
+                                className={`btn label white_color ${tab === 'id' ? 'bg_primary_color_2' : 'bg_primary_color_2'}`}
+                                style={{
+                                    padding: '8px 20px',
+                                    cursor: 'pointer',
+                                    fontWeight: tab === 'id' ? 'bold' : 'normal'
+                                }}
+                                onClick={() => setTab('id')}
+                            >
+                                아이디 찾기
+                            </button>
+                            <button
+                                className={`btn label white_color ${tab === 'pw' ? 'bg_primary_color_1' : 'bg_primary_color_2'}`}
+                                style={{
+                                    padding: '8px 20px',
+                                    cursor: 'pointer',
+                                    fontWeight: tab === 'pw' ? 'bold' : 'normal'
+                                }}
+                                onClick={() => setTab('pw')}
+                            >
+                                비밀번호 찾기
+                            </button>
+                        </div>
+                        {/* 탭 내용 */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {tab === 'id' && (
+                                <>
+                                    <label>이메일</label>
+                                    <input
+                                        type="email"
+                                        placeholder="가입한 이메일 입력"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        style={{ width: '100%', marginTop: 4 }}
+                                    />
+                                    <button
+                                        className="btn label white_color"
+                                        style={{ marginTop: 8 }}
+                                        onClick={handleFindId}
+                                    >
+                                        아이디 찾기
+                                    </button>
+                                </>
+                            )}
+                            {tab === 'pw' && (
+                                <>
+                                    <label>이메일</label>
+                                    <input
+                                        type="email"
+                                        placeholder="가입한 이메일 입력"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        style={{ width: '100%', marginTop: 4 }}
+                                    />
+                                    <label style={{ marginTop: 12 }}>아이디</label>
+                                    <input
+                                        type="text"
+                                        placeholder="아이디 입력"
+                                        value={userId}
+                                        onChange={e => setUserId(e.target.value)}
+                                        style={{ width: '100%', marginTop: 4 }}
+                                    />
+                                    <button
+                                        className="btn label white_color"
+                                        style={{ marginTop: 8 }}
+                                        onClick={handleResetPw}
+                                    >
+                                        비밀번호 재설정
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default FindModal;

@@ -1,0 +1,237 @@
+'use client'
+
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import Header from '../../Header';
+import Footer from '../../Footer';
+import axios from 'axios';
+
+const BlacklistManagement = () => {
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
+  const [complaints, setComplaints] = useState([]);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [filteredStatus, setFilteredStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const getComplaints = async () => {
+    try {
+      const { data } = await axios.post('http://localhost/blacklist_list');
+      // 콘솔로 실제 응답 구조 확인
+      console.log('blacklist_list 응답:', data);
+      // 배열만 반환되면
+      if (Array.isArray(data)) setComplaints(data);
+      // { list: [...] } 구조면
+      else if (Array.isArray(data.list)) setComplaints(data.list);
+      // { complaints: [...] } 구조면
+      else if (Array.isArray(data.complaints)) setComplaints(data.complaints);
+      else setComplaints([]);
+    } catch (err) {
+      console.error(err);
+      setComplaints([]);
+    }
+  };
+  
+  useEffect(() => {
+    getComplaints();
+  }, []);
+
+  // 상세보기 클릭시 상세 정보 세팅
+  const handleViewDetails = (complaint) => {
+    setSelectedComplaint(complaint);
+    // 폼에 현재 상태/처리내용 세팅
+    setValue('status', complaint.status || '미확인');
+    setValue('process_history', complaint.process_history || '');
+  };
+
+  // 처리 내용/상태 저장
+  const handleProcessComplaint = async (data) => {
+    if (!selectedComplaint) return;
+    setLoading(true);
+    try {
+      // 상태/처리내용 업데이트
+      const res = await axios.post(
+        `http://localhost/blacklist_status/${selectedComplaint.report_id}`,
+        { status: data.status, process_history: data.process_history }
+      );
+      if (res.data && res.data.success) {
+        alert('처리 내용이 저장되었습니다.');
+        getComplaints();
+        // 상세도 갱신
+        setSelectedComplaint({
+          ...selectedComplaint,
+          status: data.status,
+          process_history: data.process_history
+        });
+      } else {
+        alert('저장 실패');
+      }
+    } catch (err) {
+      alert('저장 중 오류');
+    }
+    setLoading(false);
+  };
+
+  // 블랙리스트 등록(레벨 0)
+  const handleBlacklist = async () => {
+    if (!selectedComplaint) return;
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `http://localhost/blacklist_level/${selectedComplaint.report_id}`
+      );
+      if (res.data && res.data.success) {
+        alert('블랙리스트(레벨 0)로 처리되었습니다.');
+        getComplaints();
+        setSelectedComplaint({
+          ...selectedComplaint,
+          status: '처리완료'
+        });
+      } else {
+        alert('블랙리스트 처리 실패');
+      }
+    } catch (err) {
+      alert('블랙리스트 처리 중 오류');
+    }
+    setLoading(false);
+  };
+
+  // 날짜 포맷 함수
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(date)) return '-';
+    return `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+  };
+
+  return (
+    <div>
+      <Header/>
+      <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
+        <p className='title'>블랙리스트</p>
+      </div>
+      <div className="wrap padding_120_0">
+        <div className="blacklist-container">
+          <h2 className="middle_title2 mb_20">블랙리스트 관리</h2>
+          <div className="complaints-filter">
+            <div className="filter-group">
+              <label className='label'>상태 필터 :</label>
+              <select 
+                value={filteredStatus}
+                onChange={(e) => setFilteredStatus(e.target.value)}
+                style={{width:300}}
+              >
+                <option value="all">전체</option>
+                <option value="미확인">미확인</option>
+                <option value="처리중">처리중</option>
+                <option value="처리완료">처리완료</option>
+              </select>
+            </div>
+            <div className="search-group">
+              <label className='label'>아이디 검색 : </label>
+              <input 
+                type="text"
+                value={searchTerm}
+                className='flex_1'
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="사용자 또는 신고자 아이디"
+              />
+            </div>
+          </div>
+          <div className="complaints-section">
+            <h3 className='middle_title2 mb_20'>신고 목록</h3>
+            <table className="complaints-table">
+              <thead>
+                <tr>
+                  <th className='label font_weight_500'>신고번호</th>
+                  <th className='label font_weight_500'>신고대상</th>
+                  <th className='label font_weight_500'>신고자</th>
+                  <th className='label font_weight_500'>상태</th>
+                  <th className='label font_weight_500'>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {complaints
+                  .filter(c => filteredStatus === 'all' || c.status === filteredStatus)
+                  .filter(c => c.report_id?.includes(searchTerm) || c.admin_id?.includes(searchTerm))
+                  .map((complaint) => (
+                  <tr key={complaint.report_idx}>
+                    <td className='label font_weight_400'>{complaint.report_idx}</td>
+                    <td className='label font_weight_400'>{complaint.report_id}</td>
+                    <td className='label font_weight_400'>{complaint.admin_id}</td>
+                    <td className='label font_weight_400'>
+                      <span className={`status ${complaint.status}`}>
+                        {complaint.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button onClick={() => handleViewDetails(complaint)} className="btn label white_color">
+                        상세보기
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {selectedComplaint && (
+            <div className="complaint-details" style={{ marginTop: 32, border: '1px solid #eee', borderRadius: 8, padding: 20 }}>
+              <h3 className='middle_title2'>신고 상세</h3>
+              <div className="details-container">
+                <div className="detail-item"><label className='label'>신고번호 : </label> <span className='label text_left'>{selectedComplaint.report_idx}</span></div>
+                <div className="detail-item"><label className='label'>신고대상:</label> <span className='label text_left'>{selectedComplaint.report_id}</span></div>
+                <div className="detail-item"><label className='label'>신고자:</label> <span className='label text_left'>{selectedComplaint.admin_id}</span></div>
+                <div className="detail-item"><label className='label'>신고내용:</label> <p className='label text_left'>{selectedComplaint.report_text}</p></div>
+                <div className="detail-item"><label className='label'>접수일시:</label> <span className='label text_left'>{formatDate(selectedComplaint.submitted_at || selectedComplaint.reg_date)}</span></div>
+                {/* 이미지 노출 */}
+                {selectedComplaint.images && selectedComplaint.images.length > 0 && (
+                  <div className="complaint-images"
+                    style={{ display: 'flex', gap: '10px', margin: '16px 0' }}>
+                    {selectedComplaint.images.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={`http://localhost/complaint/${img}`}
+                        alt={`증빙이미지${idx + 1}`}
+                        style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                      />
+                    ))}
+                  </div>
+                )}
+                <form onSubmit={handleSubmit(handleProcessComplaint)}>
+                  <div className="form-group">
+                    <label htmlFor="status" className='middle_title2 mb_20'>처리 상태</label>
+                    <select 
+                      id="status"
+                      {...register("status")}
+                      style={{width:"100%"}}
+                    >
+                      <option value="미확인">미확인</option>
+                      <option value="처리중">처리중</option>
+                      <option value="처리완료">처리완료</option>
+                    </select>
+                  </div>
+                  <div className="action-buttons" style={{ marginTop: 12 }}>
+                    <button type="submit" className="btn label white_color" disabled={loading}>
+                      처리 내용 저장
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={handleBlacklist} 
+                      className="blacklist-button label"
+                      disabled={loading}
+                    >
+                      블랙리스트 등록
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <Footer/>
+    </div>
+  );
+};
+
+export default BlacklistManagement;
