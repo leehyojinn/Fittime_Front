@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
+import AlertModal from '../alertmodal/page';
+import { useAlertModalStore } from '@/app/zustand/store';
 
 const Grant = () => {
   const { register, formState: { errors }, reset } = useForm();
@@ -12,8 +14,9 @@ const Grant = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [processingUserId, setProcessingUserId] = useState(null);
+
+  const openModal = useAlertModalStore((state) => state.openModal);
 
   // 권한명 매핑
   const LEVEL_LABELS = ['블랙리스트', '일반 회원', '트레이너', '센터 관리자', '사이트 관리자'];
@@ -35,15 +38,25 @@ const Grant = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      setError('');
       setSearchResults([]);
       const { data } = await axios.post(`http://localhost/grant_search/${searchId}`);
       if (!data?.list?.length) {
-        throw new Error('사용자를 찾을 수 없습니다');
+        openModal({
+          svg: '❗',
+          msg1: '검색 실패',
+          msg2: '사용자를 찾을 수 없습니다.',
+          showCancel: false,
+        });
+        return;
       }
       setSearchResults(data.list);
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      openModal({
+        svg: '❗',
+        msg1: '검색 오류',
+        msg2: '아이디를 입력해주세요.',
+        showCancel: false,
+      });
       setSearchResults([]);
     } finally {
       setLoading(false);
@@ -55,7 +68,6 @@ const Grant = () => {
     if (!user) return;
     setProcessingUserId(user.user_id);
     try {
-      setError('');
       const isGranting = user.user_level === 1;
       const endpoint = isGranting ? 'grant' : 'revoke';
       const { data } = await axios.post(`http://localhost/${endpoint}/${user.user_id}`);
@@ -76,83 +88,115 @@ const Grant = () => {
           )
         );
       } else {
-        throw new Error(isGranting ? '권한 부여에 실패했습니다' : '권한 해제에 실패했습니다');
+        openModal({
+          svg: '❗',
+          msg1: '권한 변경 실패',
+          msg2: isGranting ? '권한 부여에 실패했습니다.' : '권한 해제에 실패했습니다.',
+          showCancel: false,
+        });
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      openModal({
+        svg: '❗',
+        msg1: '권한 변경 오류',
+        msg2: err.response?.data?.message || err.message,
+        showCancel: false,
+      });
     } finally {
       setProcessingUserId(null);
     }
   };
 
-  // 권한 되돌리기 핸들러
-  const handleRevert = async (item) => {
-    setProcessingUserId(item.user_id);
+  // 되돌리기 버튼 클릭 시 zustand로 모달 띄우기
+  const handleRevertClick = (item) => {
+    openModal({
+      svg: '✔',
+      msg1: "확인",
+      msg2: "현재 권한을 지우고 되돌리시겠습니까?",
+      showCancel: true,
+      onConfirm: () => handleConfirmRevert(item),
+      onCancel: () => {},
+    });
+  };
+
+  // 권한 되돌리기 실행
+  const handleConfirmRevert = async (selectedItem) => {
+    if (!selectedItem) return;
+    setProcessingUserId(selectedItem.user_id);
     try {
-      setError('');
-      // 이전 권한이 4면 revoke, 1이면 grant
-      const isRevertToAdmin = item.previous_level === 4;
+      const isRevertToAdmin = selectedItem.previous_level === 4;
       const endpoint = isRevertToAdmin ? 'grant' : 'revoke';
-      const { data } = await axios.post(`http://localhost/${endpoint}/${item.user_id}`);
+      const { data } = await axios.post(`http://localhost/${endpoint}/${selectedItem.user_id}`);
       if (data.success) {
-        const newHistory = [
-          {
-            user_id: item.user_id,
-            previous_level: item.new_level,
-            new_level: item.previous_level,
-          },
-          ...history
-        ];
-        setHistory(newHistory);
-        // 검색 결과에도 반영
+        if (history.length === 0 || history[0].user_id !== selectedItem.user_id) {
+          setHistory([
+            {
+              user_id: selectedItem.user_id,
+              previous_level: selectedItem.new_level,
+              new_level: selectedItem.previous_level,
+            },
+            ...history
+          ]);
+        }
         setSearchResults(results =>
           results.map(u =>
-            u.user_id === item.user_id ? { ...u, user_level: item.previous_level } : u
+            u.user_id === selectedItem.user_id ? { ...u, user_level: selectedItem.previous_level } : u
           )
         );
       } else {
-        throw new Error('권한 되돌리기에 실패했습니다');
+        openModal({
+          svg: '❗',
+          msg1: '되돌리기 실패',
+          msg2: '권한 되돌리기에 실패했습니다.',
+          showCancel: false,
+        });
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      openModal({
+        svg: '❗',
+        msg1: '되돌리기 오류',
+        msg2: err.response?.data?.message || err.message,
+        showCancel: false,
+      });
     } finally {
       setProcessingUserId(null);
     }
   };
 
   const keyupHandler = (e) => {
-    if(e.key == "Enter"){
+    if (e.key === "Enter") {
       handleSearch();
     }
   }
 
   return (
     <div>
-      <Header/>
+      <Header />
       <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
         <p className='title'>관리자 권한 부여 페이지</p>
       </div>
       <div className='wrap padding_120_0'>
         <div className="admin-grant-container">
           <h2 className="page-title">관리자 권한 관리</h2>
-          {error && <div className="error-message">{error}</div>}
           <div className="search-section">
             <div>
               <div className="flex gap_10 align_center">
                 <label htmlFor="userId" className='label'>아이디 검색</label>
-                <input 
+                <input
                   id="userId"
                   type="text"
-                  {...register("userId", { 
+                  {...register("userId", {
                     required: "아이디를 입력해주세요",
                     onChange: (e) => setSearchId(e.target.value)
                   })}
                   onKeyUp={keyupHandler}
                   className="form-control flex_1"
                 />
-                {errors.userId && <span className="error-message">{errors.userId.message}</span>}
-                <button 
-                  type="button" 
+                {errors.userId && (
+                  <span className="error-message">{errors.userId.message}</span>
+                )}
+                <button
+                  type="button"
                   className="btn label white_color"
                   disabled={loading}
                   onClick={handleSearch}
@@ -228,7 +272,7 @@ const Grant = () => {
                       <button
                         className="btn white_color label"
                         disabled={processingUserId === item.user_id}
-                        onClick={() => handleRevert(item)}
+                        onClick={() => handleRevertClick(item)}
                       >
                         {processingUserId === item.user_id ? '처리 중...' : '되돌리기'}
                       </button>
@@ -240,7 +284,8 @@ const Grant = () => {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
+      <AlertModal />
     </div>
   );
 };
