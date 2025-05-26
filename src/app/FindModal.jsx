@@ -27,7 +27,7 @@ function FindModal({ open, onClose }) {
 
     // "비밀번호 재설정" 버튼 클릭 시
     const handleResetPw = async() => {
-        const {data} = await axios.post(`http://localhost/emailSend/${userId}`);
+        const {data} = await axios.post(`http://localhost/emailSend/${userId}`,{email:email});
         if (data.success) {
             setResult({
                 type:'pw',
