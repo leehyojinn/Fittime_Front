@@ -10,6 +10,7 @@ import axios from 'axios';
 const JoinPage = () => {
     const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
     const [isIdAvailable, setIsIdAvailable] = useState(false);
+    const [isEmailAvailable, setIsEmailAvailable] = useState(false);
 
     // 폼 상태 관리
     const [form, setForm] = useState({
@@ -81,10 +82,36 @@ const JoinPage = () => {
 
     };
 
+    // email 중복 체크 함수
+    const handleCheckEmail = async () => {
+        if (!form.email) {
+            alert('이메일을 입력해주세요');
+            return;
+        }
+
+        const {data} = await axios.post('http://localhost/overlay/email', {
+            email: form.email
+        });
+
+        if (data.use) {
+            alert('사용 가능한 이메일입니다');
+            setIsEmailAvailable(true);
+        } else {
+            alert('이미 사용 중인 이메일입니다');
+            setForm(prev => ({ ...prev, email: '' }));
+            setIsEmailAvailable(false);
+        }
+    };
+
     // 회원가입 함수
     const join = async () => {
         if (!isIdAvailable) {
             alert('아이디 중복 체크를 해주세요');
+            return;
+        }
+
+        if (!isEmailAvailable) {
+            alert('이메일 중복 체크를 해주세요');
             return;
         }
         
@@ -202,14 +229,17 @@ const JoinPage = () => {
                     {/* 이메일 */}
                     <div className='flex column gap_10 align_center justify_con_center'>
                         <p className='content_text width_500 text_left'>email</p>
-                        <input
-                            type="email"
-                            name="email"
-                            className='width_500'
-                            placeholder='e-mail을 입력해주세요'
-                            value={form.email}
-                            onChange={handleChange}
-                        />
+                        <div className='flex align_center gap_10 justify_con_center'>
+                            <input
+                                type="email"
+                                name="email"
+                                className='width_500'
+                                placeholder='e-mail을 입력해주세요'
+                                value={form.email}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <button className='btn white_color label' style={{position:'absolute',top:'108.4%',right:'25%'}} onClick={handleCheckEmail}>중복체크</button>
                     </div>
                     {/* 성별 */}
                     <div className='flex column gap_10 align_center justify_con_center'>
