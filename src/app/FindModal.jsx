@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import axios from "axios";
 
 function FindModal({ open, onClose }) {
     const [tab, setTab] = useState('id'); // 'id' 또는 'pw'
@@ -8,21 +9,36 @@ function FindModal({ open, onClose }) {
     const [result, setResult] = useState(null); // 결과 화면 상태
 
     // "아이디 찾기" 버튼 클릭 시
-    const handleFindId = () => {
-        // 실제로는 서버에서 아이디를 받아와야 함. 여기선 예시로 처리.
-        setResult({
-            type: 'id',
-            message: `입력하신 이메일로 가입된 아이디는 "exampleUser123" 입니다.`
-        });
+    const handleFindId = async() => {
+        const {data} = await axios.post('http://localhost/find/id',{email});
+        console.log(data);
+        if (data.success) {
+            setResult({
+                type: 'id',
+                message: `해당 이메일로 가입된 아이디는 [${data.user_id}] 입니다.`
+            });
+        } else {
+            setResult({
+                type: 'id',
+                message: '해당 이메일로 가입된 아이디를 찾을 수 없습니다.'
+            });
+        }
     };
 
     // "비밀번호 재설정" 버튼 클릭 시
-    const handleResetPw = () => {
-        // 실제로는 서버에서 처리 후 안내 메시지를 받아야 함. 여기선 예시로 처리.
-        setResult({
-            type: 'pw',
-            message: `비밀번호 재설정 링크가 입력하신 이메일로 전송되었습니다. 이메일을 확인해주세요.`
-        });
+    const handleResetPw = async() => {
+        const {data} = await axios.post('http://localhost/find/password',{userId, email});
+        if (data.success) {
+            setResult({
+                type: 'pw',
+                message: '비밀번호 재설정 링크가 입력하신 이메일로 전송되었습니다. 이메일을 확인해주세요.'
+            });
+        }else {
+            setResult({
+                type: 'pw',
+                message: '가입된 정보와 일치하지 않습니다.'
+            });
+        }
     };
 
     // 모달이 닫힐 때 상태 초기화
@@ -77,14 +93,14 @@ function FindModal({ open, onClose }) {
                 >
                     ×
                 </button>
-                <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>아이디/비밀번호 찾기</h3>
+                <h3 style={{fontSize: '15px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>아이디/비밀번호 찾기</h3>
                 {/* 결과 화면 */}
                 {result ? (
                     <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                        <div style={{ fontSize: '1.1rem', marginBottom: 20, color: '#007bff', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '1.3rem', marginBottom: 20, color: '#007bff', fontWeight: 'bold' }}>
                             {result.type === 'id' ? '아이디 찾기 결과' : '비밀번호 재설정 안내'}
                         </div>
-                        <div style={{ marginBottom: 24 }}>{result.message}</div>
+                        <div style={{ fontSize: '1.2rem', marginBottom: 24 }}>{result.message}</div>
                         <button
                             className="btn label white_color bg_primary_color_2"
                             onClick={handleClose}
@@ -128,7 +144,7 @@ function FindModal({ open, onClose }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {tab === 'id' && (
                                 <>
-                                    <label>이메일</label>
+                                    <label style={{ fontSize: '12.5px', marginTop: 19,fontWeight: 'bold' }}>이메일</label>
                                     <input
                                         type="email"
                                         placeholder="가입한 이메일 입력"
@@ -147,7 +163,7 @@ function FindModal({ open, onClose }) {
                             )}
                             {tab === 'pw' && (
                                 <>
-                                    <label>이메일</label>
+                                    <label style={{ fontSize: '12.5px', marginTop: 19,fontWeight: 'bold' }}>이메일</label>
                                     <input
                                         type="email"
                                         placeholder="가입한 이메일 입력"
@@ -155,7 +171,7 @@ function FindModal({ open, onClose }) {
                                         onChange={e => setEmail(e.target.value)}
                                         style={{ width: '100%', marginTop: 4 }}
                                     />
-                                    <label style={{ marginTop: 12 }}>아이디</label>
+                                    <label style={{ fontSize: '12.5px', marginTop: 12,fontWeight: 'bold'}}>아이디</label>
                                     <input
                                         type="text"
                                         placeholder="아이디 입력"
