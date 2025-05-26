@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { FaStar, FaCalendarAlt, FaTicketAlt, FaCoins, FaEdit, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import axios from "axios";
+import {usePasswordStore} from "@/app/zustand/store";
 
 const mockUser = {
   user_id: 'user123',
   user_name: '홍길동',
-  contact: '010-1234-5678',
+  phone: '010-1234-5678',
   email: 'hong@naver.com',
   gender: '남',
   age: 28,
@@ -16,10 +18,25 @@ const mockUser = {
   profile_image: '/member.png',
   point: 3500
 };
+
+const userData={
+  address:"",
+  age:0,
+  email:"",
+  gender:"",
+  name:"",
+  password:"",
+  phone:"",
+  status:"",
+  user_id:sessionStorage.getItem("user_id"),
+  user_level:sessionStorage.getItem('user_level')
+}
+
 const mockReservations = [
   { reservation_idx: 1, center_name: '헬스월드 강남점', product_name: '헬스 1개월', date: '2025-05-21', start_time: '10:00', end_time: '11:00', trainer_name: '', status: '예약완료' },
   { reservation_idx: 2, center_name: '피트니스클럽', product_name: 'PT 10회', date: '2025-05-25', start_time: '15:00', end_time: '16:00', trainer_name: '김트레이너', status: '예약완료' }
 ];
+
 const mockReviews = [
   { review_id: 1, target: '헬스월드 강남점', type: '센터', rating: 5, content: '시설이 정말 좋아요!', date: '2025-05-10' },
   { review_id: 2, target: '김트레이너', type: '트레이너', rating: 4.5, content: '운동법을 꼼꼼히 알려주셔서 좋아요.', date: '2025-05-12' }
@@ -30,17 +47,87 @@ const mockCoupons = [
 ];
 
 const MemberMyPage = () => {
+
+  const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
   const [editMode, setEditMode] = useState(false);
-  const [user, setUser] = useState(mockUser);
+  const [user, setUser] = useState(userData);
   const [profileImage, setProfileImage] = useState(mockUser.profile_image);
+  const [profileFile, setProfileFile] = useState(null);
+  const [reservations, setReservations] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   // 프로필 이미지 변경 핸들러
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
+      // console.log(e.target.files[0]);
       const newImage = URL.createObjectURL(e.target.files[0]);
       setProfileImage(newImage);
+      setProfileFile(e.target.files[0]);
     }
   };
+
+  useEffect(() => {
+    getUser();
+    getReservations();
+    getReviews();
+  }, []);
+
+  const getUser = async () => {
+    await axios.post('http://localhost/detail/profile',{"user_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
+        .then(({data}) => {
+          // console.log(data);
+          setUser(data);
+          setProfileImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+          //console.log(profileImage);
+        })
+  }
+
+  const getReservations = async () => {
+    await axios.post('http://localhost/list/userBook',{"user_id":sessionStorage.getItem("user_id")})
+        .then(({data}) => {
+          setReservations(data.bookingList);
+          console.log(data.bookingList);
+        })
+  }
+
+  const getReviews = async () => {
+    await axios.post('http://localhost/list/reviewByUser',{"user_id":sessionStorage.getItem("user_id")})
+        .then(({data}) => {
+          console.log(data);
+          setReviews(data.reviews);
+        })
+  }
+
+  const changeUser = (e) =>{
+    let {name,value} = e.target;
+    // console.log(value.address);
+    setUser((prevForm) => ({
+      ...prevForm,
+      [name]: value
+    }))
+  }
+
+  const edit = async() =>{
+    setEditMode(!editMode);
+    // console.log(editMode);
+    if(editMode){
+      if(profileFile){
+        const formData = new FormData();
+        formData.append('file',profileFile);
+        formData.append('param',new Blob([JSON.stringify(user)], { type: "application/json" }));
+        const {data} = await axios.post('http://localhost/update/Profile', formData, {
+          headers: {'content-type': 'multipart/form-data'}
+        })
+        console.log(data);
+      }
+      else {
+        // console.log('user',user);
+        const {data} = await axios.post('http://localhost/update/Profile', user);
+        // console.log('data',data);
+        await getUser();
+      }
+    }
+  }
 
   return (
     <div>
@@ -66,7 +153,7 @@ const MemberMyPage = () => {
             <div style={{width: 'calc(100% - 140px)'}}>
               <div className="mypage-profile-row">
                 <span className="label font_weight_500">이름</span>
-                <span className="label font_weight_400">{user.user_name}</span>
+                <span className="label font_weight_400">{user.name}</span>
               </div>
               <div className="mypage-profile-row">
                 <span className="label font_weight_500">아이디</span>
@@ -74,11 +161,11 @@ const MemberMyPage = () => {
               </div>
               <div className="mypage-profile-row">
                 <span className="label font_weight_500">연락처</span>
-                {editMode ? <input className='width_fit' defaultValue={user.contact} /> : <span className="label font_weight_400">{user.contact}</span>}
+                {editMode ? <input className='width_fit' defaultValue={user.phone} name='phone' value={user.phone} onChange={changeUser}/> : <span className="label font_weight_400">{user.phone}</span>}
               </div>
               <div className="mypage-profile-row">
                 <span className="label font_weight_500">이메일</span>
-                {editMode ? <input className='width_fit' defaultValue={user.email} /> : <span className="label font_weight_400">{user.email}</span>}
+                {editMode ? <input className='width_fit' defaultValue={user.email} name='email' value={user.email} onChange={changeUser}/> : <span className="label font_weight_400">{user.email}</span>}
               </div>
               <div className="mypage-profile-row">
                 <span className="label font_weight_500">성별/나이</span>
@@ -86,10 +173,16 @@ const MemberMyPage = () => {
               </div>
               <div className="mypage-profile-row">
                 <span className="label font_weight_500">주소</span>
-                {editMode ? <input className='width_fit' defaultValue={user.address} /> : <span className="label font_weight_400">{user.address}</span>}
+                {editMode ? <input className='width_fit' defaultValue={user.address} name='address' value={user.address} onChange={changeUser} /> : <span className="label font_weight_400">{user.address}</span>}
               </div>
+              {editMode ?
+              <div className="mypage-profile-row position_rel">
+                <span className="label font_weight_500">비밀번호</span>
+                <input type={passwordVisible ? "text" : "password"} className='width_fit' defaultValue={user.password} name='password' value={user.password} onChange={changeUser} />
+                <span className="material-symbols-outlined password_position" onClick={togglePasswordVisibility}>visibility</span>
+              </div> : ''}
             </div>
-              <button className="btn white_color label margin_0_auto" onClick={() => setEditMode(!editMode)}>
+              <button className="btn white_color label margin_0_auto" onClick={edit} >
                 <FaEdit /> {editMode ? '수정완료' : '정보수정'}
               </button>
           </div>
@@ -106,10 +199,10 @@ const MemberMyPage = () => {
             <h4 className='label text_left font_weight_500'><FaCalendarAlt /> 예약 내역</h4>
             <table className="mypage-table">
               <thead>
-                <tr><th>센터</th><th>상품</th><th>날짜</th><th>시간</th><th>트레이너</th><th>상태</th></tr>
+                <tr><th>센터</th><th>상품</th><th>날짜</th><th>시간</th><th>트레이너</th><th>상태</th><th>리뷰쓰기</th></tr>
               </thead>
               <tbody>
-                {mockReservations.map(r=>(
+                {reservations.map(r=>(
                   <tr key={r.reservation_idx}>
                     <td>{r.center_name}</td>
                     <td>{r.product_name}</td>
@@ -117,6 +210,7 @@ const MemberMyPage = () => {
                     <td>{r.start_time}~{r.end_time}</td>
                     <td>{r.trainer_name}</td>
                     <td>{r.status}</td>
+                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" style={{background:'#444444'}}>리뷰쓰기</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -129,13 +223,13 @@ const MemberMyPage = () => {
                 <tr><th>대상</th><th>구분</th><th>별점</th><th>내용</th><th>작성일</th></tr>
               </thead>
               <tbody>
-                {mockReviews.map(r=>(
+                {reviews.map(r=>(
                   <tr key={r.review_id}>
-                    <td>{r.target}</td>
-                    <td>{r.type}</td>
+                    <td>{r.target_id}</td>
+                    <td>{r.level == 2 ? '트레이너' : '센터'}</td>
                     <td>{r.rating}</td>
                     <td>{r.content}</td>
-                    <td>{r.date}</td>
+                    <td>{r.reg_date.substring(0,10)}</td>
                   </tr>
                 ))}
               </tbody>
