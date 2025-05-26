@@ -144,6 +144,7 @@ const JoinPage = () => {
             });
             setForm((prev) => ({ ...prev, email: '' }));
             setIsEmailAvailable(false);
+            setErrors((prev) => ({ ...prev, email: true }));
             inputRefs.email.current?.focus();
         }
     };

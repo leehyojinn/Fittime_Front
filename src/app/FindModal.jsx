@@ -27,16 +27,16 @@ function FindModal({ open, onClose }) {
 
     // "비밀번호 재설정" 버튼 클릭 시
     const handleResetPw = async() => {
-        const {data} = await axios.post('http://localhost/find/password',{userId, email});
+        const {data} = await axios.post(`http://localhost/emailSend/${userId}`);
         if (data.success) {
             setResult({
-                type: 'pw',
-                message: '비밀번호 재설정 링크가 입력하신 이메일로 전송되었습니다. 이메일을 확인해주세요.'
+                type:'pw',
+                message: data.msg
             });
         }else {
             setResult({
                 type: 'pw',
-                message: '가입된 정보와 일치하지 않습니다.'
+                message: data.msg
             });
         }
     };
