@@ -124,7 +124,7 @@ export default function Introduce() {
             {
                 isModalOpen && (
                     <Modal onClose={() => setIsModalOpen(false)}>
-                        <div className="modal-content flex column gap_10 align_center">
+                        <div style={{width:'100%'}} className="modal-content flex column gap_10 align_center">
                             <img
                                 src={selectedMember.image}
                                 alt={selectedMember.name}

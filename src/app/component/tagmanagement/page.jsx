@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
+import { useAlertModalStore } from '@/app/zustand/store';
+import AlertModal from '../alertmodal/page';
 
 const TAG_API = 'http://localhost/';
 
@@ -15,6 +17,8 @@ const TagManagement = () => {
   const [editingTag, setEditingTag] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const {openModal} = useAlertModalStore();
+
   // 태그 목록 불러오기
   const fetchTags = async (category = selectedCategory) => {
     setLoading(true);
@@ -22,7 +26,12 @@ const TagManagement = () => {
       const { data } = await axios.post(TAG_API + 'tag_list', { category });
       setTags(data.list || []);
     } catch (e) {
-      alert('태그 목록을 불러오지 못했습니다.');
+      openModal({
+        svg: '❗',
+        msg1 : '오류',
+        msg2 : '태그 목록을 불러오지 못했습니다.',
+        showCancel : false
+      })
     }
     setLoading(false);
   };
@@ -49,18 +58,39 @@ const TagManagement = () => {
           fetchTags(data.category);
           setEditingTag(null);
           reset({ category: data.category, tag_name: '' });
+          openModal({
+            svg: '✔',
+            msg1 : '확인',
+            msg2 : '태그 수정에 성공하였습니다.',
+            showCancel : false
+          });
         } else {
-          alert('태그 수정에 실패했습니다.');
+          openModal({
+            svg: '❗',
+            msg1 : '오류',
+            msg2 : '태그 수정에 실패했습니다.',
+            showCancel : false
+          })
         }
       } catch {
-        alert('태그 수정 중 오류가 발생했습니다.');
+        openModal({
+          svg: '❗',
+          msg1 : '오류',
+          msg2 : '태그 수정 중 오류가 발생했습니다.',
+          showCancel : false
+        })
       }
     } else {
       // 추가
       try {
         // 중복 검사 (프론트)
         if (tags.some(tag => tag.tag_name === data.tag_name)) {
-          alert('이미 존재하는 태그입니다.');
+          openModal({
+            svg: '❗',
+            msg1 : '중복',
+            msg2 : '이미 존재하는 태그입니다.',
+            showCancel : false
+          });
           return;
         }
         const res = await axios.post(TAG_API + 'tag', {
@@ -70,12 +100,40 @@ const TagManagement = () => {
         if (res.data.success) {
           fetchTags(data.category);
           reset({ category: data.category, tag_name: '' });
+          openModal({
+            svg: '✔',
+            msg1 : '확인',
+            msg2 : '태그 등록에 성공하였습니다.',
+            showCancel : false
+          });
         } else {
-          alert('태그 등록에 실패했습니다.');
+          openModal({
+            svg: '❗',
+            msg1 : '오류',
+            msg2 : '태그 등록에 실패했습니다.',
+            showCancel : false
+          })
         }
       } catch {
-        alert('태그 등록 중 오류가 발생했습니다.');
+        openModal({
+          svg: '❗',
+          msg1 : '오류',
+          msg2 : '태그 등록 중 오류가 발생했습니다.',
+          showCancel : false
+        })
+        
       }
+    }
+  };
+
+  const onError = (errors) => {
+    if (errors.tag_name) {
+      openModal({
+        svg: '❗',
+        msg1: '입력 오류',
+        msg2: errors.tag_name.message,
+        showCancel: false
+      });
     }
   };
 
@@ -86,18 +144,38 @@ const TagManagement = () => {
     setValue('tag_name', tag.tag_name);
   };
 
+  const alertModlaDelete = (tagToDelete) => {
+    openModal({
+      svg: '✔',
+      msg1 : '확인',
+      msg2 : '정말 해당 태그를 삭제하시겠습니까?',
+      showCancel : true,
+      onConfirm : () => handleDeleteTag(tagToDelete),
+      onCancel: () => {},
+    })
+  }
+
   // 태그 삭제
   const handleDeleteTag = async (tagToDelete) => {
-    if (!window.confirm('정말로 이 태그를 삭제하시겠습니까?')) return;
     try {
       const res = await axios.post(TAG_API + 'tag_del', { tag_idx: tagToDelete.tag_idx });
       if (res.data.success) {
         fetchTags(selectedCategory);
       } else {
-        alert('태그 삭제에 실패했습니다.');
+        openModal({
+          svg: '❗',
+          msg1 : '오류',
+          msg2 : '태그 삭제에 실패했습니다.',
+          showCancel : false
+        })
       }
     } catch {
-      alert('태그 삭제 중 오류가 발생했습니다.');
+      openModal({
+        svg: '❗',
+        msg1 : '오류',
+        msg2 : '태그 삭제 중 오류가 발생했습니다.',
+        showCancel : false
+      })
     }
   };
 
@@ -130,7 +208,7 @@ const TagManagement = () => {
             </select>
           </div>
           
-          <form className="tag-form" onSubmit={handleSubmit(onSubmit)}>
+          <form className="tag-form" onSubmit={handleSubmit(onSubmit, onError)}>
             <h3 className='middle_title2 mb_20'>{editingTag ? '태그 수정' : '태그 추가'}</h3>
             <div>
               <div className="form-group">
@@ -158,7 +236,6 @@ const TagManagement = () => {
                     maxLength: { value: 20, message: "태그 이름은 20자 이내로 입력해주세요" }
                   })}
                 />
-                {errors.tag_name && <span className="error-message">{errors.tag_name.message}</span>}
               </div>
               
               <div className="form-buttons flex gap_10 justify_con_center">
@@ -204,7 +281,7 @@ const TagManagement = () => {
                           수정
                         </button>
                         <button 
-                          onClick={() => handleDeleteTag(tag)} 
+                          onClick={() => alertModlaDelete(tag)} 
                           className="delete-button label"
                         >
                           삭제
@@ -224,6 +301,7 @@ const TagManagement = () => {
         </div>
       </div>
       <Footer/>
+      <AlertModal/>
     </div>
   );
 };

@@ -2914,7 +2914,7 @@ table tr.selected {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .alert-modal-content {
@@ -2935,13 +2935,14 @@ table tr.selected {
 }
 
 .alert-modal-title {
-  font-size: 1.3rem;
+  font-size: 1.8rem;
   font-weight: bold;
   margin-bottom: 8px;
 }
 
 .alert-modal-message {
-  font-size: 1rem;
+  font-size: 1.3rem;
+  line-height: 2rem;
   color: #555;
   margin-bottom: 24px;
 }
@@ -2956,7 +2957,7 @@ table tr.selected {
   padding: 8px 24px;
   border: none;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 1.3rem;
   cursor: pointer;
   transition: background 0.18s;
 }
@@ -3078,4 +3079,9 @@ table tr.selected {
   display: grid;
   grid-template-columns: repeat(5,1fr);
   gap: 10px;
+}
+
+.input-error {
+  border: 2px solid #ff3b3b !important;
+  transition: border 0.25s cubic-bezier(0.4,0,0.2,1);
 }

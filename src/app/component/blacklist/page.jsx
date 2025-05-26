@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
+import { useAlertModalStore } from '@/app/zustand/store';
+import AlertModal from '../alertmodal/page';
 
 const BlacklistManagement = () => {
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
@@ -14,11 +16,12 @@ const BlacklistManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const {openModal} = useAlertModalStore();
+
   const getComplaints = async () => {
     try {
       const { data } = await axios.post('http://localhost/blacklist_list');
       // 콘솔로 실제 응답 구조 확인
-      console.log('blacklist_list 응답:', data);
       // 배열만 반환되면
       if (Array.isArray(data)) setComplaints(data);
       // { list: [...] } 구조면
@@ -55,7 +58,12 @@ const BlacklistManagement = () => {
         { status: data.status, process_history: data.process_history }
       );
       if (res.data && res.data.success) {
-        alert('처리 내용이 저장되었습니다.');
+        openModal({
+          svg: '✔',
+          msg1 : '확인',
+          msg2 : '처리 내용이 저장되었습니다.',
+          showCancel : false,
+        })
         getComplaints();
         // 상세도 갱신
         setSelectedComplaint({
@@ -64,13 +72,34 @@ const BlacklistManagement = () => {
           process_history: data.process_history
         });
       } else {
-        alert('저장 실패');
+        openModal({
+          svg: '❗',
+          msg1 : '오류',
+          msg2 : '처리 내용 저장에 실패하였습니다.',
+          showCancel : false,
+        })
       }
     } catch (err) {
-      alert('저장 중 오류');
+      openModal({
+        svg: '❗',
+        msg1 : '오류',
+        msg2 : '처리 내용 저장 중 오류가 발생하였습니다.',
+        showCancel : false,
+      })
     }
     setLoading(false);
   };
+
+  const alertBlacklist = () => {
+    openModal({
+      svg: '✔',
+      msg1 : '확인',
+      msg2 : '정말 블랙리스트 처리를 진행하시겠습니까?',
+      showCancel : true,
+      onConfirm : () => handleBlacklist(),
+      onCancel: () => {},
+    })
+  }
 
   // 블랙리스트 등록(레벨 0)
   const handleBlacklist = async () => {
@@ -81,17 +110,32 @@ const BlacklistManagement = () => {
         `http://localhost/blacklist_level/${selectedComplaint.report_id}`
       );
       if (res.data && res.data.success) {
-        alert('블랙리스트(레벨 0)로 처리되었습니다.');
+        openModal({
+          svg: '✔',
+          msg1 : '확인',
+          msg2 : '블랙리스트 처리가 완료되었습니다.',
+          showCancel : false,
+        })
         getComplaints();
         setSelectedComplaint({
           ...selectedComplaint,
           status: '처리완료'
         });
       } else {
-        alert('블랙리스트 처리 실패');
+        openModal({
+          svg: '❗',
+          msg1 : '오류',
+          msg2 : '블랙리스트 처리 실패하였습니다.',
+          showCancel : false,
+        })
       }
     } catch (err) {
-      alert('블랙리스트 처리 중 오류');
+      openModal({
+        svg: '❗',
+        msg1 : '오류',
+        msg2 : '블랙리스트 처리 중 오류가 발생하였습니다.',
+        showCancel : false,
+      })
     }
     setLoading(false);
   };
@@ -216,7 +260,7 @@ const BlacklistManagement = () => {
                     </button>
                     <button 
                       type="button" 
-                      onClick={handleBlacklist} 
+                      onClick={alertBlacklist} 
                       className="blacklist-button label"
                       disabled={loading}
                     >
@@ -230,6 +274,7 @@ const BlacklistManagement = () => {
         </div>
       </div>
       <Footer/>
+      <AlertModal/>
     </div>
   );
 };

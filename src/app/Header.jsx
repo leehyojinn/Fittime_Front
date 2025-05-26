@@ -5,9 +5,10 @@ import React, { useEffect, useState } from 'react';
 import QuickMenu from './QuickMenu';
 import Image from 'next/image';
 import Popup from './Popup';
-import { useSidebarStore } from './zustand/store';
+import { useAlertModalStore, useSidebarStore } from './zustand/store';
 import Sidebar from './sidebar';
 import { set } from 'date-fns';
+import AlertModal from './component/alertmodal/page';
 
 const mainMenus = [
   {
@@ -52,6 +53,8 @@ const Header = () => {
   const [token, setToken] = useState(null);
   const [userLevel, setUserLevel] = useState(null);
   
+  const openModal = useAlertModalStore((state) => state.openModal);
+
   useEffect(() => {
     // 클라이언트에서만 sessionStorage 접근 가능
     if (typeof window !== 'undefined') {
@@ -68,6 +71,18 @@ const Header = () => {
     window.location.href = '/';
   };
 
+  // 로그아웃 시 AlertModal 띄우기
+  const confirmLogout = () => {
+    openModal({
+      svg: '✔',
+      msg1: '로그아웃 하시겠습니까?',
+      msg2: '로그아웃 후 다시 로그인해야 합니다.',
+      onConfirm: handleLogout,
+      onCancel: () => {},
+      showCancel: true,
+    });
+  };
+
   return (
     <div className='header'>
       <Popup/>
@@ -82,7 +97,7 @@ const Header = () => {
               <button
                 className='content_text white_color'
                 style={{ background: "none", border: "none", cursor: "pointer" }}
-                onClick={handleLogout}
+                onClick={confirmLogout}
               >
                 로그아웃
               </button>
@@ -137,7 +152,7 @@ const Header = () => {
       {userLevel >= 3 ? (<button onClick={openSidebar} className='sidebar'>
       ≡
       </button>) : ('')}
-      
+      <AlertModal/>
     </div>
   );
 };

@@ -1,9 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
+import AlertModal from '../alertmodal/page';
+import { useAlertModalStore } from '@/app/zustand/store';
+
+// 필수값 목록 및 라벨
+const REQUIRED_FIELDS = [
+  { name: 'title', label: '제목' },
+  { name: 'start_date', label: '시작일자' },
+  { name: 'end_date', label: '종료일자' },
+  { name: 'popup_width', label: 'Width(px)' },
+  { name: 'popup_height', label: 'Height(px)' },
+  { name: 'popup_image', label: '팝업 이미지' }
+];
 
 // 토글 스위치 컴포넌트 (커스텀)
 function ToggleSwitch({ isToggled, onToggle }) {
@@ -16,41 +28,80 @@ function ToggleSwitch({ isToggled, onToggle }) {
 }
 
 // 팝업 등록/수정 폼
-function PopupForm({ popup, onChange, onSubmit, onCancel, save, previewUrl, isEdit }) {
+function PopupForm({ popup, onChange, onSubmit, onCancel, previewUrl, isEdit, errors, inputRefs }) {
+  // 빨간 테두리 스타일 적용 함수
+  const getInputClass = name =>
+    `${errors[name] ? ' input-error' : ''}`;
+
   return (
-    <div className="popup-form" onSubmit={onSubmit}>
+    <form className="popup-form" onSubmit={onSubmit} autoComplete="off">
       <div className='flex column gap_10'>
         <p className='label'>제목</p>
-        <input type="text" name="title" value={popup.title} onChange={onChange} required />
+        <input
+          type="text"
+          name="title"
+          value={popup.title}
+          onChange={onChange}
+          className={getInputClass('title')}
+          ref={inputRefs.title}
+        />
       </div>
       <div className='flex gap_10 align_center'>
         <div className='flex column gap_10'>
           <p className='label'>시작일자</p>
-          <input type="date" name="start_date" value={popup.start_date} onChange={onChange} required />
+          <input
+            type="date"
+            name="start_date"
+            value={popup.start_date}
+            onChange={onChange}
+            className={getInputClass('start_date')}
+            ref={inputRefs.start_date}
+          />
         </div>
         <div className='flex column gap_10'>
           <p className='label'>종료일자</p>
-          <input type="date" name="end_date" value={popup.end_date} onChange={onChange} required />
+          <input
+            type="date"
+            name="end_date"
+            value={popup.end_date}
+            onChange={onChange}
+            className={getInputClass('end_date')}
+            ref={inputRefs.end_date}
+          />
         </div>
       </div>
       <div className='flex gap_10 align_center'>
         <div className='flex column gap_10'>
           <p className='label'>Width(px)</p>
-          <input type="number" name="popup_width" value={popup.popup_width} onChange={onChange} />
+          <input
+            type="number"
+            name="popup_width"
+            value={popup.popup_width}
+            onChange={onChange}
+            className={getInputClass('popup_width')}
+            ref={inputRefs.popup_width}
+          />
         </div>
         <div className='flex column gap_10'>
           <p className='label'>Height(px)</p>
-          <input type="number" name="popup_height" value={popup.popup_height} onChange={onChange} />
+          <input
+            type="number"
+            name="popup_height"
+            value={popup.popup_height}
+            onChange={onChange}
+            className={getInputClass('popup_height')}
+            ref={inputRefs.popup_height}
+          />
         </div>
       </div>
       <div className='flex column gap_10'>
         <p className='label'>Top</p>
-        <input type="text" name="position_top" value={popup.position_top == "" ? 50 : popup.position_top} onChange={onChange} />
+        <input type="text" name="position_top" value={popup.position_top === "" ? 50 : popup.position_top} onChange={onChange} />
       </div>
       <div className='flex gap_10 align_center'>
         <div className='flex column gap_10'>
           <p className='label'>Left</p>
-          <input type="text" name="position_left" value={popup.position_left == "" ? 50 : popup.position_left } onChange={onChange} />
+          <input type="text" name="position_left" value={popup.position_left === "" ? 50 : popup.position_left } onChange={onChange} />
         </div>
         <div className='flex column gap_10'>
           <p className='label'>Right</p>
@@ -61,10 +112,15 @@ function PopupForm({ popup, onChange, onSubmit, onCancel, save, previewUrl, isEd
         <p className='label'>Bottom</p>
         <input type="text" name="position_bottom" value={popup.position_bottom} onChange={onChange} />
       </div>
-
       <div className='flex column gap_10 mt_20'>
         <p className='label text_left'>팝업 이미지</p>
-        <input type="file" name="popup_image" required onChange={onChange} />
+        <input
+          type="file"
+          name="popup_image"
+          onChange={onChange}
+          className={getInputClass('popup_image')}
+          ref={inputRefs.popup_image}
+        />
         {previewUrl && (
           <img
             src={previewUrl}
@@ -79,9 +135,9 @@ function PopupForm({ popup, onChange, onSubmit, onCancel, save, previewUrl, isEd
       </div>
       <div className="form-actions">
         <button className='btn label white_color' type="button" onClick={onCancel}>취소</button>
-        <button className='btn label white_color' type="submit" onClick={save}>{isEdit ? '수정' : '저장'}</button>
+        <button className='btn label white_color' type="submit">{isEdit ? '수정' : '저장'}</button>
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -93,8 +149,21 @@ export default function PopupTable() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
 
+  // 필수값 에러 상태
+  const [errors, setErrors] = useState({});
+  // 각 input의 ref
+  const inputRefs = {
+    title: useRef(null),
+    start_date: useRef(null),
+    end_date: useRef(null),
+    popup_width: useRef(null),
+    popup_height: useRef(null),
+    popup_image: useRef(null),
+  };
+  const { openModal } = useAlertModalStore();
+
   // 모달 열기(등록/수정)
-  const openModal = (popup = null) => {
+  const openModal_popup = (popup = null) => {
     setEditingPopup(
       popup
         ? { ...popup }
@@ -120,6 +189,7 @@ export default function PopupTable() {
     } else {
       setPreviewUrl(null);
     }
+    setErrors({});
     setShowModal(true);
   };
 
@@ -132,6 +202,7 @@ export default function PopupTable() {
     }
     setPreviewUrl(null);
     setIsEdit(false);
+    setErrors({});
   };
 
   // 폼 값 변경
@@ -149,17 +220,46 @@ export default function PopupTable() {
       } else {
         setPreviewUrl(null);
       }
+      setErrors(prev => ({ ...prev, [name]: false }));
     } else {
       setEditingPopup((prev) => ({
         ...prev,
         [name]: value,
       }));
+      setErrors(prev => ({ ...prev, [name]: false }));
     }
   };
 
   // 저장(등록/수정)
   const popup_save = async (e) => {
     e.preventDefault();
+
+    // 필수값 체크
+    let firstError = null;
+    let newErrors = {};
+    for (const { name } of REQUIRED_FIELDS) {
+      if (
+        name === 'popup_image'
+          ? (!editingPopup.popup_image && !isEdit) // 수정 시 이미 파일이 있으면 통과
+          : !editingPopup[name] || (typeof editingPopup[name] === 'string' && editingPopup[name].trim() === '')
+      ) {
+        newErrors[name] = true;
+        if (!firstError) firstError = name;
+      }
+    }
+    setErrors(newErrors);
+
+    if (firstError) {
+      openModal({
+        svg: '❗',
+        msg1: '입력 오류',
+        msg2: `${REQUIRED_FIELDS.find(f => f.name === firstError).label}을(를) 입력해주세요.`,
+        showCancel: false,
+      });
+      inputRefs[firstError]?.current?.focus();
+      return;
+    }
+
     let user_id = sessionStorage.getItem('user_id');
     const formData = new FormData();
     formData.append('title', editingPopup.title);
@@ -176,61 +276,141 @@ export default function PopupTable() {
     if (editingPopup.popup_image) {
       formData.append('popup_image', editingPopup.popup_image);
     }
-    if (isEdit) {
-      formData.append('popup_idx', editingPopup.popup_idx);
-      // 수정 요청
-      const { data } = await axios.post('http://localhost/popup_update', formData);
-      if (data.success) {
-        alert('팝업 수정 완료');
-        closeModal();
-        popup_list();
+    try {
+      if (isEdit) {
+        formData.append('popup_idx', editingPopup.popup_idx);
+        const { data } = await axios.post('http://localhost/popup_update', formData);
+        if (data.success) {
+          openModal({
+            svg: '✔',
+            msg1: '팝업 수정 완료',
+            msg2: '',
+            showCancel: false,
+            onConfirm: () => {
+              closeModal();
+              popup_list();
+            }
+          });
+        } else {
+          openModal({
+            svg: '❗',
+            msg1: '팝업 수정 실패',
+            msg2: data?.message || '',
+            showCancel: false,
+          });
+        }
       } else {
-        alert('팝업 수정 실패');
+        const { data } = await axios.post('http://localhost/popup_write', formData);
+        if (data.success) {
+          openModal({
+            svg: '✔',
+            msg1: '팝업 등록 완료',
+            msg2: '',
+            showCancel: false,
+            onConfirm: () => {
+              closeModal();
+              popup_list();
+            }
+          });
+        } else {
+          openModal({
+            svg: '❗',
+            msg1: '팝업 등록 실패',
+            msg2: data?.message || '',
+            showCancel: false,
+          });
+        }
       }
-    } else {
-      // 등록 요청
-      const { data } = await axios.post('http://localhost/popup_write', formData);
-      if (data.success) {
-        alert('팝업 등록 완료');
-        closeModal();
-        popup_list();
-      } else {
-        alert('팝업 등록 실패');
-      }
+    } catch (err) {
+      openModal({
+        svg: '❗',
+        msg1: isEdit ? '팝업 수정 오류' : '팝업 등록 오류',
+        msg2: err.response?.data?.message || err.message,
+        showCancel: false,
+      });
     }
   };
 
   // 삭제
-  const handleDelete = async (popup_idx) => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      const { data } = await axios.post(`http://localhost/popup_delete/${popup_idx}`);
-      if (data.success) {
-        alert('팝업 삭제 완료');
-        popup_list();
-      } else {
-        alert('팝업 삭제 실패');
+  const handleDelete = (popup_idx) => {
+    openModal({
+      svg: '❗',
+      msg1: '팝업 삭제',
+      msg2: '정말 삭제하시겠습니까?',
+      showCancel: true,
+      onConfirm: async () => {
+        try {
+          const { data } = await axios.post(`http://localhost/popup_delete/${popup_idx}`);
+          if (data.success) {
+            openModal({
+              svg: '✔',
+              msg1: '팝업 삭제 완료',
+              msg2: '',
+              showCancel: false,
+              onConfirm: popup_list,
+            });
+          } else {
+            openModal({
+              svg: '❗',
+              msg1: '팝업 삭제 실패',
+              msg2: data?.message || '',
+              showCancel: false,
+            });
+          }
+        } catch (err) {
+          openModal({
+            svg: '❗',
+            msg1: '팝업 삭제 오류',
+            msg2: err.response?.data?.message || err.message,
+            showCancel: false,
+          });
+        }
       }
-    }
+    });
   };
 
   // 토글 변경
   const handleToggle = async (popup_idx) => {
-    const { data } = await axios.get('http://localhost/toggle/' + popup_idx);
-    if (data.success) {
-      await popup_list();
-    } else {
-      alert('토글 변경 실패');
+    try {
+      const { data } = await axios.get('http://localhost/toggle/' + popup_idx);
+      if (data.success) {
+        await popup_list();
+      } else {
+        openModal({
+          svg: '❗',
+          msg1: '토글 변경 실패',
+          msg2: data?.message || '',
+          showCancel: false,
+        });
+      }
+    } catch (err) {
+      openModal({
+        svg: '❗',
+        msg1: '토글 변경 오류',
+        msg2: err.response?.data?.message || err.message,
+        showCancel: false,
+      });
+    }
+  };
+
+  const popup_list = async () => {
+    try {
+      const { data } = await axios.get('http://localhost/popup_list');
+      setPopups(data.data);
+    } catch (err) {
+      openModal({
+        svg: '❗',
+        msg1: '팝업 목록 불러오기 오류',
+        msg2: err.response?.data?.message || err.message,
+        showCancel: false,
+      });
     }
   };
 
   useEffect(() => {
     popup_list();
+    // eslint-disable-next-line
   }, []);
-
-  const popup_list = async () => {
-    const { data } = await axios.get('http://localhost/popup_list');
-    setPopups(data.data);
-  };
 
   return (
     <div>
@@ -239,7 +419,7 @@ export default function PopupTable() {
         <p className='title'>팝업 등록 페이지</p>
       </div>
       <div className='padding_120_0 wrap'>
-        <button onClick={() => openModal()} className="register-btn label font_weight_400 white_color">
+        <button onClick={() => openModal_popup()} className="register-btn label font_weight_400 white_color">
           팝업 등록
         </button>
         <div className="popup-table">
@@ -262,7 +442,7 @@ export default function PopupTable() {
                 />
               </div>
               <div className="flex align_center gap_10 justify_con_center">
-                <button className='label btn white_color font_weight_400' onClick={() => openModal(popup)}>수정</button>
+                <button className='label btn white_color font_weight_400' onClick={() => openModal_popup(popup)}>수정</button>
                 <button className='label btn white_color font_weight_400' onClick={() => handleDelete(popup.popup_idx)}>삭제</button>
               </div>
             </div>
@@ -278,15 +458,17 @@ export default function PopupTable() {
                 onChange={handleChange}
                 onSubmit={popup_save}
                 onCancel={closeModal}
-                save={popup_save}
                 previewUrl={previewUrl}
                 isEdit={isEdit}
+                errors={errors}
+                inputRefs={inputRefs}
               />
             </div>
           </div>
         )}
       </div>
       <Footer />
+      <AlertModal />
     </div>
   );
 }
