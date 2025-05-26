@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { FaStar, FaCalendarAlt, FaUser, FaEdit, FaCamera, FaPlus } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import {usePasswordStore} from "@/app/zustand/store";
+import axios from "axios";
 
 const trainerSample = {
     user_id: 'trainer1',
     user_name: '김트레이너',
-    contact: '010-2222-3333',
+    phone: '010-2222-3333',
     email: 'trainer@naver.com',
     gender: '남',
     age: 32,
@@ -16,16 +18,16 @@ const trainerSample = {
     profile_image: '/member.png',
     sub_images: ['/member.png','/member.png'],
     tags: ['유경험자','체계적인','친절한'],
-    intro: '10년 경력의 퍼스널 트레이너',
+    career: '10년 경력의 퍼스널 트레이너',
     center: {
       center_idx: 1,
       center_name: '헬스월드 강남점',
       address: '서울 강남구 역삼동 123-45',
-      contact: '02-1234-5678'
+      phone: '02-1234-5678'
     }
   };
 const mockTrainerReservations = [
-  { reservation_idx: 1, member_name: '홍길동', contact: '010-1234-5678', date: '2025-05-21', start_time: '10:00', end_time: '11:00', product_name: 'PT 10회', status: '예약완료' }
+  { reservation_idx: 1, member_name: '홍길동', phone: '010-1234-5678', date: '2025-05-21', start_time: '10:00', end_time: '11:00', product_name: 'PT 10회', status: '예약완료' }
 ];
 const mockTrainerReviews = [
   { review_id: 1, member_name: '회원A', rating: 5, content: '트레이닝이 정말 체계적이에요!', date: '2025-05-10' }
@@ -36,18 +38,101 @@ const mockSchedules = [
 ];
 
 const TrainerMyPage = () => {
-  const [editMode, setEditMode] = useState(false);
-  const [trainer, setTrainer] = useState(trainerSample);
-  const [mainImage, setMainImage] = useState(trainer.profile_image);
-  const [subImages, setSubImages] = useState(trainer.sub_images);
+    const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
+    const [editMode, setEditMode] = useState(false);
+    const [trainer, setTrainer] = useState([]);
+    const [mainImage, setMainImage] = useState(null);
+    const [subImages, setSubImages] = useState(trainer.sub_images);
+    const [mainImageFile, setMainImageFile] = useState(null);
+    const [subImageFiles, setSubImageFiles] = useState(null);
 
-  const handleMainImageChange = e => {
-    if (e.target.files[0]) setMainImage(URL.createObjectURL(e.target.files[0]));
-  };
-  const handleSubImagesChange = e => {
-    const files = Array.from(e.target.files).slice(0, 10);
-    setSubImages(files.map(f => URL.createObjectURL(f)));
-  };
+    const handleMainImageChange = e => {
+        if (e.target.files[0]) {
+            // console.log(e.target.files[0]);
+            const newImage = URL.createObjectURL(e.target.files[0]);
+            setMainImage(newImage);
+            setMainImageFile(e.target.files[0]);
+        }
+    };
+    const handleSubImagesChange = e => {
+        const files = Array.from(e.target.files).slice(0, 10);
+        setSubImages(files.map(f => URL.createObjectURL(f)));
+        setSubImageFiles(files);
+    };
+
+    const changeTrainer = (e) =>{
+        let {name,value} = e.target;
+        // console.log(value.address);
+        setTrainer((prevForm) => ({
+            ...prevForm,
+            [name]: value
+        }))
+    }
+
+    useEffect(() => {
+        getTrainer();
+    }, []);
+
+    const getTrainer = async () => {
+        await axios.post('http://localhost/detail/profile',{"trainer_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
+            .then(({data}) => {
+                console.log(data);
+                setTrainer(data);
+                setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+                setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
+                //console.log(profileImage);
+            })
+    }
+
+    const edit = async() =>{
+        setEditMode(!editMode);
+        // console.log(editMode);
+        const formData = new FormData();
+        if(editMode){
+            switch (true) {
+                case (mainImageFile && subImageFiles && subImageFiles.length > 0):
+                    // 둘 다 있는 경우
+                    formData.append('file',mainImageFile);
+                    subImageFiles.forEach((file) => {
+                        formData.append('files', file); // 배열이 아닌 각각 append
+                    });
+                    formData.append('param',new Blob([JSON.stringify(trainer)], { type: "application/json" }));
+                    break;
+
+                case (mainImageFile && !subImageFiles):
+                    // 메인 이미지만 있는 경우
+                    formData.append('file',mainImageFile);
+                    formData.append('param',new Blob([JSON.stringify(trainer)], { type: "application/json" }));
+                    break;
+
+                case (!mainImageFile && subImageFiles && subImageFiles.length > 0):
+                    // 서브 이미지들만 있는 경우
+                    subImageFiles.forEach((file) => {
+                        formData.append('files', file); // 배열이 아닌 각각 append
+                    });
+                    formData.append('param',new Blob([JSON.stringify(trainer)], { type: "application/json" }));
+                    break;
+
+                case (!mainImageFile && !subImageFiles):
+                    // 둘 다 없는 경우
+                    formData.append('param',new Blob([JSON.stringify(trainer)], { type: "application/json" }));
+                    break;
+
+                default:
+                    // 혹시 모를 예외 처리
+                    break;
+            }
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+            const {data} = await axios.post('http://localhost/update/Profile', formData,{
+                headers: {'Content-Type': 'multipart/form-data'}
+            });
+            // console.log('data',data);
+            await getTrainer();
+        }
+    }
+
 
   return (
 
@@ -58,7 +143,7 @@ const TrainerMyPage = () => {
             <div className="mypage-container">
             <h2 className='middle_title2'>트레이너 마이페이지</h2>
             <div className="mypage-profile">
-                <img src={trainer.profile_image} alt="프로필" className="mypage-profile-img" />
+                <img src={mainImage} alt="프로필" className="mypage-profile-img" />
                 {editMode && (
                 <label className="btn white_color label">
                     <FaCamera /> 대표이미지 변경
@@ -66,10 +151,10 @@ const TrainerMyPage = () => {
                 </label>
                 )}
                 <div className="mypage-subimg-list">
-                    {subImages.map((img, idx) => (
+                    {subImages && subImages.map((img, idx) => (
                     <img key={idx} src={img} alt="트레이너 추가 이미지" className="mypage-subimg" />
                     ))}
-                    {editMode && subImages.length < 10 && (
+                    {editMode && (
                     <label className="btn white_color label">
                         <FaPlus /> 추가이미지
                         <input type="file" multiple accept="image/*" style={{display:'none'}} onChange={handleSubImagesChange} />
@@ -87,11 +172,11 @@ const TrainerMyPage = () => {
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">연락처</span>
-                    {editMode ? <input className='width_fit' defaultValue={trainer.contact} /> : <span className="label font_weight_400">{trainer.contact}</span>}
+                    {editMode ? <input className='width_fit' name='phone' value={trainer.phone} onChange={changeTrainer}/> : <span className="label font_weight_400">{trainer.phone}</span>}
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">이메일</span>
-                    {editMode ? <input className='width_fit' defaultValue={trainer.email} /> : <span className="label font_weight_400">{trainer.email}</span>}
+                    {editMode ? <input className='width_fit' defaultValue={trainer.email} name='email' value={trainer.email} onChange={changeTrainer}/> : <span className="label font_weight_400">{trainer.email}</span>}
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">성별/나이</span>
@@ -99,27 +184,33 @@ const TrainerMyPage = () => {
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">주소</span>
-                    {editMode ? <input className='width_fit' defaultValue={trainer.address} /> : <span className="label font_weight_400">{trainer.address}</span>}
+                    {editMode ? <input className='width_fit' defaultValue={trainer.address} name='address' value={trainer.address} onChange={changeTrainer}/> : <span className="label font_weight_400">{trainer.address}</span>}
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">소속센터</span>
-                    <span className="label font_weight_400">{trainer.center.center_name} ({trainer.center.address})</span>
+                    <span className="label font_weight_400">{trainer.center_name} ({trainer.center_address})</span>
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">센터 연락처</span>
-                    <span className="label font_weight_400">{trainer.center.contact}</span>
+                    <span className="label font_weight_400">{trainer.center_phone}</span>
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">태그</span>
-                    {trainer.tags.map((item,idx)=>{
-                        return(<span key={idx} className="mypage_tag">{item}</span>);
+                    {trainer.tags && trainer.tags.map((item,trainer_idx)=>{
+                        return(<span key={trainer_idx} className="mypage_tag">{item}</span>);
                     })}
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">소개</span>
-                    {editMode ? <textarea className='width_fit' defaultValue={trainer.intro} /> : <span className="label font_weight_400">{trainer.intro}</span>}
+                    {editMode ? <textarea className='width_fit' defaultValue={trainer.career} name='career' value={trainer.career} onChange={changeTrainer}/> : <span className="label font_weight_400">{trainer.career}</span>}
                 </div>
-                <button className="btn white_color label mr_10" onClick={() => setEditMode(!editMode)}>
+                {editMode ?
+                <div className="mypage-profile-row position_rel">
+                    <span className="label font_weight_500">비밀번호</span>
+                    <input type={passwordVisible ? "text" : "password"} className='width_fit' defaultValue={trainer.password} name='password' value={trainer.password} onChange={changeTrainer} />
+                    <span className="material-symbols-outlined password_position" onClick={togglePasswordVisibility}>visibility</span>
+                </div> : ''}
+                <button className="btn white_color label mr_10" onClick={edit}>
                     <FaEdit /> {editMode ? '수정완료' : '정보수정'}
                 </button>
                 <button className="btn white_color label">
@@ -137,7 +228,7 @@ const TrainerMyPage = () => {
                     {mockTrainerReservations.map(r=>(
                     <tr key={r.reservation_idx}>
                         <td>{r.member_name}</td>
-                        <td>{r.contact}</td>
+                        <td>{r.phone}</td>
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
                         <td>{r.start_time}~{r.end_time}</td>
