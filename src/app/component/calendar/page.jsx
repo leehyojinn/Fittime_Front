@@ -7,6 +7,8 @@ import Footer from '../../Footer';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useAlertModalStore } from '@/app/zustand/store';
+import AlertModal from '../alertmodal/page';
 
 const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
@@ -20,13 +22,17 @@ export default function MyCalendar() {
     end_time: '',
     status: '일정'
   });
-  const [inputValue, setInputValue] = useState('');
   const [detailInfo, setDetailInfo] = useState({ open: false, event: null, x: 0, y: 0 });
   const [hoveredEventId, setHoveredEventId] = useState(null);
   const [editForm, setEditForm] = useState(null);
+
+  // 에러 상태
+  const [errors, setErrors] = useState({});
   const inputRef = useRef();
   const inputModalRef = useRef(null);
   const detailModalRef = useRef(null);
+
+  const { openModal } = useAlertModalStore();
 
   // 일정 리스트 불러오기
   const fetchEvents = async () => {
@@ -41,7 +47,12 @@ export default function MyCalendar() {
         }))
       );
     } catch (err) {
-      alert('일정 불러오기 실패');
+      openModal({
+        svg: '❗',
+        msg1: '오류',
+        msg2: '일정 불러오기 실패',
+        showCancel: false,
+      });
     }
   };
 
@@ -64,6 +75,7 @@ export default function MyCalendar() {
       end_time: '',
       status: '일정'
     });
+    setErrors({});
     setTimeout(() => {
       inputRef.current && inputRef.current.focus();
     }, 50);
@@ -82,7 +94,22 @@ export default function MyCalendar() {
 
   // 일정 등록
   const handleRegister = async () => {
-    if (!form.title) return alert('제목을 입력하세요');
+    // 제목 필수값 검사
+    if (!form.title || form.title.trim() === '') {
+      setErrors({ title: true });
+      openModal({
+        svg: '❗',
+        msg1: '입력 오류',
+        msg2: '제목을 입력해주세요.',
+        showCancel: false,
+      });
+      setTimeout(() => {
+        inputRef.current && inputRef.current.focus();
+      }, 50);
+      return;
+    }
+    setErrors({});
+
     try {
       await axios.post('http://localhost/schedule_insert', {
         user_id: user_id,
@@ -95,27 +122,60 @@ export default function MyCalendar() {
       });
       setInputInfo({ ...inputInfo, open: false });
       fetchEvents();
+      openModal({
+        svg: '✔',
+        msg1: '확인',
+        msg2: '일정 등록을 완료하였습니다.',
+        showCancel: false,
+      });
     } catch (err) {
-      alert('등록 실패');
+      openModal({
+        svg: '❗',
+        msg1: '등록 실패',
+        msg2: err.response?.data?.message || '등록 실패',
+        showCancel: false,
+      });
     }
   };
 
   // 일정 삭제
   const handleDelete = async (event) => {
-    console.log(event)
-    if (!window.confirm('삭제하시겠습니까?')) return;
-    try {
-      await axios.post(`http://localhost/schedule_del/${user_id}/${event.id}`);
-      setDetailInfo({ open: false, event: null, x: 0, y: 0 });
-      setEditForm(null);
-      fetchEvents();
-    } catch (err) {
-      alert('삭제 실패');
-    }
+    openModal({
+      svg: '❗',
+      msg1: '일정 삭제',
+      msg2: '정말 삭제하시겠습니까?',
+      showCancel: true,
+      onConfirm: async () => {
+        try {
+          await axios.post(`http://localhost/schedule_del/${user_id}/${event.id}`);
+          setDetailInfo({ open: false, event: null, x: 0, y: 0 });
+          setEditForm(null);
+          fetchEvents();
+        } catch (err) {
+          openModal({
+            svg: '❗',
+            msg1: '삭제 실패',
+            msg2: err.response?.data?.message || '삭제 실패',
+            showCancel: false,
+          });
+        }
+      }
+    });
   };
 
   // 일정 수정
   const handleUpdate = async (event, editData) => {
+    // 제목 필수값 검사
+    if (!editData.title || editData.title.trim() === '') {
+      setEditForm(prev => ({ ...prev, title: prev.title || '' }));
+      openModal({
+        svg: '❗',
+        msg1: '입력 오류',
+        msg2: '제목을 입력해주세요.',
+        showCancel: false,
+      });
+      return;
+    }
     try {
       await axios.post(`http://localhost/schedule_update/${user_id}/${event.id}`, {
         title: editData.title,
@@ -128,27 +188,21 @@ export default function MyCalendar() {
       setDetailInfo({ open: false, event: null, x: 0, y: 0 });
       setEditForm(null);
       fetchEvents();
+      openModal({
+        svg: '✔',
+        msg1: '확인',
+        msg2: '일정 수정을 완료하였습니다.',
+        showCancel: false,
+      });
     } catch (err) {
-      alert('수정 실패');
+      openModal({
+        svg: '❗',
+        msg1: '수정 실패',
+        msg2: err.response?.data?.message || '수정 실패',
+        showCancel: false,
+      });
     }
   };
-
-  // 외부 클릭 시 모달 닫기
-  useEffect(() => {
-    const onClickOutside = (e) => {
-      if (inputInfo.open && inputModalRef.current && !inputModalRef.current.contains(e.target)) {
-        setInputInfo({ ...inputInfo, open: false });
-      }
-      if (detailInfo.open && detailModalRef.current && !detailModalRef.current.contains(e.target)) {
-        setDetailInfo({ open: false, event: null, x: 0, y: 0 });
-        setEditForm(null);
-      }
-    };
-    if (inputInfo.open || detailInfo.open) {
-      window.addEventListener('mousedown', onClickOutside);
-    }
-    return () => window.removeEventListener('mousedown', onClickOutside);
-  }, [inputInfo, detailInfo]);
 
   // 일정 렌더(hover시 삭제)
   const renderEventContent = (eventInfo) => (
@@ -240,7 +294,11 @@ export default function MyCalendar() {
               ref={inputRef}
               type="text"
               value={form.title}
-              onChange={e => setForm({ ...form, title: e.target.value })}
+              onChange={e => {
+                setForm({ ...form, title: e.target.value });
+                setErrors({ ...errors, title: false });
+              }}
+              className={errors.title ? 'input-error' : ''}
             />
             <label className='label'>내용</label>
             <input
@@ -309,6 +367,7 @@ export default function MyCalendar() {
                     type="text"
                     value={editForm.title}
                     onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                    className={!editForm.title ? 'input-error' : ''}
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -373,6 +432,7 @@ export default function MyCalendar() {
         )}
       </div>
       <Footer />
+      <AlertModal/>
     </div>
   );
 }
