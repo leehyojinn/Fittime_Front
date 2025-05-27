@@ -45,6 +45,9 @@ const TrainerMyPage = () => {
     const [subImages, setSubImages] = useState(trainer.sub_images);
     const [mainImageFile, setMainImageFile] = useState(null);
     const [subImageFiles, setSubImageFiles] = useState(null);
+    const [reservation, setReservation] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [schedules, setSchedules] = useState([]);
 
     const handleMainImageChange = e => {
         if (e.target.files[0]) {
@@ -71,17 +74,38 @@ const TrainerMyPage = () => {
 
     useEffect(() => {
         getTrainer();
+        getReservation();
+        getReviews();
+        getSchedules();
     }, []);
 
     const getTrainer = async () => {
         await axios.post('http://localhost/detail/profile',{"trainer_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
             .then(({data}) => {
-                console.log(data);
+                //console.log(data);
                 setTrainer(data);
                 setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
                 setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
                 //console.log(profileImage);
             })
+    }
+
+    const getReservation = async () =>{
+        const {data} = await axios.post('http://localhost/list/trainerBook',{"trainer_id":sessionStorage.getItem("user_id")});
+        //console.log(data);
+        setReservation(data.bookingList);
+    }
+
+    const getReviews = async () => {
+        const {data} = await axios.post('http://localhost/list/reviewByTrainer',{"trainer_id":sessionStorage.getItem("user_id")});
+        setReviews(data.reviews);
+        console.log(data);
+    }
+
+    const getSchedules = async () => {
+        const {data} = await axios.post(`http://localhost/schedule_list/${sessionStorage.getItem("user_id")}`);
+        setSchedules(data.list);
+        console.log(data);
     }
 
     const edit = async() =>{
@@ -208,7 +232,7 @@ const TrainerMyPage = () => {
                 <div className="mypage-profile-row position_rel">
                     <span className="label font_weight_500">비밀번호</span>
                     <input type={passwordVisible ? "text" : "password"} className='width_fit' defaultValue={trainer.password} name='password' value={trainer.password} onChange={changeTrainer} />
-                    <span className="material-symbols-outlined password_position" onClick={togglePasswordVisibility}>visibility</span>
+                    <span className="material-symbols-outlined mypage_password_position" onClick={togglePasswordVisibility}>visibility</span>
                 </div> : ''}
                 <button className="btn white_color label mr_10" onClick={edit}>
                     <FaEdit /> {editMode ? '수정완료' : '정보수정'}
@@ -225,13 +249,13 @@ const TrainerMyPage = () => {
                     <tr><th>회원</th><th>연락처</th><th>상품</th><th>날짜</th><th>시간</th><th>상태</th></tr>
                 </thead>
                 <tbody>
-                    {mockTrainerReservations.map(r=>(
+                    {reservation.map(r=>(
                     <tr key={r.reservation_idx}>
-                        <td>{r.member_name}</td>
-                        <td>{r.phone}</td>
+                        <td>{r.user_name}</td>
+                        <td>{r.user_phone}</td>
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
-                        <td>{r.start_time}~{r.end_time}</td>
+                        {r.exercise_level === 'class'?<td>{r.class_start_time}~{r.class_end_time}</td>:<td>{r.start_time}~{r.end_time}</td>}
                         <td>{r.status}</td>
                     </tr>
                     ))}
@@ -245,12 +269,12 @@ const TrainerMyPage = () => {
                     <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th></tr>
                 </thead>
                 <tbody>
-                    {mockTrainerReviews.map(r=>(
+                    {reviews.map(r=>(
                     <tr key={r.review_id}>
-                        <td>{r.member_name}</td>
+                        <td>{r.user_name}</td>
                         <td>{r.rating}</td>
                         <td>{r.content}</td>
-                        <td>{r.date}</td>
+                        <td>{r.reg_date}</td>
                     </tr>
                     ))}
                 </tbody>
@@ -263,12 +287,12 @@ const TrainerMyPage = () => {
                     <tr><th>일정명</th><th>시작</th><th>종료</th><th>구분</th></tr>
                 </thead>
                 <tbody>
-                    {mockSchedules.map(s=>(
-                    <tr key={s.schedule_id}>
+                    {schedules.map(s=>(
+                    <tr key={s.schedule_idx}>
                         <td>{s.title}</td>
                         <td>{s.start_time}</td>
                         <td>{s.end_time}</td>
-                        <td>{s.type}</td>
+                        <td>{s.status}</td>
                     </tr>
                     ))}
                 </tbody>

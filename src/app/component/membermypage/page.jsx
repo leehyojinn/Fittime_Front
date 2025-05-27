@@ -179,7 +179,7 @@ const MemberMyPage = () => {
               <div className="mypage-profile-row position_rel">
                 <span className="label font_weight_500">비밀번호</span>
                 <input type={passwordVisible ? "text" : "password"} className='width_fit' defaultValue={user.password} name='password' value={user.password} onChange={changeUser} />
-                <span className="material-symbols-outlined password_position" onClick={togglePasswordVisibility}>visibility</span>
+                <span className="material-symbols-outlined mypage_password_position" onClick={togglePasswordVisibility}>visibility</span>
               </div> : ''}
             </div>
               <button className="btn white_color label margin_0_auto" onClick={edit} >
