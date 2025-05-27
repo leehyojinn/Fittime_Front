@@ -111,8 +111,8 @@ const MemberMyPage = () => {
     setEditMode(!editMode);
     // console.log(editMode);
     if(editMode){
+      const formData = new FormData();
       if(profileFile){
-        const formData = new FormData();
         formData.append('file',profileFile);
         formData.append('param',new Blob([JSON.stringify(user)], { type: "application/json" }));
         const {data} = await axios.post('http://localhost/update/Profile', formData, {
@@ -121,8 +121,11 @@ const MemberMyPage = () => {
         console.log(data);
       }
       else {
+        formData.append('param',new Blob([JSON.stringify(user)], { type: "application/json" }));
         // console.log('user',user);
-        const {data} = await axios.post('http://localhost/update/Profile', user);
+        const {data} = await axios.post('http://localhost/update/Profile', formData, {
+          headers: {'content-type': 'multipart/form-data'}
+        });
         // console.log('data',data);
         await getUser();
       }

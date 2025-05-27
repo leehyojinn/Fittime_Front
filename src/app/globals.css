@@ -319,6 +319,10 @@ table {
     width: fit-content;
 }
 
+.right_padding{
+    padding-right: 40px;
+}
+
 
 
 .justify_con_center{
@@ -460,6 +464,14 @@ input[type=file]::file-selector-button:hover{
   top: 50%;
   transform : translateY(-50%);
   cursor: pointer;
+}
+
+.mypage_password_position{
+    position: absolute;
+    left: 260px;
+    top: 50%;
+    transform : translateY(-50%);
+    cursor: pointer;
 }
 
 .footer{
