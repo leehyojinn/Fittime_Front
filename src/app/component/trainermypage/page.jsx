@@ -274,7 +274,7 @@ const TrainerMyPage = () => {
                         <td>{r.user_name}</td>
                         <td>{r.rating}</td>
                         <td>{r.content}</td>
-                        <td>{r.reg_date}</td>
+                        <td>{r.reg_date.substring(0,10)}</td>
                     </tr>
                     ))}
                 </tbody>

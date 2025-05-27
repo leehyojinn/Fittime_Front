@@ -1678,6 +1678,29 @@ table tr.selected {
   border-radius: 100px;
 }
 
+.tag_List {
+    padding: 5px 10px;
+    box-sizing: border-box;
+    background-color: #dee2e6;
+    color: black;
+    font-size: 1.1rem;
+    border-radius: 100px;
+    display: inline-block;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+.tag_List.selected{
+    padding: 5px 10px;
+    box-sizing: border-box;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 1.1rem;
+    border-radius: 100px;
+    display: inline-block;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
 .no-results {
   background-color: #fff;
   border-radius: var(--border-radius);
