@@ -6,6 +6,7 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
 import {usePasswordStore} from "@/app/zustand/store";
+import {useRouter} from "next/navigation";
 
 const mockUser = {
   user_id: 'user123',
@@ -55,6 +56,7 @@ const MemberMyPage = () => {
   const [profileFile, setProfileFile] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const router = useRouter();
 
   // 프로필 이미지 변경 핸들러
   const handleImageChange = (e) => {
@@ -65,6 +67,10 @@ const MemberMyPage = () => {
       setProfileFile(e.target.files[0]);
     }
   };
+
+  const handleReviewClick = (center_id,trainer_id,reservation_idx)=>{
+    router.push(`/component/review?center_id=${center_id}&trainer_id=${trainer_id}&reservation_idx=${reservation_idx}`);
+  }
 
   useEffect(() => {
     getUser();
@@ -213,7 +219,7 @@ const MemberMyPage = () => {
                     <td>{r.start_time}~{r.end_time}</td>
                     <td>{r.trainer_name}</td>
                     <td>{r.status}</td>
-                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" style={{background:'#444444'}}>리뷰쓰기</button></td>
+                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" style={{background:'#444444'}} onClick={()=>handleReviewClick(r.center_id,r.trainer_id,r.reservation_idx)}>리뷰쓰기</button></td>
                   </tr>
                 ))}
               </tbody>
