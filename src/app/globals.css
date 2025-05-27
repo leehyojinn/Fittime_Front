@@ -3089,3 +3089,7 @@ table tr.selected {
 .text-center {
     text-align: center;
 }
+
+img {
+    width: 100%;
+}
