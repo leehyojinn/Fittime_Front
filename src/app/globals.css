@@ -1690,8 +1690,12 @@ table tr.selected {
     font-size: 1.1rem;
     border-radius: 100px;
     display: inline-block;
-    margin-right: 8px;
     white-space: nowrap;
+    cursor: pointer;
+}
+.tag_List:hover{
+  background-color: var(--primary-color) !important;
+  color: #fff;
 }
 .tag_List.selected{
     padding: 5px 10px;
@@ -1701,7 +1705,6 @@ table tr.selected {
     font-size: 1.1rem;
     border-radius: 100px;
     display: inline-block;
-    margin-right: 8px;
     white-space: nowrap;
 }
 

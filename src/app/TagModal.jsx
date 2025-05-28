@@ -90,7 +90,7 @@ function FindModal({ open, onClose }){
                 <h3 style={{fontSize: '15px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>태그 리스트</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <>
-                            <span style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}} >
+                            <span style={{display: 'grid', gridTemplateColumns:'repeat(3,1fr)', gap: '5px'}} >
                             {tags?.map((item,idx)=>{
                                 const isSelected = selectTags.includes(item.tag_idx);
                                 return(<span key={item.tag_idx} className={`tag_List ${isSelected ? 'selected' : ''}`} onClick={()=>{toggleTag(item.tag_idx)}}>{item.tag_name}</span>);
