@@ -10,7 +10,7 @@ import KakaoMap from '../map/kakaomap';
 const centerSample = {
   center_idx: 1,
   center_name: '헬스월드 강남점',
-  address: '서울 강남구 역삼동 123-45',
+  address: '서울시 성북구 장위동 316-2',
   contact: '02-1234-5678',
   image: '/center1.jpg',
   intro: '최신 장비와 쾌적한 환경의 24시간 프리미엄 헬스장',
@@ -93,8 +93,8 @@ const CenterDetail = () => {
                     <div className="review-submit-btn width_fit">예약 하기</div>
                 </Link>
             </div>
-            <div>
-                <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+            <div style={{margin:'50px 0'}}>
+                <KakaoMap address={centerSample.address}/>
             </div>
             {/* 리뷰 작성 인풋 */}
             <div className="center-review-write">

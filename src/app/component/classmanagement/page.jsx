@@ -4,47 +4,11 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import axios from 'axios';
 
 const ClassManagement = () => {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
-  const [classes, setClasses] = useState([
-    { 
-      class_idx: 1, 
-      class_name: '요가 클래스',
-      start_time: '09:00',
-      end_time: '10:00',
-      day_of_week: '월,수,금',
-      max_count: 15,
-      trainer_id: 'trainer1',
-      trainer_name: '김트레이너',
-      product_id: 1,
-      product_name: '요가 클래스 상품'
-    },
-    { 
-      class_idx: 2, 
-      class_name: '필라테스 초급반',
-      start_time: '13:00',
-      end_time: '14:00',
-      day_of_week: '화,목',
-      max_count: 10,
-      trainer_id: 'trainer2',
-      trainer_name: '박트레이너',
-      product_id: 2,
-      product_name: '필라테스 상품'
-    },
-    { 
-      class_idx: 3, 
-      class_name: '크로스핏 고급반',
-      start_time: '18:00',
-      end_time: '19:30',
-      day_of_week: '화,목,토',
-      max_count: 12,
-      trainer_id: 'trainer3',
-      trainer_name: '이트레이너',
-      product_id: 3,
-      product_name: '크로스핏 상품'
-    }
-  ]);
+  const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [trainers, setTrainers] = useState([
     { user_id: 'trainer1', user_name: '김트레이너' },
@@ -72,34 +36,34 @@ const ClassManagement = () => {
   
   const selectedDays = watch('days') || [];
 
-  const handleAddClass = (data) => {
-    // API 호출하여 클래스 등록
-    const selectedTrainer = trainers.find(trainer => trainer.user_id === data.trainer_id);
-    const selectedProduct = products.find(product => product.product_id === parseInt(data.product_id));
-    
+  const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+
+  const handleAddClass = async(item) => {
     const newClass = {
-      class_idx: classes.length + 1,
-      class_name: data.class_name,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      day_of_week: data.days.join(','),
-      max_count: Number(data.max_count),
-      trainer_id: data.trainer_id,
-      trainer_name: selectedTrainer?.user_name || '',
-      product_id: parseInt(data.product_id),
-      product_name: selectedProduct?.product_name || ''
+      start_time: item.start_time,
+      end_time: item.end_time,
+      week: item.days.join(','),
+      max_count: Number(item.max_count),
+      trainer_id: 'Lee', // 소속 트레이너 넣기
+      center_id: user_id,
     };
     
-    setClasses([...classes, newClass]);
-    reset();
+    const {data} = await axios.post('http://localhost/insert/class',newClass);
+
+    if(data.success){
+      setClasses([...classes, newClass]);
+      reset();
+      alert('등록성공');
+    }else{
+      alert('등록실패');
+    }
+
   };
 
   const handleSelectClass = (classItem) => {
     setSelectedClass(classItem);
     setIsEditing(false);
-    
     // 선택한 클래스 정보를 폼에 설정
-    setValue('class_name', classItem.class_name);
     setValue('start_time', classItem.start_time);
     setValue('end_time', classItem.end_time);
     setValue('days', classItem.day_of_week.split(','));
@@ -121,7 +85,6 @@ const ClassManagement = () => {
       classItem.class_idx === selectedClass.class_idx 
         ? {
             ...classItem,
-            class_name: data.class_name,
             start_time: data.start_time,
             end_time: data.end_time,
             day_of_week: data.days.join(','),
@@ -137,7 +100,6 @@ const ClassManagement = () => {
     setClasses(updatedClasses);
     setSelectedClass({
       ...selectedClass,
-      class_name: data.class_name,
       start_time: data.start_time,
       end_time: data.end_time,
       day_of_week: data.days.join(','),
@@ -204,7 +166,6 @@ const ClassManagement = () => {
                     <table className="classes-table">
                         <thead>
                         <tr>
-                            <th>클래스명</th>
                             <th>요일</th>
                             <th>시작 시간</th>
                             <th>종료 시간</th>
@@ -220,7 +181,6 @@ const ClassManagement = () => {
                             className={selectedClass?.class_idx === classItem.class_idx ? 'selected' : ''}
                             onClick={() => handleSelectClass(classItem)}
                             >
-                            <td>{classItem.class_name}</td>
                             <td>{classItem.day_of_week}</td>
                             <td>{classItem.start_time}</td>
                             <td>{classItem.end_time}</td>
@@ -247,16 +207,6 @@ const ClassManagement = () => {
                     <h3 className='middle_title2 mb_20'>{selectedClass ? (isEditing ? '클래스 수정' : '클래스 상세') : '새 클래스 등록'}</h3>
                     
                     <form onSubmit={handleSubmit(selectedClass && isEditing ? handleUpdateClass : handleAddClass)}>
-                        <div className="form-group">
-                        <label htmlFor="class_name" className='label'>클래스명</label>
-                        <input 
-                            id="class_name"
-                            type="text"
-                            {...register("class_name", { required: "클래스명을 입력해주세요" })}
-                            disabled={selectedClass && !isEditing}
-                        />
-                        {errors.class_name && <span className="error-message">{errors.class_name.message}</span>}
-                        </div>
                         
                         <div className="form-group">
                         <label htmlFor="days" className='label'>운영 요일</label>
