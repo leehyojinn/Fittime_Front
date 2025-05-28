@@ -9,6 +9,7 @@ import axios from "axios";
 import FindModal from "@/app/FindModal";
 import findModal from "@/app/FindModal";
 import TagModal from "@/app/TagModal";
+import {useRouter} from "next/navigation";
 
 const centerProfileSample = {
     center_idx: 1,
@@ -58,9 +59,12 @@ const CenterMyPage = () => {
   const [subImages, setSubImages] = useState(null);
   const [subImageFiles, setSubImageFiles] = useState(null);
   const [tagModalOpen, setTagModalOpen] = useState(false);
+  const router = useRouter();
+  const [trainers, setTrainers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [reservations, setReservations] = useState([]);
 
-  
-  // 대표이미지 변경
+    // 대표이미지 변경
     const handleMainImageChange = e => {
     if (e.target.files[0]) {
         setMainImage(URL.createObjectURL(e.target.files[0]));
@@ -75,6 +79,7 @@ const CenterMyPage = () => {
         setSubImageFiles(files);
     };
 
+    // 입력
     const changeCenter = (e) =>{
         let {name,value} = e.target;
         // console.log(value.address);
@@ -84,15 +89,34 @@ const CenterMyPage = () => {
         }))
     }
 
+    // 태그 modal 창 닫기
     const tagModalClose = async() =>{
         setTagModalOpen(false);
         await getCenter();
     }
 
+    // Calendar page 이동
+    const handleMoveCalendar = () =>{
+        router.push('/component/calendar');
+    }
+
+    // Product page 이동
+    const handleMoveProduct = () =>{
+        router.push('/component/product');
+    }
+
+    // Trainer detail page 이동
+    const handleMoveTrainerDetail = (idx) =>{
+        router.push(`/component/trainerdetail?trainer_idx=${idx}`);
+    }
+
     useEffect(() => {
         getCenter();
+        getTrainer();
+        getProducts();
     }, []);
 
+    // 센터 정보 가져오기
     const getCenter = async () =>{
         const {data} = await axios.post('http://localhost/detail/profile',{"center_id":sessionStorage.getItem('user_id'), "user_level":sessionStorage.getItem('user_level')});
         console.log(data);
@@ -101,6 +125,45 @@ const CenterMyPage = () => {
         setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
         console.log(tagModalOpen);
     }
+
+    // 상품 리스트 가져오기
+    const getProducts = async () =>{
+        const {data} = await axios.post('http://localhost/list/product',{'center_id':sessionStorage.getItem('user_id')});
+        console.log(data.products);
+        setProducts(data.products);
+    }
+
+    // 상품 활성화/비활성화
+    const handleProductStaus = async (product_idx)=>{
+        const {data} = await axios.get(`http://localhost/update/productStatus/${product_idx}`);
+        console.log(data);
+        await getProducts();
+    }
+
+    // 소속 트레이너 리스트 가져오기
+    const getTrainer = async () =>{
+        const {data} = await axios.post(`http://localhost/list/trainers/${sessionStorage.getItem('user_id')}`);
+        console.log(data);
+        setTrainers(data.trainers);
+    }
+
+    // 소속 트레이너 삭제
+    const deleteTrainer = async (idx) =>{
+        const {data} = await axios.post(`http://localhost/del/trainers/${idx}`);
+        console.log(data);
+        if(data.success){
+            await getTrainer();
+        }
+    }
+
+    // 예약 리스트 가져오기
+    const getReservations = async () =>{
+        const {data} = await axios.post('http://localhost/list/centerBook',{'center_id':sessionStorage.getItem('user_id')});
+        console.log(data);
+        setReservations(data.bookingList);
+    }
+
+
 
     const edit = async() =>{
         setEditMode(!editMode);
@@ -149,10 +212,6 @@ const CenterMyPage = () => {
             // console.log('data',data);
             await getCenter();
         }
-    }
-
-    const findmodal = () =>{
-
     }
 
   return (
@@ -229,23 +288,23 @@ const CenterMyPage = () => {
                     <tr><th>이름</th><th>연락처</th><th>별점</th><th>프로필</th><th>관리</th></tr>
                 </thead>
                 <tbody>
-                    {/*{center.trainers.map(t=>(
-                    <tr key={t.user_id}>
+                    {trainers?.map(t=>(
+                    <tr key={t.trainer_id}>
                         <td>
-                        <img src={t.profile_image} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
-                        {t.user_name}
+                        <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
+                        {t.name}
                         </td>
                         <td>{t.phone}</td>
                         <td>{t.rating}</td>
                         <td>
-                        <button className="mypage-small-btn">보기</button>
+                        <button className="mypage-small-btn" onClick={()=>handleMoveTrainerDetail(t.trainer_idx)}>보기</button>
                         </td>
                         <td>
-                        <button className="mypage-small-btn mr_10"><FaEdit />수정</button>
-                        <button className="mypage-small-btn"><FaTrash />삭제</button>
+                        {/*<button className="mypage-small-btn mr_10"><FaEdit />수정</button>*/}
+                        <button className="mypage-small-btn" onClick={()=>deleteTrainer(t.trainer_idx)}><FaTrash />삭제</button>
                         </td>
                     </tr>
-                    ))}*/}
+                    ))}
                 </tbody>
                 </table>
                 <button className="btn white_color label" onClick={findModal}><FaPlus /> 트레이너 추가</button>
@@ -257,20 +316,24 @@ const CenterMyPage = () => {
                     <tr><th>상품명</th><th>가격</th><th>할인율</th><th>관리</th></tr>
                 </thead>
                 <tbody>
-                    {/*{center.products.map(p=>(*/}
-                    {/*<tr key={p.product_idx}>*/}
-                    {/*    <td>{p.product_name}</td>*/}
-                    {/*    <td>{p.price.toLocaleString()}원</td>*/}
-                    {/*    <td>{p.discount_rate}%</td>*/}
-                    {/*    <td>*/}
-                    {/*    <button className="mypage-small-btn mr_10"><FaEdit />수정</button>*/}
-                    {/*    <button className="mypage-small-btn"><FaTrash />비활성화</button>*/}
-                    {/*    </td>*/}
-                    {/*</tr>*/}
-                    {/*))}*/}
+                    {products?.map(p=>(
+                    <tr key={p.product_idx}>
+                        <td>{p.product_name}</td>
+                        <td>{p.price.toLocaleString()}원</td>
+                        <td>{p.discount_rate}%</td>
+                        <td>
+                        <button className="mypage-small-btn mr_10" onClick={handleMoveProduct}><FaEdit />수정</button>
+                        {p.status === "1" ?
+                            <button className="mypage-small-btn" onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />비활성화</button>
+                        :
+                            <button className="mypage-small-btn" onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />활성화</button>
+                        }
+                        </td>
+                    </tr>
+                    ))}
                 </tbody>
                 </table>
-                <button className="btn white_color label"><FaPlus /> 상품 추가</button>
+                <button className="btn white_color label" onClick={handleMoveProduct}><FaPlus /> 상품 추가</button>
             </div>
             <div className="mypage-section">
                 <h4 className='label text_left font_weight_500'><FaCalendarAlt /> 예약자 명단</h4>
@@ -328,7 +391,7 @@ const CenterMyPage = () => {
                     ))}
                 </tbody>
                 </table>
-                <button className="btn white_color label"><FaPlus /> 일정 추가</button>
+                <button className="btn white_color label" onClick={handleMoveCalendar}><FaPlus /> 일정 추가</button>
             </div>
             </div>
         </div>

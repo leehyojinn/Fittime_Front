@@ -6,6 +6,7 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
+import {useSearchParams} from "next/navigation";
 
 const trainerSample = {
   user_id: 'trainer1',
@@ -31,6 +32,9 @@ const TrainerDetail = () => {
   const [hoverStar, setHoverStar] = useState(0);
   const [files, setFiles] = useState([]);
   const [reviews, setReviews] = useState(trainerSample.reviews);
+
+  const searchParams = useSearchParams();
+  const trainer_idx = searchParams.get('trainer_idx');
 
   // 별점 클릭/호버
   const handleStarClick = (value) => setStar(value);

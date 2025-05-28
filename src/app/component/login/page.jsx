@@ -82,6 +82,9 @@ function LoginPage() {
             sessionStorage.setItem('user_id', form.user_id);
             sessionStorage.setItem('token', data.token);
             sessionStorage.setItem('user_level', data.user_level);
+            if(data.user_level === 3){
+                sessionStorage.setItem('exercise_level',data.exercise_level);
+            }
             window.location.href = '/';
         } else {
             openModal({
