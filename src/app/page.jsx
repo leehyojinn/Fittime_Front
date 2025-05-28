@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
@@ -8,16 +8,31 @@ import '@splidejs/react-splide/css';
 import KakaoMap from './component/map/kakaomap';
 import AlertModal from './component/alertmodal/page';
 import { FaStar } from 'react-icons/fa';
+import axios from 'axios';
 
 
 const MainPage = () => {
 
     const [hoverStar, setHoverStar] = useState(0);
-      const [star, setStar] = useState(0);
-  // 별점 클릭/호버
-  const handleStarClick = (value) => setStar(value);
-  const handleStarHover = (value) => setHoverStar(value);
-  const handleStarOut = () => setHoverStar(0);
+    const [star, setStar] = useState(0);
+    // 별점 클릭/호버
+    const handleStarClick = (value) => setStar(value);
+    const handleStarHover = (value) => setHoverStar(value);
+    const handleStarOut = () => setHoverStar(0);
+
+    const [centerList, setCenterList] = useState([]);
+    const [trainerList, setTrainerList] = useState([]);
+
+    const center_list = async () => {
+        let { data } = await axios.post('http://localhost/center_rating/list');
+        if (data && data.list) setCenterList(data.list);
+    };
+    const trainer_list = async () => {
+        let { data } = await axios.post('http://localhost/trainer_rating/list');
+        if (data && data.list) setTrainerList(data.list);
+    };
+
+    useEffect(() => { center_list(); trainer_list();}, []);
 
     return (
         <div>
@@ -51,63 +66,58 @@ const MainPage = () => {
                 {/* 두번째 모듈 인기있는 헬스장 영역 */}
                 <div className='padding_120_0 wrap'>
                     <div className='mb_40 flex column gap_10'>
-                        <p className='title'>헬스장 리스트</p>
-                        <p className='middle_title'>가장 인기있는 헬스장 리스트를 확인해보세요!</p>
+                        <p className='title'>센터 리스트</p>
+                        <p className='middle_title'>가장 인기있는 센터 리스트를 확인해보세요!</p>
                         <p className='content_text'>별점을 통해 가장 인기있는 리스트들을 모아두었습니다.</p>
                     </div>
-                    <Splide
-                        aria-label="Splide Basic Example"
+                        <Splide
+                        aria-label="센터 리스트"
                         options={{
                             type: 'loop',
-                            perPage: 3,
+                            perPage: 5,
                             autoplay: true,
                             gap: "10px",
-                            padding: {
-                                left: '5rem',
-                                right: '5rem'
-                            }
+                            pagination : false,
+                            padding: { left: '5rem', right: '5rem' }
                         }}>
-                        <SplideSlide>
-                            <div>
-                                <div style={{ background: "#ccc", height: '200px' }}>
-                                    <p>이미지 영역</p>
+                        {/* 추후 링크걸기 */}
+                        {centerList.map((center, idx) => (
+                            <SplideSlide key={center.center_id || idx}>
+                                <div className='flex column'>
+                                    {/* 대표 이미지 */}
+                                    <div
+                                        style={{
+                                            background: center.profile_image
+                                                ? `url('http://localhost/center_profile/${center.profile_image}') center/cover no-repeat`
+                                                : "#ccc",
+                                            aspectRatio:'1/1',
+                                            borderRadius: 12
+                                        }}
+                                    />
+                                    <div className='flex column gap_10 mt_20'>
+                                        <p className='content_text' style={{ fontWeight: 600, fontSize: 20 }}>
+                                            {center.center_name}
+                                        </p>
+                                        <p className='label' style={{ color: '#888', minHeight: 40 }}>
+                                            {center.career}
+                                        </p>
+                                        {/* 별점 + 참여인원수 */}
+                                        <div className="flex align_center gap_8 justify_con_center">
+                                            {/* 별점(소수점) 표시 */}
+                                            <span style={{ color: "#FFC107", fontSize: 22, marginRight: 4 }}>
+                                                <FaStar />
+                                            </span>
+                                            <span style={{ fontWeight: 600, fontSize: 18 }}>
+                                                {center.avg_rating ? Number(center.avg_rating).toFixed(1) : "0.0"}
+                                            </span>
+                                            <span style={{ color: "#888", marginLeft: 6, fontSize: 15 }}>
+                                                ({center.rating_count || 0})
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className='flex column gap_10 mt_20'>
-                                    <p className='content_text'>제목 영역</p>
-                                    <p className='label'>내용 영역</p>
-                                    <p>      
-                                        {[1,2,3,4,5].map(i=>(
-                                                            <span key={i} style={{position:'relative',display:'inline-block'}}>
-                                                                <FaStar
-                                                                className="star"
-                                                                color={((hoverStar||star) >= i) ? '#FFC107' : '#e4e5e9'}
-                                                                onMouseEnter={()=>handleStarHover(i)}
-                                                                onMouseLeave={handleStarOut}
-                                                                onClick={()=>handleStarClick(i)}
-                                                                style={{cursor:'pointer',fontSize:'2rem'}}
-                                                                />
-                                                                {/* 0.5점 지원 */}
-                                                                <FaStar
-                                                                className="star half"
-                                                                color={((hoverStar||star) >= i-0.5) && ((hoverStar||star)<i) ? '#FFC107':'transparent'}
-                                                                style={{
-                                                                    cursor:'pointer',
-                                                                    fontSize:'2rem',
-                                                                    position:'absolute',
-                                                                    left:0,
-                                                                    zIndex:1,
-                                                                    clipPath:'inset(0 50% 0 0)'
-                                                                }}
-                                                                onMouseEnter={()=>handleStarHover(i-0.5)}
-                                                                onMouseLeave={handleStarOut}
-                                                                onClick={()=>handleStarClick(i-0.5)}
-                                                                />
-                                                            </span>
-                                                            ))}
-                                    </p>
-                                </div>
-                            </div>
-                        </SplideSlide>
+                            </SplideSlide>
+                        ))}
                     </Splide>
                 </div>
             </div>
@@ -125,55 +135,49 @@ const MainPage = () => {
                             aria-label="Splide Basic Example"
                             options={{
                                 type: 'loop',
-                                perPage: 3,
+                                perPage: 5,
                                 autoplay: true,
                                 gap: "10px",
                                 padding: {
                                     left: '5rem',
                                     right: '5rem'
-                                }
+                                },
+                                pagination : false,
                             }}>
-                            <SplideSlide>
-                                <div>
-                                    <div style={{ background: "#ccc", height: '200px' }}>
-                                        <p>이미지 영역</p>
+                                {trainerList.map((trainer, idx) => (
+                                <SplideSlide key={trainer.trainer_id || idx}>
+                                    <div className='flex column'>
+                                        {/* 대표 이미지 */}
+                                        <div
+                                            style={{
+                                                background: trainer.profile_image
+                                                    ? `url('http://localhost/center_profile/${trainer.profile_image}') center/cover no-repeat`
+                                                    : "#ccc",
+                                                aspectRatio:'1/1',
+                                                borderRadius: 12
+                                            }}
+                                        />
+                                        <div className='flex column gap_10 mt_20'>
+                                            <p className='content_text' style={{ fontWeight: 600, fontSize: 20 }}>
+                                                {trainer.trainer_name}
+                                            </p>
+                                            {/* 별점 + 참여인원수 */}
+                                            <div className="flex align_center gap_8 justify_con_center">
+                                                {/* 별점(소수점) 표시 */}
+                                                <span style={{ color: "#FFC107", fontSize: 22, marginRight: 4 }}>
+                                                    <FaStar />
+                                                </span>
+                                                <span style={{ fontWeight: 600, fontSize: 18 }}>
+                                                    {trainer.avg_rating ? Number(trainer.avg_rating).toFixed(1) : "0.0"}
+                                                </span>
+                                                <span style={{ color: "#888", marginLeft: 6, fontSize: 15 }}>
+                                                    ({trainer.rating_count || 0})
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className='flex column gap_10 mt_20'>
-                                        <p className='content_text'>제목 영역</p>
-                                        <p className='label'>내용 영역</p>
-                                        <p>
-                                        {[1,2,3,4,5].map(i=>(
-                                                            <span key={i} style={{position:'relative',display:'inline-block'}}>
-                                                                <FaStar
-                                                                className="star"
-                                                                color={((hoverStar||star) >= i) ? '#FFC107' : '#e4e5e9'}
-                                                                onMouseEnter={()=>handleStarHover(i)}
-                                                                onMouseLeave={handleStarOut}
-                                                                onClick={()=>handleStarClick(i)}
-                                                                style={{cursor:'pointer',fontSize:'2rem'}}
-                                                                />
-                                                                {/* 0.5점 지원 */}
-                                                                <FaStar
-                                                                className="star half"
-                                                                color={((hoverStar||star) >= i-0.5) && ((hoverStar||star)<i) ? '#FFC107':'transparent'}
-                                                                style={{
-                                                                    cursor:'pointer',
-                                                                    fontSize:'2rem',
-                                                                    position:'absolute',
-                                                                    left:0,
-                                                                    zIndex:1,
-                                                                    clipPath:'inset(0 50% 0 0)'
-                                                                }}
-                                                                onMouseEnter={()=>handleStarHover(i-0.5)}
-                                                                onMouseLeave={handleStarOut}
-                                                                onClick={()=>handleStarClick(i-0.5)}
-                                                                />
-                                                            </span>
-                                                            ))}
-                                        </p>
-                                    </div>
-                                </div>
-                            </SplideSlide>
+                                </SplideSlide>
+                            ))}
                         </Splide>
                     </div>
                 </div>
