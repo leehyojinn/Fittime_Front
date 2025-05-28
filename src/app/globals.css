@@ -278,6 +278,10 @@ table {
     gap:10px;
 }
 
+.gap_3{
+  gap:3px;
+}
+
 .gap_20{
   gap: 20px;
 }
@@ -3128,3 +3132,72 @@ table tr.selected {
 img {
     width: 100%;
 }
+.rbc-calendar{
+  font-size: 1.4rem;
+}
+
+.rbc-day-bg{
+  cursor: pointer;
+}
+.rbc-toolbar-label {
+  font-size: 2.5rem;
+  font-weight: 700;
+  padding: 0 !important;
+}
+
+.rbc-day-bg:hover{
+  background-color: var(--gray-color) !important;
+}
+
+.rbc-selected-cell{
+  background-color: var(--gray-color) !important;
+  color: #fff !important;
+}
+
+.rbc-button-link{
+  color: inherit !important;
+}
+
+.rbc-row-segment :hover {
+  background-color: var(--primary-color) !important;
+  border: none !important;
+}
+
+.rbc-btn-group {
+  display: flex !important;
+  gap: 5px !important;
+}
+
+.rbc-btn-group button {
+  background-color: var(--primary-color) !important;
+  border-radius: 5px !important;
+  color: #fff !important;
+}
+
+.rbc-btn-group button:hover {
+  background-color: var(--primary-color-2) !important;
+  color: #000 !important;
+}
+
+.no_wrap {
+  flex-wrap: nowrap !important;
+}
+
+.bg_2196f3{
+  background-color: #2196f3;
+}
+
+.bg_e57373{
+  background-color: #e57373;
+}
+
+.bg_ffd54f{
+  background-color: #ffd54f;
+}
+
+.event_setting{
+  padding: 3px 5px;
+  box-sizing: border-box;
+  border-radius: 5px;
+}
+

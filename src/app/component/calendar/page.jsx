@@ -4,17 +4,34 @@ import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Header from '../../Header';
 import Footer from '../../Footer';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
+import format from 'date-fns/format';
+import parse from 'date-fns/parse';
+import startOfWeek from 'date-fns/startOfWeek';
+import getDay from 'date-fns/getDay';
+import addDays from 'date-fns/addDays';
+import ko from 'date-fns/locale/ko';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useAlertModalStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
+import CustomToolbar from './CustomToolbar';
+
+const locales = {
+  'ko': ko,
+};
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
+  getDay,
+  locales,
+});
 
 const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
 export default function MyCalendar() {
   const [events, setEvents] = useState([]);
-  const [inputInfo, setInputInfo] = useState({ open: false, date: '', x: 0, y: 0 });
+  const [inputInfo, setInputInfo] = useState({ open: false, start: null, end: null, x: 0, y: 0 });
   const [form, setForm] = useState({
     title: '',
     content: '',
@@ -25,6 +42,7 @@ export default function MyCalendar() {
   const [detailInfo, setDetailInfo] = useState({ open: false, event: null, x: 0, y: 0 });
   const [hoveredEventId, setHoveredEventId] = useState(null);
   const [editForm, setEditForm] = useState(null);
+  const [view, setView] = useState('month');
 
   // 에러 상태
   const [errors, setErrors] = useState({});
@@ -34,6 +52,12 @@ export default function MyCalendar() {
 
   const { openModal } = useAlertModalStore();
 
+  const STATUS_COLORS = {
+    '일정': '#2196f3', // 파랑
+    '휴무': '#e57373', // 빨강
+    '예약': '#ffd54f'  // 노랑
+  };
+
   // 일정 리스트 불러오기
   const fetchEvents = async () => {
     try {
@@ -42,8 +66,10 @@ export default function MyCalendar() {
         res.data.list.map(item => ({
           id: item.schedule_idx,
           title: item.title,
-          date: item.date,
-          extendedProps: { ...item }
+          start: new Date(item.start_date),
+          end: new Date(item.end_date),
+          allDay: true,
+          resource: { ...item }
         }))
       );
     } catch (err) {
@@ -60,13 +86,17 @@ export default function MyCalendar() {
     fetchEvents();
   }, []);
 
-  // 날짜 클릭: 등록 인풋 오픈
-  const handleDateClick = (info) => {
+  // 날짜 클릭: 등록 인풋 오픈 (단일 날짜)
+  const handleSelectSlot = (slotInfo) => {
+    // slotInfo.start, slotInfo.end: Date 객체
+    // slotInfo.action: 'select', 'click', etc.
+    const isSingleDay = format(slotInfo.start, 'yyyy-MM-dd') === format(addDays(slotInfo.end, -1), 'yyyy-MM-dd');
     setInputInfo({
       open: true,
-      date: info.dateStr,
-      x: info.jsEvent.clientX,
-      y: info.jsEvent.clientY
+      start: slotInfo.start,
+      end: addDays(slotInfo.end, -1), // end는 inclusive로 맞춤
+      x: 0,
+      y: 0
     });
     setForm({
       title: '',
@@ -82,19 +112,18 @@ export default function MyCalendar() {
   };
 
   // 일정 클릭: 상세정보 모달
-  const handleEventClick = (info) => {
+  const handleSelectEvent = (event) => {
     setDetailInfo({
       open: true,
-      event: info.event,
-      x: info.jsEvent.clientX,
-      y: info.jsEvent.clientY
+      event: event,
+      x: 0,
+      y: 0
     });
     setEditForm(null);
   };
 
   // 일정 등록
   const handleRegister = async () => {
-    // 제목 필수값 검사
     if (!form.title || form.title.trim() === '') {
       setErrors({ title: true });
       openModal({
@@ -115,7 +144,8 @@ export default function MyCalendar() {
         user_id: user_id,
         title: form.title,
         content: form.content,
-        date: inputInfo.date,
+        start_date: format(inputInfo.start, 'yyyy-MM-dd'),
+        end_date: format(inputInfo.end, 'yyyy-MM-dd'),
         start_time: form.start_time,
         end_time: form.end_time,
         status: form.status
@@ -165,7 +195,6 @@ export default function MyCalendar() {
 
   // 일정 수정
   const handleUpdate = async (event, editData) => {
-    // 제목 필수값 검사
     if (!editData.title || editData.title.trim() === '') {
       setEditForm(prev => ({ ...prev, title: prev.title || '' }));
       openModal({
@@ -180,7 +209,8 @@ export default function MyCalendar() {
       await axios.post(`http://localhost/schedule_update/${user_id}/${event.id}`, {
         title: editData.title,
         content: editData.content,
-        date: event.extendedProps.date,
+        start_date: format(event.start, 'yyyy-MM-dd'),
+        end_date: format(addDays(event.end, -1), 'yyyy-MM-dd'),
         start_time: editData.start_time,
         end_time: editData.end_time,
         status: editData.status
@@ -204,48 +234,35 @@ export default function MyCalendar() {
     }
   };
 
-  // 일정 렌더(hover시 삭제)
-  const renderEventContent = (eventInfo) => (
-    <div
-      onMouseEnter={() => setHoveredEventId(eventInfo.event.id)}
-      onMouseLeave={() => setHoveredEventId(null)}
-      style={{
-        position: 'relative',
-        cursor: 'pointer'
-      }}>
-      <span>{eventInfo.event.title}</span>
-      {
-        hoveredEventId === eventInfo.event.id && (
-          <span
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              zIndex: 2
-            }}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(eventInfo.event);
-              }}
-              style={{
-                marginRight: 4,
-                color: 'red'
-              }}>삭제</button>
-          </span>
-        )
+  const eventPropGetter = (event, start, end, isSelected) => {
+    // status는 event.resource.status에 들어있음
+    const status = event.resource?.status || '일정';
+    const backgroundColor = STATUS_COLORS[status] || '#2196f3';
+  
+    return {
+      style: {
+        backgroundColor,
+        color: '#fff',
+        borderRadius: '4px',
+        border: isSelected ? '2px solid #1976d2' : 'none',
+        cursor: 'pointer',
+        fontWeight: 600,
+        paddingLeft: 6,
+        paddingRight: 6,
+        minHeight: 24
       }
-    </div>
-  );
+    };
+  };
+  
 
   // 상세정보에서 수정 버튼 클릭 시
   const startEdit = () => {
     setEditForm({
-      title: detailInfo.event.extendedProps.title,
-      content: detailInfo.event.extendedProps.content,
-      start_time: detailInfo.event.extendedProps.start_time,
-      end_time: detailInfo.event.extendedProps.end_time,
-      status: detailInfo.event.extendedProps.status
+      title: detailInfo.event.title,
+      content: detailInfo.event.resource.content,
+      start_time: detailInfo.event.resource.start_time,
+      end_time: detailInfo.event.resource.end_time,
+      status: detailInfo.event.resource.status
     });
   };
 
@@ -262,13 +279,32 @@ export default function MyCalendar() {
         <p className='title'>개인일정</p>
       </div>
       <div className='wrap padding_120_0' style={{ position: 'relative' }}>
-        <FullCalendar
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
+        <Calendar
+          localizer={localizer}
           events={events}
-          dateClick={handleDateClick}
-          eventClick={handleEventClick}
-          eventContent={renderEventContent}
+          startAccessor="start"
+          endAccessor="end"
+          titleAccessor="title"
+          views={['month']}
+          defaultView={view}
+          onView={setView}
+          selectable={true}
+          popup={true}
+          onSelectSlot={handleSelectSlot}
+          onSelectEvent={handleSelectEvent}
+          eventPropGetter={eventPropGetter}
+          style={{ height: '80vh' }}
+          messages={{
+            next: "다음",
+            previous: "이전",
+            today: "오늘",
+            month: "월",
+            week: "주",
+            day: "일",
+            showMore: total => `+${total}개 더보기`
+          }}
+          culture="ko"
+          components={{ toolbar: CustomToolbar }} 
         />
         {/* 일정 등록 인풋 모달 */}
         {inputInfo.open && (
@@ -289,6 +325,14 @@ export default function MyCalendar() {
             onClick={e => e.stopPropagation()}
           >
             <h4 className='middle_title2'>일정 등록</h4>
+            <label className='label'>일정 날짜</label>
+            <div className='label' style={{ marginBottom: 8 }}>
+              {inputInfo.start && inputInfo.end
+                ? format(inputInfo.start, 'yyyy-MM-dd') === format(inputInfo.end, 'yyyy-MM-dd')
+                  ? format(inputInfo.start, 'yyyy-MM-dd')
+                  : `${format(inputInfo.start, 'yyyy-MM-dd')} ~ ${format(inputInfo.end, 'yyyy-MM-dd')}`
+                : ''}
+            </div>
             <label className='label'>제목</label>
             <input
               ref={inputRef}
@@ -417,10 +461,12 @@ export default function MyCalendar() {
             ) : (
               <div className='flex column gap_10'>
                 <h4 className='middle_title2'>{detailInfo.event.title}</h4>
-                <p className='label'>날짜 : {detailInfo.event.extendedProps.date}</p>
-                <p className='label'>내용 : {detailInfo.event.extendedProps.content}</p>
-                <p className='label'>시간 : {detailInfo.event.extendedProps.start_time} ~ {detailInfo.event.extendedProps.end_time}</p>
-                <p className='label'>{detailInfo.event.extendedProps.status}</p>
+                <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')
+                  ? format(detailInfo.event.start, 'yyyy-MM-dd')
+                  : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')}`}</p>
+                <p className='label'>내용 : {detailInfo.event.resource.content}</p>
+                <p className='label'>시간 : {detailInfo.event.resource.start_time} ~ {detailInfo.event.resource.end_time}</p>
+                <p className='label'>{detailInfo.event.resource.status}</p>
                 <div className='flex justify_con_end align_center modal-btns'>
                   <button className='label' onClick={startEdit}>수정</button>
                   <button className='label' onClick={() => handleDelete(detailInfo.event)}>삭제</button>
