@@ -6,19 +6,11 @@ import Footer from './Footer';
 import { Splide, SplideSlide } from '@splidejs/react-splide';
 import '@splidejs/react-splide/css';
 import KakaoMap from './component/map/kakaomap';
-import AlertModal from './component/alertmodal/page';
 import { FaStar } from 'react-icons/fa';
 import axios from 'axios';
 
 
 const MainPage = () => {
-
-    const [hoverStar, setHoverStar] = useState(0);
-    const [star, setStar] = useState(0);
-    // 별점 클릭/호버
-    const handleStarClick = (value) => setStar(value);
-    const handleStarHover = (value) => setHoverStar(value);
-    const handleStarOut = () => setHoverStar(0);
 
     const [centerList, setCenterList] = useState([]);
     const [trainerList, setTrainerList] = useState([]);
