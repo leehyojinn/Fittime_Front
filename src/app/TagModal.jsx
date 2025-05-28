@@ -14,7 +14,7 @@ function FindModal({ open, onClose }){
 
     useEffect(() => {
         getTags();
-    }, []);
+    }, [open]);
 
     const getTags = async () => {
         const {data} = await axios.post(`http://localhost/list/tags/${sessionStorage.getItem('user_level')}`);
@@ -22,15 +22,15 @@ function FindModal({ open, onClose }){
         setTags(data.tags);
     }
 
-    const toggleTag = (tagName) => {
+    const toggleTag = (tag_idx) => {
 
         setSelectTags((prev) => {
-                if (prev.includes(tagName)) {
-                    return prev.filter((t) => t !== tagName); // 제거
+                if (prev.includes(tag_idx)) {
+                    return prev.filter((t) => t !== tag_idx); // 제거
                 } else if(prev.length > 4){
                     return prev;
                 } else {
-                        return [...prev, tagName]; // 추가
+                        return [...prev, tag_idx]; // 추가
                 }
         });
         console.log(selectTags);
@@ -39,6 +39,9 @@ function FindModal({ open, onClose }){
     const insertTag = async ()=>{
         const {data} = await axios.post('http://localhost/insert/tags',{'user_level':sessionStorage.getItem('user_level'),'user_id':sessionStorage.getItem('user_id'),'tags':selectTags});
         console.log(data);
+            setTags([]);
+            setSelectTags([]);
+            await onClose();
     }
 
     if (!open) return null;
@@ -89,8 +92,8 @@ function FindModal({ open, onClose }){
                         <>
                             <span style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}} >
                             {tags?.map((item,idx)=>{
-                                const isSelected = selectTags.includes(item.tag_name);
-                                return(<span key={idx} className={`tag_List ${isSelected ? 'selected' : ''}`} onClick={()=>{toggleTag(item.tag_name)}}>{item.tag_name}</span>);
+                                const isSelected = selectTags.includes(item.tag_idx);
+                                return(<span key={item.tag_idx} className={`tag_List ${isSelected ? 'selected' : ''}`} onClick={()=>{toggleTag(item.tag_idx)}}>{item.tag_name}</span>);
                             })}
                             </span>
                             <button

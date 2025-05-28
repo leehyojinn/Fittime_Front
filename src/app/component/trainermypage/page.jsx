@@ -6,6 +6,7 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import {usePasswordStore} from "@/app/zustand/store";
 import axios from "axios";
+import TagModal from "@/app/TagModal";
 
 const trainerSample = {
     user_id: 'trainer1',
@@ -48,6 +49,7 @@ const TrainerMyPage = () => {
     const [reservation, setReservation] = useState([]);
     const [reviews, setReviews] = useState([]);
     const [schedules, setSchedules] = useState([]);
+    const [tagModalOpen, setTagModalOpen] = useState(false);
 
     const handleMainImageChange = e => {
         if (e.target.files[0]) {
@@ -72,6 +74,11 @@ const TrainerMyPage = () => {
         }))
     }
 
+    const tagModalClose = async() =>{
+        setTagModalOpen(false);
+        await getTrainer();
+    }
+
     useEffect(() => {
         getTrainer();
         getReservation();
@@ -82,7 +89,7 @@ const TrainerMyPage = () => {
     const getTrainer = async () => {
         await axios.post('http://localhost/detail/profile',{"trainer_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
             .then(({data}) => {
-                //console.log(data);
+                console.log(data);
                 setTrainer(data);
                 setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
                 setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
@@ -237,7 +244,7 @@ const TrainerMyPage = () => {
                 <button className="btn white_color label mr_10" onClick={edit}>
                     <FaEdit /> {editMode ? '수정완료' : '정보수정'}
                 </button>
-                <button className="btn white_color label">
+                <button className="btn white_color label" onClick={()=>setTagModalOpen(true)}>
                     <FaEdit /> 태그추가
                 </button>
                 </div>
@@ -300,6 +307,7 @@ const TrainerMyPage = () => {
             </div>
             </div>
         </div>
+        <TagModal open={tagModalOpen} onClose={tagModalClose} />
         <Footer/>
     </div>  
   );

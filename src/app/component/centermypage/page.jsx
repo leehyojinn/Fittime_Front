@@ -57,8 +57,7 @@ const CenterMyPage = () => {
   const [mainImageFile, setMainImageFile] = useState(null);
   const [subImages, setSubImages] = useState(null);
   const [subImageFiles, setSubImageFiles] = useState(null);
-
-const [tagModalOpen, setTagModalOpen] = useState(false);
+  const [tagModalOpen, setTagModalOpen] = useState(false);
 
   
   // 대표이미지 변경
@@ -83,6 +82,11 @@ const [tagModalOpen, setTagModalOpen] = useState(false);
             ...prevForm,
             [name]: value
         }))
+    }
+
+    const tagModalClose = async() =>{
+        setTagModalOpen(false);
+        await getCenter();
     }
 
     useEffect(() => {
@@ -328,7 +332,7 @@ const [tagModalOpen, setTagModalOpen] = useState(false);
             </div>
             </div>
         </div>
-        <TagModal open={tagModalOpen} onClose={() => setTagModalOpen(false)} />
+        <TagModal open={tagModalOpen} onClose={tagModalClose} />
         <Footer/>
     </div>
   );
