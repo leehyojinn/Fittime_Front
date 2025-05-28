@@ -211,7 +211,7 @@ const MemberMyPage = () => {
                 <tr><th>센터</th><th>상품</th><th>날짜</th><th>시간</th><th>트레이너</th><th>상태</th><th>리뷰쓰기</th></tr>
               </thead>
               <tbody>
-                {reservations.map(r=>(
+                {reservations?.map(r=>(
                   <tr key={r.reservation_idx}>
                     <td>{r.center_name}</td>
                     <td>{r.product_name}</td>
@@ -232,7 +232,7 @@ const MemberMyPage = () => {
                 <tr><th>대상</th><th>구분</th><th>별점</th><th>내용</th><th>작성일</th></tr>
               </thead>
               <tbody>
-                {reviews.map(r=>(
+                {reviews?.map(r=>(
                   <tr key={r.review_id}>
                     <td>{r.target_id}</td>
                     <td>{r.level == 2 ? '트레이너' : '센터'}</td>

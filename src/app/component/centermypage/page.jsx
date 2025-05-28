@@ -10,6 +10,7 @@ import FindModal from "@/app/FindModal";
 import findModal from "@/app/FindModal";
 import TagModal from "@/app/TagModal";
 import {useRouter} from "next/navigation";
+import TrainerModal from "@/app/TrainerModal";
 
 const centerProfileSample = {
     center_idx: 1,
@@ -52,6 +53,9 @@ const mockCenterSchedules = [
 
 const CenterMyPage = () => {
   const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
+
+  const router = useRouter();
+
   const [editMode, setEditMode] = useState(false);
   const [center, setCenter] = useState([]);
   const [mainImage, setMainImage] = useState(null);
@@ -59,10 +63,12 @@ const CenterMyPage = () => {
   const [subImages, setSubImages] = useState(null);
   const [subImageFiles, setSubImageFiles] = useState(null);
   const [tagModalOpen, setTagModalOpen] = useState(false);
-  const router = useRouter();
   const [trainers, setTrainers] = useState([]);
   const [products, setProducts] = useState([]);
   const [reservations, setReservations] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [TrainerModalOpen, setTrainerModalOpen] = useState(false);
 
     // 대표이미지 변경
     const handleMainImageChange = e => {
@@ -87,6 +93,54 @@ const CenterMyPage = () => {
             ...prevForm,
             [name]: value
         }))
+        if(name==='exercise'){
+            switch (value){
+                case '헬스':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 4
+                    }));
+                    break;
+                case '복싱':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 1
+                    }));
+                    break;
+                case '수영':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 2
+                    }));
+                    break;
+                case '요가':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 2
+                    }));
+                    break;
+                case '크로스핏':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 2
+                    }));
+                    break;
+                case '골프':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 3
+                    }));
+                    break;
+                case '필라테스':
+                    setCenter((prev) => ({
+                        ...prev,
+                        exercise_level: 3
+                    }));
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     // 태그 modal 창 닫기
@@ -114,43 +168,46 @@ const CenterMyPage = () => {
         getCenter();
         getTrainer();
         getProducts();
+        getReservations();
+        getReviews();
+        getSchedules();
     }, []);
 
     // 센터 정보 가져오기
     const getCenter = async () =>{
         const {data} = await axios.post('http://localhost/detail/profile',{"center_id":sessionStorage.getItem('user_id'), "user_level":sessionStorage.getItem('user_level')});
-        console.log(data);
+        //console.log(data);
         setCenter(data);
         setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
         setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
-        console.log(tagModalOpen);
+        //console.log(tagModalOpen);
     }
 
     // 상품 리스트 가져오기
     const getProducts = async () =>{
         const {data} = await axios.post('http://localhost/list/product',{'center_id':sessionStorage.getItem('user_id')});
-        console.log(data.products);
+        //console.log(data.products);
         setProducts(data.products);
     }
 
     // 상품 활성화/비활성화
     const handleProductStaus = async (product_idx)=>{
         const {data} = await axios.get(`http://localhost/update/productStatus/${product_idx}`);
-        console.log(data);
+        //console.log(data);
         await getProducts();
     }
 
     // 소속 트레이너 리스트 가져오기
     const getTrainer = async () =>{
         const {data} = await axios.post(`http://localhost/list/trainers/${sessionStorage.getItem('user_id')}`);
-        console.log(data);
+        //console.log(data);
         setTrainers(data.trainers);
     }
 
     // 소속 트레이너 삭제
     const deleteTrainer = async (idx) =>{
         const {data} = await axios.post(`http://localhost/del/trainers/${idx}`);
-        console.log(data);
+        //console.log(data);
         if(data.success){
             await getTrainer();
         }
@@ -159,10 +216,23 @@ const CenterMyPage = () => {
     // 예약 리스트 가져오기
     const getReservations = async () =>{
         const {data} = await axios.post('http://localhost/list/centerBook',{'center_id':sessionStorage.getItem('user_id')});
-        console.log(data);
+        //console.log(data);
         setReservations(data.bookingList);
     }
 
+    // 리뷰 리스트 가져오기
+    const getReviews = async ()=>{
+        const {data} = await axios.post('http://localhost/list/reviewByCenter',{'center_id':sessionStorage.getItem('user_id')});
+        console.log(data);
+        setReviews(data.reviews);
+    }
+
+    // 센터 스케줄 가져오기
+    const getSchedules = async () => {
+        const {data} = await axios.post(`http://localhost/schedule_list/${sessionStorage.getItem('user_id')}`);
+        console.log(data);
+        setSchedules(data.list);
+    }
 
 
     const edit = async() =>{
@@ -267,12 +337,28 @@ const CenterMyPage = () => {
                 <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours}</span></div>
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">주차</span><span className="label font_weight_400">{center.parking}</span></div>*/}
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">위치</span><span className="label font_weight_400">({center.latitude},{center.longitude})</span></div>*/}
-                {editMode ?
+                {editMode &&
                 <div className="mypage-profile-row position_rel">
                     <span className="label font_weight_500">비밀번호</span>
-                    <input type={passwordVisible ? "text" : "password"} className='width_fit' defaultValue={center.password} name='password' value={center.password} onChange={changeCenter} />
+                    <input type={passwordVisible ? "text" : "password"} className='width_fit' style={{width:218}} defaultValue={center.password} name='password' value={center.password} onChange={changeCenter} />
                     <span className="material-symbols-outlined mypage_password_position" onClick={togglePasswordVisibility}>visibility</span>
-                </div> : ''}
+                </div>
+                }
+                {editMode &&
+                    <div className="mypage-profile-row form-group">
+                        <span className="label font_weight_500">종목</span>
+                        <select style={{width:'244px'}} className="exercise_select" name="exercise" onChange={changeCenter}>
+                            <option value={center.exercise}>{center.exercise}</option>
+                            <option value="헬스">헬스</option>
+                            <option value="수영">수영</option>
+                            <option value="골프">골프</option>
+                            <option value="복싱">복싱</option>
+                            <option value="요가">요가</option>
+                            <option value="필라테스">필라테스</option>
+                            <option value="크로스핏">크로스핏</option>
+                        </select>
+                    </div>
+                }
                 <button className="btn white_color label mr_10" onClick={edit}>
                     <FaEdit /> {editMode ? '수정완료' : '정보수정'}
                 </button>
@@ -307,7 +393,7 @@ const CenterMyPage = () => {
                     ))}
                 </tbody>
                 </table>
-                <button className="btn white_color label" onClick={findModal}><FaPlus /> 트레이너 추가</button>
+                <button className="btn white_color label" onClick={()=>setTrainerModalOpen(true)}><FaPlus /> 트레이너 추가</button>
             </div>
             <div className="mypage-section">
                 <h4 className='label text_left font_weight_500'><FaCalendarAlt /> 상품 관리</h4>
@@ -342,10 +428,10 @@ const CenterMyPage = () => {
                     <tr><th>회원명</th><th>연락처</th><th>상품</th><th>날짜</th><th>시간</th><th>트레이너</th><th>상태</th></tr>
                 </thead>
                 <tbody>
-                    {mockCenterReservations.map(r=>(
+                    {reservations?.map(r=>(
                     <tr key={r.reservation_idx}>
-                        <td>{r.member_name}</td>
-                        <td>{r.phone}</td>
+                        <td>{r.user_name}</td>
+                        <td>{r.user_phone}</td>
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
                         <td>{r.start_time}~{r.end_time}</td>
@@ -363,12 +449,12 @@ const CenterMyPage = () => {
                     <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th></tr>
                 </thead>
                 <tbody>
-                    {mockCenterReviews.map(r=>(
+                    {reviews.map(r=>(
                     <tr key={r.review_id}>
-                        <td>{r.member_name}</td>
+                        <td>{r.user_name}</td>
                         <td>{r.rating}</td>
                         <td>{r.content}</td>
-                        <td>{r.date}</td>
+                        <td>{r.reg_date.substring(0,10)}</td>
                     </tr>
                     ))}
                 </tbody>
@@ -381,12 +467,12 @@ const CenterMyPage = () => {
                     <tr><th>일정명</th><th>시작</th><th>종료</th><th>구분</th></tr>
                 </thead>
                 <tbody>
-                    {mockCenterSchedules.map(s=>(
-                    <tr key={s.schedule_id}>
+                    {schedules?.map(s=>(
+                    <tr key={s.schedule_idx}>
                         <td>{s.title}</td>
-                        <td>{s.start_time}</td>
-                        <td>{s.end_time}</td>
-                        <td>{s.type}</td>
+                        <td>{s.start_date} {s.start_time}</td>
+                        <td>{s.end_date} {s.end_time}</td>
+                        <td>{s.status}</td>
                     </tr>
                     ))}
                 </tbody>
@@ -396,6 +482,7 @@ const CenterMyPage = () => {
             </div>
         </div>
         <TagModal open={tagModalOpen} onClose={tagModalClose} />
+        <TrainerModal open={TrainerModalOpen} onClose={() => setTrainerModalOpen(false)} />
         <Footer/>
     </div>
   );

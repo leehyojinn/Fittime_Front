@@ -472,7 +472,7 @@ input[type=file]::file-selector-button:hover{
 
 .mypage_password_position{
     position: absolute;
-    left: 260px;
+    left: 250px;
     top: 50%;
     transform : translateY(-50%);
     cursor: pointer;
@@ -3201,3 +3201,6 @@ img {
   border-radius: 5px;
 }
 
+.exercise_select{
+    padding:0;
+}
