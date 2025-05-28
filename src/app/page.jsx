@@ -188,7 +188,7 @@ const MainPage = () => {
                         <p className='content_text'>게시판 및 위치 확인해주세요.</p>
                     </div>
                     <div>
-                        <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+                        <KakaoMap/>
                     </div>
                     <div className='flex gap_10'>
                         <div className='content_text position_rel' style={{border:'1px solid #ccc', padding : 20}}>
