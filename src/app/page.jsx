@@ -98,9 +98,10 @@ const MainPage = () => {
                                         <p className='content_text' style={{ fontWeight: 600, fontSize: 20 }}>
                                             {center.center_name}
                                         </p>
-                                        <p className='label' style={{ color: '#888', minHeight: 40 }}>
-                                            {center.career}
-                                        </p>
+                                        {center.introduction == '' || center.introduction == null ? '' : 
+                                        <p className='label' style={{ color: '#888'}}>
+                                            {center.introduction}
+                                        </p>}
                                         {/* 별점 + 참여인원수 */}
                                         <div className="flex align_center gap_8 justify_con_center">
                                             {/* 별점(소수점) 표시 */}
