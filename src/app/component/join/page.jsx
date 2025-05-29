@@ -24,7 +24,7 @@ const JoinPage = () => {
     const [isIdAvailable, setIsIdAvailable] = useState(false);
     const [isEmailAvailable, setIsEmailAvailable] = useState(false);
     const [form, setForm] = useState({
-        user_level: '1',
+        user_level: "1",
         name: '',
         user_id: '',
         password: '',
@@ -34,6 +34,9 @@ const JoinPage = () => {
         gender: '남자',
         age: '',
         status: 'active',
+        sido:'',
+        gugun:'',
+        eupmyeondong:''
     });
 
     const openModal = useAlertModalStore((state) => state.openModal);
@@ -70,6 +73,21 @@ const JoinPage = () => {
             },
         }).open();
     };
+
+    const handleAddress = async(e) =>{
+
+            const {data} = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json`,
+                {
+                    params: { query: form.address },
+                    headers: { Authorization: 'KakaoAK a2b3e94b94e46217dd7c653496948190' },
+                });
+            console.log(data);
+            return {
+                sido: data.documents[0].address.region_1depth_name,
+                gugun: data.documents[0].address.region_2depth_name,
+                eupmyeondong: data.documents[0].address.region_3depth_name
+            };
+    }
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -191,17 +209,25 @@ const JoinPage = () => {
             return;
         }
 
-        const { data } = await axios.post('http://localhost/join', form);
+        const region = await handleAddress();
+
+        const fullForm = {
+            ...form,
+            ...region
+        }
+
+        const { data } = await axios.post('http://localhost/join', fullForm);
         if (data.success) {
-            openModal({
-                svg: '✔',
-                msg1: '회원가입 성공!',
-                msg2: '로그인 페이지로 이동합니다.',
-                onConfirm: () => {
-                    window.location.href = '/component/login';
-                },
-                showCancel: false,
-            });
+            // openModal({
+            //     svg: '✔',
+            //     msg1: '회원가입 성공!',
+            //     msg2: '로그인 페이지로 이동합니다.',
+            //     onConfirm: () => {
+            //         window.location.href = '/component/login';
+            //     },
+            //     showCancel: false,
+            // });
+            console.log(fullForm);
         } else {
             openModal({
                 svg: '❗',
