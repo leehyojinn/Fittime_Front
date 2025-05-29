@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { FaStar, FaMapMarkerAlt, FaFilter, FaMapMarkedAlt } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import axios from "axios";
 
 const CenterSearch = () => {
   // 상태 관리
@@ -19,10 +20,20 @@ const CenterSearch = () => {
     tags: []
   });
   const [sortOption, setSortOption] = useState('rating');
-  const [cityOptions, setCityOptions] = useState(['서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산', '제주']);
+  const [cityOptions, setCityOptions] = useState([]);
   const [districtOptions, setDistrictOptions] = useState([]);
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+
+    useEffect(() => {
+        getCity();
+    }, []);
+
+  const getCity = async () => {
+      const {data}= await axios.post('http://localhost/get/city');
+      console.log(data);
+      setCityOptions(data.City);
+  }
 
   // 운동 종목 옵션
   const exerciseOptions = [
@@ -33,16 +44,26 @@ const CenterSearch = () => {
   useEffect(() => {
     if (location.city) {
       // API 호출하여 해당 도시의 구 옵션 로드
-      const mockDistricts = ['강남구', '서초구', '송파구', '마포구', '중구', '강동구'];
-      setDistrictOptions(mockDistricts);
+      //const mockDistricts = ['강남구', '서초구', '송파구', '마포구', '중구', '강동구'];
+      axios.post('http://localhost/get/district',{"sido":location.city})
+          .then(({data}) => {
+              setDistrictOptions(data.District);
+              console.log(data);
+        })
+      //setDistrictOptions(mockDistricts);
     }
   }, [location.city]);
 
   useEffect(() => {
     if (location.district) {
       // API 호출하여 해당 구의 동 옵션 로드
-      const mockNeighborhoods = ['역삼동', '삼성동', '대치동', '서초동', '잠실동', '송파동'];
-      setNeighborhoodOptions(mockNeighborhoods);
+      // const mockNeighborhoods = ['역삼동', '삼성동', '대치동', '서초동', '잠실동', '송파동'];
+      // setNeighborhoodOptions(mockNeighborhoods);
+        axios.post('http://localhost/get/neighborhood',{"sido":location.city ,"gugun":location.district})
+        .then(({data}) => {
+            setNeighborhoodOptions(data.Neighborhood);
+            console.log(data);
+        })
     }
   }, [location.district]);
 
@@ -54,7 +75,7 @@ const CenterSearch = () => {
   }, []);
 
   // 검색 실행
-  const handleSearch = () => {
+  const handleSearch = async () => {
     // API 호출하여 검색 결과 로드
     const mockResults = [
       {
@@ -91,7 +112,17 @@ const CenterSearch = () => {
         description: '1:1 맞춤 필라테스 수업을 제공합니다.'
       }
     ];
-    
+
+      const {data} = axios.post('http://localhost/search/location',
+          {
+              "sido":location.city,
+              "gugun":location.district,
+              "eupmyeondong":location.neighborhood,
+              "exercise":exerciseType
+          });
+
+      console.log(data);
+
     setSearchResults(mockResults);
     applyFilters(mockResults);
   };
@@ -155,7 +186,7 @@ const CenterSearch = () => {
                     onChange={(e) => setLocation({ ...location, city: e.target.value, district: '', neighborhood: '' })}
                     >
                     <option value="">선택하세요</option>
-                    {cityOptions.map((city) => (
+                    {cityOptions?.map((city) => (
                         <option key={city} value={city}>{city}</option>
                     ))}
                     </select>
@@ -169,7 +200,7 @@ const CenterSearch = () => {
                     disabled={!location.city}
                     >
                     <option value="">선택하세요</option>
-                    {districtOptions.map((district) => (
+                    {districtOptions?.map((district) => (
                         <option key={district} value={district}>{district}</option>
                     ))}
                     </select>
@@ -183,7 +214,7 @@ const CenterSearch = () => {
                     disabled={!location.district}
                     >
                     <option value="">선택하세요</option>
-                    {neighborhoodOptions.map((neighborhood) => (
+                    {neighborhoodOptions?.map((neighborhood) => (
                         <option key={neighborhood} value={neighborhood}>{neighborhood}</option>
                     ))}
                     </select>
@@ -193,7 +224,7 @@ const CenterSearch = () => {
                 <div className="exercise-selector">
                 <label>운동 종목</label>
                 <div className="exercise-options">
-                    {exerciseOptions.map((exercise) => (
+                    {exerciseOptions?.map((exercise) => (
                     <button 
                         key={exercise}
                         className={exerciseType === exercise ? 'active' : ''}
