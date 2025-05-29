@@ -23,14 +23,25 @@ const Sidebar = () => {
         { label: '클래스 등록', href: '/component/classmanagement'},
     ];
 
+    const centerLinks_2 = [
+        { label: '대시보드', href: '/component/dashboard'},
+        { label: '상품 등록', href: '/component/product'},
+        { label: '신고하기', href: '/component/complaint'},
+    ];
+
     useEffect(() => {
         // 클라이언트에서만 sessionStorage 접근 가능
         if (typeof window !== 'undefined') {
             const userLevel = sessionStorage.getItem('user_level');
+            const exercise_level = sessionStorage.getItem('exercise_level');
             if (userLevel > '3') {
                 setLinks(adminLinks);
             } else if (userLevel === '3') {
-                setLinks(centerLinks);
+                if(exercise_level === '1'){
+                    setLinks(centerLinks_2);
+                }else{
+                    setLinks(centerLinks);
+                }
             }
         }
     },[]);
