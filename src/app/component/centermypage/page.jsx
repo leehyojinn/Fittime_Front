@@ -234,6 +234,11 @@ const CenterMyPage = () => {
         setSchedules(data.list);
     }
 
+    // 트레이너 찾기 modal 창 닫기
+    const TrainerModalClose = async () =>{
+        setTrainerModalOpen(false);
+        await getTrainer();
+    }
 
     const edit = async() =>{
         setEditMode(!editMode);
@@ -482,7 +487,7 @@ const CenterMyPage = () => {
             </div>
         </div>
         <TagModal open={tagModalOpen} onClose={tagModalClose} />
-        <TrainerModal open={TrainerModalOpen} onClose={() => setTrainerModalOpen(false)} />
+        <TrainerModal open={TrainerModalOpen} onClose={TrainerModalClose} handleMoveTrainerDetail={handleMoveTrainerDetail} center_idx = {center.center_idx} />
         <Footer/>
     </div>
   );

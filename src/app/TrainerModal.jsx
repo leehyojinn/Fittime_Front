@@ -1,28 +1,40 @@
 'use client';
 import React, { useState } from 'react';
 import axios from "axios";
+import {FaTrash} from "react-icons/fa";
 
-function TrainerModal({ open, onClose }) {
-    const [tab, setTab] = useState('pw'); // 'id' 또는 'pw'
-    const [email, setEmail] = useState('');
+function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
     const [userId, setUserId] = useState('');
-    const [result, setResult] = useState(null); // 결과 화면 상태
+    const [trainers, setTrainers] = useState([]);
 
 
     // 모달이 닫힐 때 상태 초기화
     const handleClose = () => {
-        setResult(null);
-        setEmail('');
         setUserId('');
-        setTab('id');
+        setTrainers([]);
         onClose();
     };
 
+    // 트레이너 검색
+    const searchTrainers = async ()=>{
+        const {data} = await axios.post('http://localhost/search/trainers',{"id":userId})
+        console.log(userId);
+        console.log(data);
+        setTrainers(data.trainers);
+    }
+
+    // 소속 트레이너 추가
+    const insertTrainer= async (trainer_idx) =>{
+        const {data} = await axios.post('http://localhost/add/trainer',{"trainer_idx": trainer_idx, "center_idx" : center_idx});
+        console.log(data);
+        if(data.success){
+            await searchTrainers();
+        }
+    }
+
+
     if (!open) return null;
 
-    const insertData = async () =>{
-        await axios.post('http://localhost/user');
-    }
 
     return (
         <div
@@ -65,22 +77,7 @@ function TrainerModal({ open, onClose }) {
                 >
                     ×
                 </button>
-                <h3 style={{fontSize: '15px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>아이디/비밀번호 찾기</h3>
-                {/* 결과 화면 */}
-                {result ? (
-                    <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                        <div style={{ fontSize: '1.3rem', marginBottom: 20, color: '#007bff', fontWeight: 'bold' }}>
-                            {result.type === 'id' ? '아이디 찾기 결과' : '비밀번호 재설정 안내'}
-                        </div>
-                        <div style={{ fontSize: '1.2rem', marginBottom: 24 }}>{result.message}</div>
-                        <button
-                            className="btn label white_color bg_primary_color_2"
-                            onClick={handleClose}
-                        >
-                            닫기
-                        </button>
-                    </div>
-                ) : (
+                <h3 style={{fontSize: '15px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>트레이너 찾기</h3>
                     <>
 
                         {/* 탭 내용 */}
@@ -97,15 +94,38 @@ function TrainerModal({ open, onClose }) {
                                     <button
                                         className="btn label white_color"
                                         style={{ marginTop: 8 }}
-                                        //onClick={handleResetPw}
-                                        onClick={insertData}
+                                        onClick={searchTrainers}
                                     >
-                                        비밀번호 재설정
+                                        트레이너 검색
                                     </button>
+                                    <div>
+                                        <table className="mypage-table">
+                                            {trainers?.length>0 &&(
+                                            <thead>
+                                            <tr><th>이름</th><th>프로필</th><th>관리</th></tr>
+                                            </thead>
+                                                )}
+                                            <tbody>
+                                            {trainers?.map(t=>(
+                                                <tr key={t.trainer_id}>
+                                                    <td>
+                                                        <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
+                                                        {t.name}
+                                                    </td>
+                                                    <td style={{textAlign:'center'}}>
+                                                        <button className="mypage-small-btn" onClick={()=>handleMoveTrainerDetail(t.trainer_idx)}>보기</button>
+                                                    </td>
+                                                    <td>
+                                                        <button className="mypage-small-btn" onClick={()=>insertTrainer(t.trainer_idx)}>추가</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </>
                         </div>
                     </>
-                )}
             </div>
         </div>
     );
