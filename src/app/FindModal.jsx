@@ -86,7 +86,7 @@ function FindModal({ open, onClose }) {
                         top: 20,
                         background: 'none',
                         border: 'none',
-                        fontSize: '1.3rem',
+                        fontSize: '2rem',
                         cursor: 'pointer'
                     }}
                     onClick={handleClose}

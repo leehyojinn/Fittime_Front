@@ -33,6 +33,7 @@ const TrainerDetail = () => {
   const [files, setFiles] = useState([]);
   const [reviews, setReviews] = useState(trainerSample.reviews);
 
+
   const searchParams = useSearchParams();
   const trainer_idx = searchParams.get('trainer_idx');
 

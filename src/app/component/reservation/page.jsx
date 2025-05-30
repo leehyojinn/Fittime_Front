@@ -405,7 +405,7 @@ const Reservation = () => {
       <Header />
       <div className='wrap padding_120_0'>
         <div className="reservation-container">
-          <h2 className="page-title">예약하기</h2>
+          <h2 className="middle_title mb_20">예약하기</h2>
           {step < 4 && renderProgressBar()}
           <div className="reservation-content">
             {step === 1 && renderCenterSelectionStep()}
