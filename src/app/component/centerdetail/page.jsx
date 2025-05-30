@@ -6,6 +6,7 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
+import axios from 'axios';
 
 const centerSample = {
   center_idx: 1,
@@ -27,7 +28,7 @@ const CenterDetail = () => {
   const [star, setStar] = useState(0);
   const [hoverStar, setHoverStar] = useState(0);
   const [files, setFiles] = useState([]);
-  const [reviews, setReviews] = useState(centerSample.reviews);
+  const [reviews, setReviews] = useState([]);
 
   // 별점 클릭/호버
   const handleStarClick = (value) => setStar(value);
@@ -49,7 +50,7 @@ const CenterDetail = () => {
     setReviews([
       {
         review_id: Date.now(),
-        user_name: '나(로그인회원)', // 실제론 로그인 회원명
+        user_name: Date.now(), // 실제론 로그인 회원명
         rating: star,
         content: reviewText,
         date: new Date().toISOString().slice(0, 10),
@@ -64,6 +65,49 @@ const CenterDetail = () => {
 
   // 별점 평균/참여인원
   const avgRating = reviews.length ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(2) : '-';
+
+  const insertReview = async() =>{
+    const formData = new FormData();
+    if (files.length > 0) {
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+    }
+    formData.append("user_id", sessionStorage.getItem('user_id')); // 로그인된 사용자 ID
+    formData.append("rating", star);
+    formData.append("content", reviewText);
+    formData.append("target_id",'center'); 
+    formData.append("reservation_idx",8);
+    const {data} = await axios.post('http://localhost:/insert/review', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    console.log(data);
+  }
+  React.useEffect(() => {
+    
+  
+    fetchReviews();
+  }, []);
+  
+  const fetchReviews = async () => {
+    const {data} = await axios.post('http://localhost/list/review/1');
+    console.log(data);
+    // setCenter(data.center_idx);
+    setReviews(data);
+};
+
+// 초기 리뷰 데이터 설정
+// React.useEffect(() => {
+//     const fetchReviews = async () => {
+//         const response = await fetch(`http://localhost/list/review/1`);
+//         const data = await response.json();
+//         setReviews(data.reviews || []);
+//     };
+//     fetchReviews();
+//   }, []);
+
 
   return (
     <div>
@@ -157,19 +201,19 @@ const CenterDetail = () => {
                     ))}
                     </div>
                 </div>
-                <button type="submit" className="review-submit-btn">등록하기</button>
+                <button type="submit" className="review-submit-btn" onClick={insertReview}>등록하기</button>
                 </form>
             </div>
             {/* 리뷰 리스트 */}
             <div className="center-reviews">
                 <h4>리뷰</h4>
                 <ul>
-                {reviews.map(r=>(
-                    <li key={r.review_id}>
-                    <span className="review-user">{r.user_name}</span>
+                {reviews.list?.map(r=>(
+                    <li key={r.review_idx}>
+                    <span className="review-user">{r.user_id}</span>
                     <span className="review-rating"><FaStar /> {r.rating}</span>
                     <span className="review-content">{r.content}</span>
-                    {r.images && r.images.length>0 && (
+                    {r.images && r.images?.length>0 && (
                         <span className="review-images">
                         {r.images.map((img,idx)=>(
                             <img key={idx} src={img} alt="첨부" style={{width:40,height:40,objectFit:'cover',borderRadius:'0.4rem',marginLeft:4}} />

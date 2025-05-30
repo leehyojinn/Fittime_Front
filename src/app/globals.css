@@ -2757,7 +2757,7 @@ table tr.selected {
 }
 
 .center-review-write, .trainer-review-write {
-  background: #f8f9fb;
+  background: #dee2e6;
   border-radius: 1rem;
   padding: 1.5rem 1rem;
   margin-bottom: 2rem;
@@ -2831,9 +2831,8 @@ table tr.selected {
   padding: 0.2rem 0.7rem;
   font-size: 0.93rem;
 }
-
 .review-submit-btn {
-  background: #3673c1;
+  background: #474747;
   color: #fff;
   border: none;
   border-radius: 1.5rem;
@@ -2845,8 +2844,24 @@ table tr.selected {
   margin-top: 0.5rem;
   transition: background 0.18s;
 }
+
+
+.review-submit-btn-n {
+  background: #474747;
+  color: #fff;
+  border: none;
+  border-radius: 1.5rem;
+  padding: 0.6rem 1.7rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  float: left;
+  margin-top: 0.5rem;
+  transition: background 0.18s;
+}
+
 .review-submit-btn:hover {
-  background: #265a98;
+  background: #444444;
 }
 
 .center-reviews ul, .trainer-reviews ul {
@@ -3230,4 +3245,37 @@ img {
 
 .exercise_select{
     padding:0;
+
+.review-toggle-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.review-toggle-wrapper.right-align {
+  justify-content: flex-end;
+}
+
+.review-toggle-btn {
+  padding: 10px 18px;
+  border: 1px solid #ccc;
+  background-color: #f5f5f5;
+  color: #444;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.review-toggle-btn.small {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+
+.review-toggle-btn.active {
+  background-color: #222;
+  color: #fff;
+  border-color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
