@@ -17,6 +17,7 @@ const MainPage = () => {
 
     const center_list = async () => {
         let { data } = await axios.post('http://localhost/center_rating/list');
+        console.log(data)
         if (data && data.list) setCenterList(data.list);
     };
     const trainer_list = async () => {
@@ -80,7 +81,7 @@ const MainPage = () => {
                                     <div
                                         style={{
                                             background: center.profile_image
-                                                ? `url('http://localhost/center_profile/${center.profile_image}') center/cover no-repeat`
+                                                ? `url('http://localhost/center_profile_img/${center.profile_image}') center/cover no-repeat`
                                                 : "#ccc",
                                             aspectRatio:'1/1',
                                             borderRadius: 12
@@ -144,7 +145,7 @@ const MainPage = () => {
                                         <div
                                             style={{
                                                 background: trainer.profile_image
-                                                    ? `url('http://localhost/center_profile/${trainer.profile_image}') center/cover no-repeat`
+                                                    ? `url('http://localhost/center_profile_img/${trainer.profile_image}') center/cover no-repeat`
                                                     : "#ccc",
                                                 aspectRatio:'1/1',
                                                 borderRadius: 12
