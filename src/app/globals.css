@@ -1626,10 +1626,6 @@ table tr.selected {
   gap: 1.5rem;
 }
 
-.trainer-image, .center-image {
-  flex-shrink: 0;
-}
-
 .profile-image, .facility-image {
   border-radius: var(--border-radius);
   object-fit: cover;
@@ -1640,7 +1636,7 @@ table tr.selected {
 }
 
 .trainer-name, .center-name {
-  font-size: 1.25rem;
+  font-size: 2.25rem;
   margin-bottom: 0.75rem;
   font-weight: 600;
 }
@@ -1656,7 +1652,7 @@ table tr.selected {
 
 .trainer-exercise-type, .trainer-price, .center-price {
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 1.875rem;
 }
 
 .value {
@@ -1664,6 +1660,7 @@ table tr.selected {
 }
 
 .trainer-rating, .center-rating {
+    font-size: 1.25rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -2054,16 +2051,10 @@ table tr.selected {
   border: 2px solid var(--primary-color);
 }
 
-.center-image {
-  height: 180px;
-  overflow: hidden;
-  flex: 1;
-}
 
 .center-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 200px;
+    object-fit: contain;
   transition: transform 0.3s;
 }
 
@@ -2701,7 +2692,7 @@ table tr.selected {
 
 .trainer-name {
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 2.05rem;
 }
 
 .trainer-type {

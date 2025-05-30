@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { FaStar, FaMapMarkerAlt, FaFilter } from 'react-icons/fa';
 import Footer from '../../Footer';
 import Header from '../../Header';
+import axios from "axios";
 
 const TrainerSearch = () => {
   // 상태 관리
@@ -24,6 +25,16 @@ const TrainerSearch = () => {
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
 
+    useEffect(() => {
+        getCity();
+    }, []);
+
+    const getCity = async () => {
+        const {data}= await axios.post('http://localhost/get/city');
+        console.log(data);
+        setCityOptions(data.City);
+    }
+
   // 운동 종목 옵션
   const exerciseOptions = [
     '전체', '헬스', 'PT', '필라테스', '요가', '골프', '크로스핏', '복싱', '수영'
@@ -33,28 +44,43 @@ const TrainerSearch = () => {
   useEffect(() => {
     if (location.city) {
       // API 호출하여 해당 도시의 구 옵션 로드
-      const mockDistricts = ['강남구', '서초구', '송파구', '마포구', '중구', '강동구'];
-      setDistrictOptions(mockDistricts);
+      // const mockDistricts = ['강남구', '서초구', '송파구', '마포구', '중구', '강동구'];
+      // setDistrictOptions(mockDistricts);
+        axios.post('http://localhost/get/district',{"sido":location.city})
+            .then(({data}) => {
+                setDistrictOptions(data.District);
+                console.log(data);
+            })
     }
   }, [location.city]);
 
   useEffect(() => {
     if (location.district) {
       // API 호출하여 해당 구의 동 옵션 로드
-      const mockNeighborhoods = ['역삼동', '삼성동', '대치동', '서초동', '잠실동', '송파동'];
-      setNeighborhoodOptions(mockNeighborhoods);
+      // const mockNeighborhoods = ['역삼동', '삼성동', '대치동', '서초동', '잠실동', '송파동'];
+      // setNeighborhoodOptions(mockNeighborhoods);
+        axios.post('http://localhost/get/neighborhood',{"sido":location.city ,"gugun":location.district})
+            .then(({data}) => {
+                setNeighborhoodOptions(data.Neighborhood);
+                console.log(data);
+            })
     }
   }, [location.district]);
 
   // 태그 로드
   useEffect(() => {
     // API 호출하여 트레이너 태그 로드
-    const mockTags = ['유경험자', '친절한', '체계적인', '열정적인', '세심한', '커리큘럼 보유'];
-    setAvailableTags(mockTags);
+    // const mockTags = ['유경험자', '친절한', '체계적인', '열정적인', '세심한', '커리큘럼 보유'];
+    // setAvailableTags(mockTags);
+      axios.post('http://localhost/tag_list',{category:"트레이너"})
+          .then(({data}) => {
+              console.log(data);
+              setAvailableTags(data.list);
+          })
   }, []);
 
   // 검색 실행
-  const handleSearch = () => {
+  const handleSearch = async() => {
     // API 호출하여 검색 결과 로드
     const mockResults = [
       {
@@ -94,9 +120,18 @@ const TrainerSearch = () => {
         gender: '남'
       }
     ];
-    
-    setSearchResults(mockResults);
-    applyFilters(mockResults);
+
+      const {data} = await axios.post('http://localhost/search/trainer',
+          {
+              "sido":location.city,
+              "gugun":location.district,
+              "eupmyeondong":location.neighborhood,
+              "exercise":exerciseType
+          });
+
+    console.log(data.list);
+    setSearchResults(data.list);
+    applyFilters(data.list);
   };
 
   // 필터 적용
@@ -110,10 +145,15 @@ const TrainerSearch = () => {
     if (filters.minRating > 0) {
       filtered = filtered.filter(trainer => trainer.rating >= filters.minRating);
     }
-    
+
     if (filters.tags.length > 0) {
-      filtered = filtered.filter(trainer => 
-        filters.tags.some(tag => trainer.tags.includes(tag))
+      filtered = filtered.filter(trainer => {
+              if (!trainer.tags) {
+                  return false;
+              }
+
+              return filters.tags.some(tag => JSON.parse(trainer.tags).includes(tag))
+          }
       );
     }
     
@@ -130,8 +170,11 @@ const TrainerSearch = () => {
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-    applyFilters(searchResults);
   };
+
+    useEffect(() => {
+        applyFilters(searchResults);
+    }, [filters]);
 
   // 태그 토글
   const toggleTag = (tag) => {
@@ -162,7 +205,7 @@ const TrainerSearch = () => {
                     onChange={(e) => setLocation({ ...location, city: e.target.value, district: '', neighborhood: '' })}
                     >
                     <option value="">선택하세요</option>
-                    {cityOptions.map((city) => (
+                    {cityOptions?.map((city) => (
                         <option key={city} value={city}>{city}</option>
                     ))}
                     </select>
@@ -176,7 +219,7 @@ const TrainerSearch = () => {
                     disabled={!location.city}
                     >
                     <option value="">선택하세요</option>
-                    {districtOptions.map((district) => (
+                    {districtOptions?.map((district) => (
                         <option key={district} value={district}>{district}</option>
                     ))}
                     </select>
@@ -190,7 +233,7 @@ const TrainerSearch = () => {
                     disabled={!location.district}
                     >
                     <option value="">선택하세요</option>
-                    {neighborhoodOptions.map((neighborhood) => (
+                    {neighborhoodOptions?.map((neighborhood) => (
                         <option key={neighborhood} value={neighborhood}>{neighborhood}</option>
                     ))}
                     </select>
@@ -200,7 +243,7 @@ const TrainerSearch = () => {
                 <div className="exercise-selector">
                 <label>운동 종목</label>
                 <div className="exercise-options">
-                    {exerciseOptions.map((exercise) => (
+                    {exerciseOptions?.map((exercise) => (
                     <button 
                         key={exercise}
                         className={exerciseType === exercise ? 'active' : ''}
@@ -242,16 +285,16 @@ const TrainerSearch = () => {
                     <label>
                         <input 
                         type="radio" 
-                        checked={filters.gender === '남'} 
-                        onChange={() => handleFilterChange('gender', '남')}
+                        checked={filters.gender === '남자'}
+                        onChange={() => handleFilterChange('gender', '남자')}
                         />
                         남성
                     </label>
                     <label>
                         <input 
                         type="radio" 
-                        checked={filters.gender === '여'} 
-                        onChange={() => handleFilterChange('gender', '여')}
+                        checked={filters.gender === '여자'}
+                        onChange={() => handleFilterChange('gender', '여자')}
                         />
                         여성
                     </label>
@@ -277,13 +320,13 @@ const TrainerSearch = () => {
                     <h3>태그</h3>
                     <div className="tag-options">
                     {availableTags.map((tag) => (
-                        <label key={tag} className="tag-checkbox">
+                        <label key={tag.tag_idx} className="tag-checkbox">
                         <input 
                             type="checkbox" 
-                            checked={filters.tags.includes(tag)}
-                            onChange={() => toggleTag(tag)}
+                            checked={filters.tags.includes(tag.tag_name)}
+                            onChange={() => toggleTag(tag.tag_name)}
                         />
-                        {tag}
+                        {tag.tag_name}
                         </label>
                     ))}
                     </div>
@@ -323,45 +366,49 @@ const TrainerSearch = () => {
                 {filteredResults.length > 0 ? (
                 filteredResults.map((trainer) => (
                     <div key={trainer.user_id} className="trainer-card">
-                    <div className="trainer-image">
-                        <Image 
-                        src={trainer.profile_image || '/default-profile.jpg'} 
-                        alt={trainer.user_name}
-                        width={120}
-                        height={120}
+                    <div className="trainer-image" style={{width:"fit-content"}}>
+                        <img
+                        //src={trainer.profile_image || '/default-profile.jpg'}
+                        src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
+                        alt={trainer.name}
+                        width={200}
+                        height={150}
                         className="profile-image"
                         />
                     </div>
                     
                     <div className="trainer-info">
-                        <h3 className="trainer-name">{trainer.user_name}</h3>
+                        <h3 className="trainer-name">{trainer.name}</h3>
                         
-                        <div className="trainer-center">
+                        <div className="trainer-center"  style={{fontSize: "1.2rem"}}>
                         <FaMapMarkerAlt className="location-icon" />
                         <span>{trainer.center_name}</span>
                         </div>
                         
-                        <div className="trainer-exercise-type">
-                        <span className="label">전문 분야:</span>
-                        <span className="value">{trainer.exercise_type}</span>
-                        </div>
+                        {/*<div className="trainer-exercise-type">*/}
+                        {/*<span className="label">전문 분야:</span>*/}
+                        {/*<span className="value">{trainer.exercise_type}</span>*/}
+                        {/*</div>*/}
                         
                         <div className="trainer-price">
                         <span className="label">최저 가격:</span>
-                        <span className="value">{trainer.lowest_price.toLocaleString()}원~</span>
+                            {trainer.price && <span className="value">{trainer.price.toLocaleString()}원~</span>}
                         </div>
                         
                         <div className="trainer-rating">
                         <FaStar className="star-icon" />
-                        <span className="rating">{trainer.rating.toFixed(1)}</span>
-                        <span className="rating-count">({trainer.rating_count})</span>
+                            {trainer.review_cnt > 0 &&
+                            <span className="rating">{trainer.rating > 1 ? trainer.rating : trainer.rating.toFixed(1)}</span>}
+                        <span className="rating-count">({trainer.review_cnt})</span>
                         </div>
-                        
+
+                        {trainer.tags && (
                         <div className="trainer-tags">
-                        {trainer.tags.map((tag) => (
-                            <span key={tag} className="tag">{tag}</span>
+                        {JSON.parse(trainer.tags).map((tag) => (
+                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
                         ))}
                         </div>
+                            )}
                     </div>
                     </div>
                 ))

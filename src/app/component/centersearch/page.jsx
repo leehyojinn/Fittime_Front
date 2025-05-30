@@ -261,12 +261,12 @@ const CenterSearch = () => {
                     <FaFilter /> 필터
                 </button>
                 
-                {/* <button 
+                 <button
                     className={`map-button ${showMap ? 'active' : ''}`}
                     onClick={() => setShowMap(!showMap)}
                 >
                     <FaMapMarkedAlt /> {showMap ? '목록 보기' : '지도 보기'}
-                </button> */}
+                </button>
                 </div>
             </div>
             
@@ -358,8 +358,8 @@ const CenterSearch = () => {
                 {filteredResults?.length > 0 ? (
                     filteredResults?.map((center) => (
                     <div key={center.center_idx} className="center-card">
-                        <div className="center-image">
-                        <Image 
+                        <div className={"center-image"} style={{width:"fit-content"}}>
+                        <img
                             //src={center.center_image || '/default-center.jpg'}
                             src={`http://localhost/profileImg/profile/${center.center_id}`}
                             alt={center.center_name}
@@ -372,7 +372,7 @@ const CenterSearch = () => {
                         <div className="center-info">
                         <h3 className="center-name">{center.center_name}</h3>
                         
-                        <div className="center-address">
+                        <div className="center-address" style={{fontSize:"1.2rem"}}>
                             <FaMapMarkerAlt className="location-icon" />
                             <span>{center.address}</span>
                         </div>
@@ -383,7 +383,7 @@ const CenterSearch = () => {
                         
                         <div className="center-price">
                             <span className="label">최저 가격:</span>
-                            {center.price && <span className="value">{center.price.toLocaleString()}원~</span>}
+                            {center.price && <span className="value"> {center.price.toLocaleString()}원~</span>}
                         </div>
                         
                         <div className="center-rating">
@@ -396,7 +396,7 @@ const CenterSearch = () => {
                         {center.tags && (
                         <div className="center-tags">
                             {JSON.parse(center.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag">{tag}</span>
+                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
                             ))}
                         </div>
                             )}

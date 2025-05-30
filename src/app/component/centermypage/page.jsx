@@ -179,7 +179,7 @@ const CenterMyPage = () => {
         //console.log(data);
         setCenter(data);
         setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
-        setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
+        setSubImages(data.photos?.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
         //console.log(tagModalOpen);
     }
 
