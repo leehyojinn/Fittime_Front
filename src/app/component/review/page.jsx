@@ -1,5 +1,5 @@
 'use client'
-import React, {use, useState} from 'react';
+import React, {useState} from 'react';
 import Header from "@/app/Header";
 import {FaCamera, FaMapMarkerAlt, FaStar, FaPhoneAlt} from "react-icons/fa";
 import Footer from "@/app/Footer";
@@ -9,7 +9,8 @@ import KakaoMap from '../map/kakaomap';
 
 const ReviewPage = () => {
 
-    // 해야하는거 :/ 리뷰 상세보기 불러오기 / 센터 or 트레이너 선택 별 디테일 (마이페이지 정보) 가지고 오기
+    // 해야하는거 :/ 리뷰 리스트 
+
     const [showMap, setShowMap] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -17,14 +18,18 @@ const ReviewPage = () => {
     const centerId = searchParams.get('center_id');
     const trainerId = searchParams.get('trainer_id');
     const reservationIdx = searchParams.get('reservation_idx');
+    const trainerName = searchParams.get('trainer_name');
+    const centerName = searchParams.get('center_name');
+    
 
-    const [reviewTarget, setReviewTarget] = useState(''); // 'trainer' or 'center'
+    const [reviewTarget, setReviewTarget] = useState('');
+    const [target, setTarget] = useState(centerId);
+    const [targetName, setTargetName] = useState();
     const [reviewText, setReviewText] = useState('');
     const [star, setStar] = useState(0);
     const [hoverStar, setHoverStar] = useState(0);
     const [files, setFiles] = useState([]);
     const [reviews, setReviews] = useState([]);
-    const [target, setTarget] = useState(centerId); // 'trainer' or 'center'
     const [page, setPage] = useState(1);
     // 별점 클릭/호버
     const handleStarClick = (value) => setStar(value);
@@ -39,12 +44,9 @@ const ReviewPage = () => {
         setFiles(newFiles);
     };
 
-
     // 리뷰 등록
     const handleReviewSubmit = (e) => {
         e.preventDefault();
-        if (reviewTarget === '') 
-            return alert('리뷰 대상을 선택해주세요.');
         if (star < 0.5) 
             return alert('별점을 입력해주세요.');
         if (reviewText.trim().length < 15) 
@@ -52,6 +54,9 @@ const ReviewPage = () => {
         if (files.some(f => f.size > 10 * 1024 * 1024)) 
             return alert('각 이미지는 10MB 이하만 가능합니다.');
         setReviews({
+            target_id: reviewTarget === 'trainer'
+                ? trainerId
+                : centerId,
             review_id: Date.now(),
             user_name: Date.now(),
             rating: star,
@@ -62,9 +67,12 @@ const ReviewPage = () => {
     };
 
     // 별점 평균/참여인원
-    const avgRating = reviews.length
-        ? (reviews.reduce((a, b) => a + b.rating, 0) / reviews.length).toFixed(2)
-        : '-';
+    const avgRating = reviews.list
+        ?.length
+            ? (reviews.list.reduce((sum, r) => sum + r.rating, 0) / reviews.list.length).toFixed(
+                2
+            )
+            : '-';
     const insertReview = async () => {
         const formData = new FormData();
         if (files.length > 0) {
@@ -80,18 +88,30 @@ const ReviewPage = () => {
                 ? trainerId
                 : centerId
         ));
+        formData.append("target", reviewTarget);
         formData.append("reservation_idx", reservationIdx);
+
+        console.log('reviewTarget:', reviewTarget);
+        console.log('trainerId:', trainerId);
+        console.log('centerId:', centerId);
+
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ':', pair[1]);
+        }
         const {data} = await axios.post('http://localhost/insert/review', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        console.log(formData);
-        console.log(data);
+
+        console.log('서버 응답 전체:', data);
+
+
         if (data.success) {
             setReviewText('');
             setStar(0);
             setFiles([]);
+            setPage(1); // 페이지 초기화
             fetchReviews();
         }
     }
@@ -102,10 +122,12 @@ const ReviewPage = () => {
             if (target === 'trainer') {
                 setReviewTarget('trainer');
                 setTarget(trainerId);
+                setTargetName(trainerName);
 
             } else if (target === 'center') {
                 setReviewTarget('center');
                 setTarget(centerId);
+                setTargetName(centerName);
             }
 
             setReviewText('');
@@ -128,7 +150,7 @@ const ReviewPage = () => {
 
     const fetchReviews = async () => {
         const {data} = await axios.post(
-            `http://localhost/list/review/${page}`,
+            `http://localhost/list/review/0`,
             {reservation_idx: reservationIdx}
         );
         console.log(data);
@@ -137,6 +159,7 @@ const ReviewPage = () => {
             (review) => String(review.target_id) === target
         );
         setReviews({data, list: relatedReviews});
+        console.log('필터링된 리뷰:', relatedReviews);
     };
 
     const filteredList = reviews.list
@@ -150,6 +173,10 @@ const ReviewPage = () => {
     };
     // 리뷰
     const handReviewForm = () => {
+        if (!reviewTarget) {
+            alert('센터 또는 트레이너를 먼저 선택해주세요.');
+            return;
+        }
         setShowReviewForm(prev => !prev);
     };
 
@@ -182,11 +209,12 @@ const ReviewPage = () => {
             }
         ]
     };
-    
+
     const reviewsPerPage = 10;
     const startIndex = (page - 1) * reviewsPerPage;
     const endIndex = startIndex + reviewsPerPage;
-    const paginatedReviews = filteredList?.slice(startIndex, endIndex);
+    const paginatedReviews = filteredList
+        ?.slice(startIndex, endIndex);
 
     return (
         <div>
@@ -201,8 +229,8 @@ const ReviewPage = () => {
                     )}>
                     {
                         target === trainerId
-                            ? trainerId + ' 트레이너 님의 리뷰'
-                            : centerId + ' 센터 리뷰'
+                            ? trainerName + ' 트레이너 님의 리뷰'
+                            : centerName + ' 센터 리뷰'
                     }
                 </p>
             </div>
@@ -266,9 +294,24 @@ const ReviewPage = () => {
                         }
                     </div>
 
+                    <button
+                        className={`review-toggle-btn ${reviewTarget === 'center'
+                            ? 'active'
+                            : ''}`}
+                        onClick={() => handleReviewTargetChange('center')}>
+                        센터 리뷰
+                    </button>
+                    <button
+                        className={`review-toggle-btn ${reviewTarget === 'trainer'
+                            ? 'active'
+                            : ''}`}
+                        onClick={() => handleReviewTargetChange('trainer')}>
+                        트레이너 리뷰
+                    </button>
+
                     <div>
                         <div className="trainer-detail-container"></div>
-                        <button onClick={() => handReviewForm(prev => !prev)} className="submit-button">
+                        <button onClick={handReviewForm} className="submit-button">
                             {
                                 showReviewForm
                                     ? '리뷰 작성 닫기'
@@ -276,196 +319,175 @@ const ReviewPage = () => {
                             }
                         </button>
 
-                    <div>
+                        <div></div>
 
                     </div>
-
-
-                    </div>
-                    {showReviewForm && (<div>
-
-                    {/* 리뷰 작성 인풋 */}
-                    <div className="trainer-review-write">
-                        <h1>{target}
-                            리뷰 작성</h1>
-                        <form onSubmit={handleReviewSubmit}>
-                            <div className="star-input">
-                                {
-                                    [1, 2, 3, 4, 5].map(i => (
-                                        <span
-                                            key={i}
-                                            style={{
-                                                position: 'relative',
-                                                display: 'inline-block'
-                                            }}>
-                                            <FaStar
-                                                className="star"
-                                                color={(
-                                                    (hoverStar || star) >= i)
-                                                    ? '#444444'
-                                                    : '#C0C6CC'}
-                                                onMouseEnter={() => handleStarHover(i)}
-                                                onMouseLeave={handleStarOut}
-                                                onClick={() => handleStarClick(i)}
-                                                style={{
-                                                    cursor: 'pointer',
-                                                    fontSize: '2rem'
-                                                }}/> {/* 0.5점 지원 */}
-                                            <FaStar
-                                                className="star half"
-                                                color={(
-                                                    (hoverStar || star) >= i - 0.5) && ((hoverStar || star) < i)
-                                                    ? '#444444'
-                                                    : 'transparent'}
-                                                style={{
-                                                    cursor: 'pointer',
-                                                    fontSize: '2rem',
-                                                    position: 'absolute',
-                                                    left: 0,
-                                                    zIndex: 1,
-                                                    clipPath: 'inset(0 50% 0 0)'
-                                                }}
-                                                onMouseEnter={() => handleStarHover(i - 0.5)}
-                                                onMouseLeave={handleStarOut}
-                                                onClick={() => handleStarClick(i - 0.5)}/>
-                                        </span>
-                                    ))
-                                }
-                                <span className="star-score">{
-                                        star > 0
-                                            ? star
-                                            : ''
-                                    }</span>
-                            </div>
-                            <textarea
-                                className="review-textarea"
-                                placeholder="트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
-                                minLength={15}
-                                value={reviewText}
-                                onChange={e => setReviewText(e.target.value)}
-                                required="required"/>
-                            <div className="review-file-input">
-                                <label htmlFor="trainer-review-upload" className="file-label">
-                                    <FaCamera/>
-                                    사진첨부 (최대 5장)
-                                    <input
-                                        id="trainer-review-upload"
-                                        type="file"
-                                        accept="image/jpeg,image/png"
-                                        multiple="multiple"
-                                        onChange={handleFileChange}
-                                        style={{
-                                            display: 'none'
-                                        }}/>
-                                </label>
-                                <div className="review-file-preview">
-                                    {
-                                        files
-                                            ?.map((file, i) => (<span key={i} className="file-name">{file.name}</span>))
-                                    }
-                                </div>
-                            </div>
-                            <button
-                                type="submit"
-                                className="review-submit-btn"
-                                onClick={handleReviewSubmit}>등록하기</button>
-                        </form>
-
-                    </div>
-                    </div>)}
-
-                    
-
-                    {/* 리뷰 리스트 */}
-                    <div className='wrap padding_120_0'>
-                        
-                    <div className="trainer-reviews">
-
-                    <button
-                            className={`review-toggle-btn ${reviewTarget === 'center'
-                                ? 'active'
-                                : ''}`}
-                            onClick={() => handleReviewTargetChange('center')}>
-                            센터 리뷰
-                        </button>
-                        <button
-                            className={`review-toggle-btn ${reviewTarget === 'trainer'
-                                ? 'active'
-                                : ''}`}
-                            onClick={() => handleReviewTargetChange('trainer')}>
-                            트레이너 리뷰
-                        </button>
-
-                        <h4>리뷰</h4>
-                        <ul>
-                        {paginatedReviews?.map(r => (
-                            <li key={r.review_idx}>
-                                            <span className="review-user">{r.user_id}</span>
-                                            <span className="review-rating"><FaStar/> {r.rating}</span>
-                                            <span className="review-content">{r.content}</span>
-                                            {
-                                                r.file_idx && r.file_idx
-                                                    ?.length > 0 && (
-                                                        <span className="review-images">
-                                                            {
-                                                                JSON
-                                                                    .parse(r.file_idx)
-                                                                    .map((img, idx) => (
-                                                                        <img
-                                                                            key={idx}
-                                                                            src={`http://localhost/reviewImg/${img}`}
-                                                                            alt="첨부"
-                                                                            style={{
-                                                                                width: 40,
-                                                                                height: 40,
-                                                                                objectFit: 'cover',
-                                                                                borderRadius: '0.4rem',
-                                                                                marginLeft: 4
-                                                                            }}/>
-                                                                    ))
-                                                            }
-                                                        </span>
-                                                    )
-                                            }
-                                            <span className="review-date">{r.date}</span>
-
-                                        </li>
-                                    ))
-                            }
-                        </ul>
-                    </div>
-                    <div className="pagination-buttons-fixed">
-                        {
-                            page > 1 && (
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="review-submit-btn-n"
-                                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}>
-                                        이전 페이지
-                                    </button>
-                                </div>
-                            )
-                        }
-                    </div>
-
                     {
-                        filteredList.length > 0 && (
+                        showReviewForm && (
                             <div>
-                                <button
-                                    type="button"
-                                    className="review-submit-btn"
-                                    onClick={() => setPage((prev) => prev + 1)}>
-                                    다음 페이지
-                                </button>
+
+                                {/* 리뷰 작성 인풋 */}
+                                <div className="trainer-review-write">
+                                    <h2>{targetName} 리뷰 작성</h2>
+                                    <form onSubmit={handleReviewSubmit}>
+                                        <div className="star-input">
+                                            {
+                                                [1, 2, 3, 4, 5].map(i => (
+                                                    <span
+                                                        key={i}
+                                                        style={{
+                                                            position: 'relative',
+                                                            display: 'inline-block'
+                                                        }}>
+                                                        <FaStar
+                                                            className="star"
+                                                            color={(
+                                                                (hoverStar || star) >= i)
+                                                                ? '#444444'
+                                                                : '#C0C6CC'}
+                                                            onMouseEnter={() => handleStarHover(i)}
+                                                            onMouseLeave={handleStarOut}
+                                                            onClick={() => handleStarClick(i)}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                fontSize: '2rem'
+                                                            }}/> {/* 0.5점 지원 */}
+                                                        <FaStar
+                                                            className="star half"
+                                                            color={(
+                                                                (hoverStar || star) >= i - 0.5) && ((hoverStar || star) < i)
+                                                                ? '#444444'
+                                                                : 'transparent'}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                fontSize: '2rem',
+                                                                position: 'absolute',
+                                                                left: 0,
+                                                                zIndex: 1,
+                                                                clipPath: 'inset(0 50% 0 0)'
+                                                            }}
+                                                            onMouseEnter={() => handleStarHover(i - 0.5)}
+                                                            onMouseLeave={handleStarOut}
+                                                            onClick={() => handleStarClick(i - 0.5)}/>
+                                                    </span>
+                                                ))
+                                            }
+                                            <span className="star-score">{
+                                                    star > 0
+                                                        ? star
+                                                        : ''
+                                                }</span>
+                                        </div>
+                                        <textarea
+                                            className="review-textarea"
+                                            placeholder="트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
+                                            minLength={15}
+                                            value={reviewText}
+                                            onChange={e => setReviewText(e.target.value)}
+                                            required="required"/>
+                                        <div className="review-file-input">
+                                            <label htmlFor="trainer-review-upload" className="file-label">
+                                                <FaCamera/>
+                                                사진첨부 (최대 5장)
+                                                <input
+                                                    id="trainer-review-upload"
+                                                    type="file"
+                                                    accept="image/jpeg,image/png"
+                                                    multiple="multiple"
+                                                    onChange={handleFileChange}
+                                                    style={{
+                                                        display: 'none'
+                                                    }}/>
+                                            </label>
+                                            <div className="review-file-preview">
+                                                {
+                                                    files
+                                                        ?.map((file, i) => (<span key={i} className="file-name">{file.name}</span>))
+                                                }
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="review-submit-btn"
+                                            onClick={handleReviewSubmit}>등록하기</button>
+                                    </form>
+
+                                </div>
                             </div>
                         )
                     }
 
+                    {/* 리뷰 리스트 */}
+                    <div className='wrap padding_120_0'>
+
+                        <div className="trainer-reviews">
+                            <h4>리뷰</h4>
+                            <ul>
+                                {
+                                    paginatedReviews
+                                        ?.map(r => (
+                                            <li key={r.review_idx}>
+                                                <span className="review-user">{r.user_id}</span>
+                                                <span className="review-rating"><FaStar/> {r.rating}</span>
+                                                <span className="review-content">{r.content}</span>
+                                                {
+                                                    r.file_idx && r.file_idx
+                                                        ?.length > 0 && (
+                                                            <span className="review-images">
+                                                                {
+                                                                    JSON
+                                                                        .parse(r.file_idx)
+                                                                        .map((img, idx) => (
+                                                                            <img
+                                                                                key={idx}
+                                                                                src={`http://localhost/reviewImg/${img}`}
+                                                                                alt="첨부"
+                                                                                style={{
+                                                                                    width: 40,
+                                                                                    height: 40,
+                                                                                    objectFit: 'cover',
+                                                                                    borderRadius: '0.4rem',
+                                                                                    marginLeft: 4
+                                                                                }}/>
+                                                                        ))
+                                                                }
+                                                            </span>
+                                                        )
+                                                }
+                                                <span className="review-date">{r.date}</span>
+
+                                            </li>
+                                        ))
+                                }
+                            </ul>
+                        </div>
+                        <div className="pagination-buttons-fixed">
+                            {
+                                page > 1 && (
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="review-submit-btn-n"
+                                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}>
+                                            이전 페이지
+                                        </button>
+                                    </div>
+                                )
+                            }
+                        </div>
+
+                        <div>
+                            {
+                                reviews.list && reviews.list.length === 10 && (
+                                    <button onClick={() => setPage(prev => prev + 1)}>다음 페이지</button>
+                                )
+                            }
+                        </div>
+
+                    </div>
                 </div>
+                <Footer/>
             </div>
-            <Footer/>
-        </div>
         </div>
     );
 
