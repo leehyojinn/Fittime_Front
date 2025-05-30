@@ -71,7 +71,12 @@ const CenterSearch = () => {
   useEffect(() => {
     // API 호출하여 센터 태그 로드
     const mockTags = ['24시간', '샤워시설', '피트니스', '주차가능', '락커', '무료 PT'];
-    setAvailableTags(mockTags);
+    axios.post('http://localhost/tag_list',{category:"센터"})
+        .then(({data}) => {
+            console.log(data);
+            setAvailableTags(data.list);
+        })
+    //setAvailableTags(mockTags);
   }, []);
 
   // 검색 실행
@@ -113,7 +118,7 @@ const CenterSearch = () => {
       }
     ];
 
-      const {data} = axios.post('http://localhost/search/location',
+      const {data} = await axios.post('http://localhost/search/location',
           {
               "sido":location.city,
               "gugun":location.district,
@@ -123,8 +128,8 @@ const CenterSearch = () => {
 
       console.log(data);
 
-    setSearchResults(mockResults);
-    applyFilters(mockResults);
+    setSearchResults(data.list);
+    applyFilters(data.list);
   };
 
   // 필터 적용
@@ -136,8 +141,13 @@ const CenterSearch = () => {
     }
     
     if (filters.tags.length > 0) {
-      filtered = filtered.filter(center => 
-        filters.tags.some(tag => center.tags.includes(tag))
+      filtered = filtered.filter(center => {
+            if(!center.tags){
+                return false;
+            }
+
+            return filters.tags.some(tag => JSON.parse(center.tags).includes(tag))
+          }
       );
     }
     
@@ -154,15 +164,18 @@ const CenterSearch = () => {
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-    applyFilters(searchResults);
   };
+
+    useEffect(() => {
+        applyFilters(searchResults);
+    }, [filters]);
 
   // 태그 토글
   const toggleTag = (tag) => {
     const newTags = filters.tags.includes(tag)
       ? filters.tags.filter(t => t !== tag)
       : [...filters.tags, tag];
-    
+
     handleFilterChange('tags', newTags);
   };
 
@@ -278,13 +291,13 @@ const CenterSearch = () => {
                     <h3>태그</h3>
                     <div className="tag-options">
                     {availableTags.map((tag) => (
-                        <label key={tag} className="tag-checkbox">
+                        <label key={tag.tag_idx} className="tag-checkbox">
                         <input 
-                            type="checkbox" 
-                            checked={filters.tags.includes(tag)}
-                            onChange={() => toggleTag(tag)}
+                            type="checkbox"
+                            checked={filters.tags.includes(tag.tag_name)}
+                            onChange={() => toggleTag(tag.tag_name)}
                         />
-                        {tag}
+                        {tag.tag_name}
                         </label>
                     ))}
                     </div>
@@ -326,11 +339,11 @@ const CenterSearch = () => {
                     <p>지도 API가 여기에 로드됩니다.</p>
                     <p>실제 구현 시 카카오맵 또는 네이버맵 API를 사용할 수 있습니다.</p>
                     
-                    {filteredResults.length > 0 && (
+                    {filteredResults?.length > 0 && (
                     <div className="map-markers">
                         <h3>지도에 표시될 센터:</h3>
                         <ul>
-                        {filteredResults.map(center => (
+                        {filteredResults?.map(center => (
                             <li key={center.center_idx}>
                             {center.center_name} - {center.address}
                             </li>
@@ -342,12 +355,13 @@ const CenterSearch = () => {
                 </div>
             ) : (
                 <div className="search-results">
-                {filteredResults.length > 0 ? (
-                    filteredResults.map((center) => (
+                {filteredResults?.length > 0 ? (
+                    filteredResults?.map((center) => (
                     <div key={center.center_idx} className="center-card">
                         <div className="center-image">
                         <Image 
-                            src={center.center_image || '/default-center.jpg'} 
+                            //src={center.center_image || '/default-center.jpg'}
+                            src={`http://localhost/profileImg/profile/${center.center_id}`}
                             alt={center.center_name}
                             width={200}
                             height={150}
@@ -363,26 +377,29 @@ const CenterSearch = () => {
                             <span>{center.address}</span>
                         </div>
                         
-                        <div className="center-description">
-                            {center.description}
-                        </div>
+                        {/*<div className="center-description">*/}
+                        {/*    {center.description}*/}
+                        {/*</div>*/}
                         
                         <div className="center-price">
                             <span className="label">최저 가격:</span>
-                            <span className="value">{center.lowest_price.toLocaleString()}원~</span>
+                            {center.price && <span className="value">{center.price.toLocaleString()}원~</span>}
                         </div>
                         
                         <div className="center-rating">
                             <FaStar className="star-icon" />
-                            <span className="rating">{center.rating.toFixed(1)}</span>
-                            <span className="rating-count">({center.rating_count})</span>
+                            {center.review_cnt > 0 &&
+                                <span className="rating">{center.rating > 1 ? center.rating : center.rating.toFixed(1)}</span>}
+                            <span className="rating-count">({center.review_cnt})</span>
                         </div>
-                        
+
+                        {center.tags && (
                         <div className="center-tags">
-                            {center.tags.map((tag) => (
-                            <span key={tag} className="tag">{tag}</span>
+                            {JSON.parse(center.tags).map((tag) => (
+                            <span key={tag.tag_idx} className="tag">{tag}</span>
                             ))}
                         </div>
+                            )}
                         </div>
                     </div>
                     ))
