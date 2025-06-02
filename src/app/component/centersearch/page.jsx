@@ -363,8 +363,6 @@ const CenterSearch = () => {
                             //src={center.center_image || '/default-center.jpg'}
                             src={`http://localhost/profileImg/profile/${center.center_id}`}
                             alt={center.center_name}
-                            width={200}
-                            height={150}
                             className="facility-image"
                         />
                         </div>
@@ -372,7 +370,7 @@ const CenterSearch = () => {
                         <div className="center-info">
                         <h3 className="center-name">{center.center_name}</h3>
                         
-                        <div className="center-address" style={{fontSize:"1.2rem"}}>
+                        <div className="center-address" style={{fontSize:"1.5rem"}}>
                             <FaMapMarkerAlt className="location-icon" />
                             <span>{center.address}</span>
                         </div>
@@ -390,13 +388,13 @@ const CenterSearch = () => {
                             <FaStar className="star-icon" />
                             {center.review_cnt > 0 &&
                                 <span className="rating">{center.rating > 1 ? center.rating : center.rating.toFixed(1)}</span>}
-                            <span className="rating-count">({center.review_cnt})</span>
+                            <span className="rating-count" style={{fontSize:"1.4rem"}}>({center.review_cnt})</span>
                         </div>
 
                         {center.tags && (
                         <div className="center-tags">
                             {JSON.parse(center.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
+                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
                             ))}
                         </div>
                             )}

@@ -415,7 +415,7 @@ const CenterMyPage = () => {
                         <td>
                         <button className="mypage-small-btn mr_10" onClick={handleMoveProduct}><FaEdit />수정</button>
                         {p.status === "1" ?
-                            <button className="mypage-small-btn" onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />비활성화</button>
+                            <button className="mypage-small-btn" style={{background:'#4444', color: 'black'}} onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />비활성화</button>
                         :
                             <button className="mypage-small-btn" onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />활성화</button>
                         }

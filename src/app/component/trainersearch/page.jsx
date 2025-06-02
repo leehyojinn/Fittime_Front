@@ -366,7 +366,7 @@ const TrainerSearch = () => {
                 {filteredResults.length > 0 ? (
                 filteredResults.map((trainer) => (
                     <div key={trainer.user_id} className="trainer-card">
-                    <div className="trainer-image" style={{width:"fit-content"}}>
+                    <div className="center-image" style={{width:"fit-content"}}>
                         <img
                         //src={trainer.profile_image || '/default-profile.jpg'}
                         src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
@@ -378,9 +378,9 @@ const TrainerSearch = () => {
                     </div>
                     
                     <div className="trainer-info">
-                        <h3 className="trainer-name">{trainer.name}</h3>
+                        <h3 className="center-name">{trainer.name}</h3>
                         
-                        <div className="trainer-center"  style={{fontSize: "1.2rem"}}>
+                        <div className="trainer-center"  style={{fontSize: "1.5rem"}}>
                         <FaMapMarkerAlt className="location-icon" />
                         <span>{trainer.center_name}</span>
                         </div>
@@ -399,13 +399,13 @@ const TrainerSearch = () => {
                         <FaStar className="star-icon" />
                             {trainer.review_cnt > 0 &&
                             <span className="rating">{trainer.rating > 1 ? trainer.rating : trainer.rating.toFixed(1)}</span>}
-                        <span className="rating-count">({trainer.review_cnt})</span>
+                        <span className="rating-count"style={{fontSize:"1.4rem"}}>({trainer.review_cnt})</span>
                         </div>
 
                         {trainer.tags && (
                         <div className="trainer-tags">
                         {JSON.parse(trainer.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
+                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
                         ))}
                         </div>
                             )}

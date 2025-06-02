@@ -5,12 +5,37 @@ import Image from 'next/image';
 import { FaStar, FaMapMarkerAlt, FaUser, FaBuilding, FaSearch } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import axios from "axios";
 
 const NameSearch = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchType, setSearchType] = useState('all'); // 'all', 'trainer', 'center'
     const [searchResults, setSearchResults] = useState({trainers: [], centers: []});
     const [isLoading, setIsLoading] = useState(false);
+    const [page,setPage] = useState(1);
+
+
+    const search=async()=>{
+        const {data} = await axios.post('http://localhost/search/name',{name:searchTerm, page:page});
+        console.log(data);
+        // const results = {
+        //     trainers: searchType === 'center'
+        //         ? []
+        //         : data.trainer_list,
+        //     centers: searchType === 'trainer'
+        //         ? []
+        //         : data.center_list
+        // };
+
+        const results = {
+            trainers: data.trainer_list ?? [],
+            centers: data.center_list ?? []
+        };
+        console.log(results);
+
+        setSearchResults(results);
+        setIsLoading(false);
+    }
 
     // 검색 실행
     const handleSearch = () => {
@@ -20,7 +45,7 @@ const NameSearch = () => {
         setIsLoading(true);
 
         // API 호출하여 검색 결과 로드
-        setTimeout(() => {
+        setTimeout(async() => {
             const mockTrainers = [
                 {
                     user_id: 'trainer1',
@@ -36,13 +61,13 @@ const NameSearch = () => {
                     rating_count: 24
                 }, {
                     user_id: 'trainer2',
-                    user_name: '박트레이닝',
+                    user_name: '파트레이닝',
                     profile_image: '/trainer2.jpg',
                     center_name: '피트니스클럽',
                     lowest_price: 120000,
                     exercise_type: '필라테스',
                     tags: [
-                        '유경험자', '세심한'
+                        '유경험자', '세심한' , '전문적인', '파이팅', '저기요'
                     ],
                     rating: 4.9,
                     rating_count: 18
@@ -75,17 +100,19 @@ const NameSearch = () => {
                 }
             ].filter(center => center.center_name.includes(searchTerm));
 
-            const results = {
-                trainers: searchType === 'center'
-                    ? []
-                    : mockTrainers,
-                centers: searchType === 'trainer'
-                    ? []
-                    : mockCenters
-            };
+            await search();
 
-            setSearchResults(results);
-            setIsLoading(false);
+            // const results = {
+            //     trainers: searchType === 'center'
+            //         ? []
+            //         : mockTrainers,
+            //     centers: searchType === 'trainer'
+            //         ? []
+            //         : mockCenters
+            // };
+            //
+            // setSearchResults(results);
+            // setIsLoading(false);
         }, 800); // 검색 지연 시뮬레이션
     };
 
@@ -153,7 +180,7 @@ const NameSearch = () => {
                     </div>
                 ) : (
                     <>
-                    {searchResults.trainers.length > 0 && (
+                    {searchType==='trainer' && searchResults.trainers.length > 0 && (
                         <div className="result-section">
                         <h3 className="section-title">
                             <FaUser /> 트레이너 검색 결과
@@ -161,54 +188,58 @@ const NameSearch = () => {
                         
                         <div className="trainer-results">
                             {searchResults.trainers.map((trainer) => (
-                            <div key={trainer.user_id} className="trainer-card">
-                                <div className="trainer-image">
-                                <Image 
-                                    src={trainer.profile_image || '/default-profile.jpg'} 
-                                    alt={trainer.user_name}
-                                    width={100}
-                                    height={100}
-                                    className="profile-image"
-                                />
+                                <div key={trainer.user_id} className="trainer-card">
+                                    <div className="center-image" style={{width:"fit-content"}}>
+                                        <img
+                                            //src={trainer.profile_image || '/default-profile.jpg'}
+                                            src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
+                                            alt={trainer.name}
+                                            width={200}
+                                            height={150}
+                                            className="profile-image"
+                                        />
+                                    </div>
+
+                                    <div className="trainer-info">
+                                        <h3 className="center-name">{trainer.name}</h3>
+
+                                        <div className="trainer-center"  style={{fontSize: "1.2rem"}}>
+                                            <FaMapMarkerAlt className="location-icon" />
+                                            <span>{trainer.center_name}</span>
+                                        </div>
+
+                                        {/*<div className="trainer-exercise-type">*/}
+                                        {/*<span className="label">전문 분야:</span>*/}
+                                        {/*<span className="value">{trainer.exercise_type}</span>*/}
+                                        {/*</div>*/}
+
+                                        <div className="trainer-price">
+                                            <span className="label">최저 가격:</span>
+                                            {trainer.price && <span className="value">{trainer.price.toLocaleString()}원~</span>}
+                                        </div>
+
+                                        <div className="trainer-rating">
+                                            <FaStar className="star-icon" />
+                                            {trainer.review_cnt > 0 &&
+                                                <span className="rating">{trainer.rating > 1 ? trainer.rating : trainer.rating.toFixed(1)}</span>}
+                                            <span className="rating-count">({trainer.review_cnt})</span>
+                                        </div>
+
+                                        {trainer.tags && (
+                                            <div className="trainer-tags">
+                                                {JSON.parse(trainer.tags).map((tag) => (
+                                                    <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                
-                                <div className="trainer-info">
-                                <h4 className="trainer-name">{trainer.user_name}</h4>
-                                
-                                <div className="trainer-center">
-                                    <FaMapMarkerAlt className="location-icon" />
-                                    <span>{trainer.center_name}</span>
-                                </div>
-                                
-                                <div className="trainer-exercise-type">
-                                    <span className="label">전문 분야:</span>
-                                    <span className="value">{trainer.exercise_type}</span>
-                                </div>
-                                
-                                <div className="trainer-price">
-                                    <span className="label">최저 가격:</span>
-                                    <span className="value">{trainer.lowest_price.toLocaleString()}원~</span>
-                                </div>
-                                
-                                <div className="trainer-rating">
-                                    <FaStar className="star-icon" />
-                                    <span className="rating">{trainer.rating.toFixed(1)}</span>
-                                    <span className="rating-count">({trainer.rating_count})</span>
-                                </div>
-                                
-                                <div className="trainer-tags">
-                                    {trainer.tags.map((tag) => (
-                                    <span key={tag} className="tag">{tag}</span>
-                                    ))}
-                                </div>
-                                </div>
-                            </div>
                             ))}
                         </div>
                         </div>
                     )}
                     
-                    {searchResults.centers.length > 0 && (
+                    {searchType==='center' && searchResults.centers.length > 0 && (
                         <div className="result-section">
                         <h3 className="section-title">
                             <FaBuilding /> 운동기관 검색 결과
@@ -216,47 +247,160 @@ const NameSearch = () => {
                         
                         <div className="center-results">
                             {searchResults.centers.map((center) => (
-                            <div key={center.center_idx} className="center-card">
-                                <div className="center-image">
-                                <Image 
-                                    src={center.center_image || '/default-center.jpg'} 
-                                    alt={center.center_name}
-                                    width={150}
-                                    height={100}
-                                    className="facility-image"
-                                />
+                                <div key={center.center_idx} className="center-card">
+                                    <div className={"center-image"} style={{width:"fit-content"}}>
+                                        <img
+                                            //src={center.center_image || '/default-center.jpg'}
+                                            src={`http://localhost/profileImg/profile/${center.center_id}`}
+                                            alt={center.center_name}
+                                            className="facility-image"
+                                        />
+                                    </div>
+
+                                    <div className="center-info">
+                                        <h3 className="center-name">{center.center_name}</h3>
+
+                                        <div className="center-address" style={{fontSize:"1.2rem"}}>
+                                            <FaMapMarkerAlt className="location-icon" />
+                                            <span>{center.address}</span>
+                                        </div>
+
+                                        {/*<div className="center-description">*/}
+                                        {/*    {center.description}*/}
+                                        {/*</div>*/}
+
+                                        <div className="center-price">
+                                            <span className="label">최저 가격:</span>
+                                            {center.price && <span className="value"> {center.price.toLocaleString()}원~</span>}
+                                        </div>
+
+                                        <div className="center-rating">
+                                            <FaStar className="star-icon" />
+                                            {center.review_cnt > 0 &&
+                                                <span className="rating">{center.rating > 1 ? center.rating : center.rating.toFixed(1)}</span>}
+                                            <span className="rating-count">({center.review_cnt})</span>
+                                        </div>
+
+                                        {center.tags && (
+                                            <div className="center-tags">
+                                                {JSON.parse(center.tags).map((tag) => (
+                                                    <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                
-                                <div className="center-info">
-                                <h4 className="center-name">{center.center_name}</h4>
-                                
-                                <div className="center-address">
-                                    <FaMapMarkerAlt className="location-icon" />
-                                    <span>{center.address}</span>
-                                </div>
-                                
-                                <div className="center-price">
-                                    <span className="label">최저 가격:</span>
-                                    <span className="value">{center.lowest_price.toLocaleString()}원~</span>
-                                </div>
-                                
-                                <div className="center-rating">
-                                    <FaStar className="star-icon" />
-                                    <span className="rating">{center.rating.toFixed(1)}</span>
-                                    <span className="rating-count">({center.rating_count})</span>
-                                </div>
-                                
-                                <div className="center-tags">
-                                    {center.tags.map((tag) => (
-                                    <span key={tag} className="tag">{tag}</span>
-                                    ))}
-                                </div>
-                                </div>
-                            </div>
                             ))}
                         </div>
                         </div>
                     )}
+
+                        {searchType==='all' && (
+                            <div style={{display: 'flex', gap:"inherit"}}>
+                                <div className="result-section" style={{width:'50%'}}>
+                                    <div className="center-results" >
+                                        <div className="search-title" style={{fontSize:'1.5rem'}}>센터</div>
+                                        {searchResults.centers.map((center) => (
+                                            <div key={center.center_idx} className="center-card">
+                                                <div className="center-image" style={{width:"fit-content"}}>
+                                                    <img
+                                                        //src={center.center_image || '/default-center.jpg'}
+                                                        src={`http://localhost/profileImg/profile/${center.center_id}`}
+                                                        alt={center.center_name}
+                                                        width={150}
+                                                        height={150}
+                                                        className="facility-image"
+                                                    />
+                                                </div>
+
+                                                <div className="center-info" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                    <div style={{display: 'flex', gap:"inherit"}}>
+                                                        <h4 className="center-name" style={{fontSize:'2rem', fontWeight:"bold", textAlign:"left", width:'100%'}}>{center.center_name}</h4>
+
+                                                        <div className="center-rating" style={{justifyContent: "flex-end"}}>
+                                                            <FaStar className="star-icon" />
+                                                            {center.cnt > 0 &&
+                                                                <span className="rating" style={{fontSize:"1.6rem"}}>{center.rating>1?center.rating : center.rating.toFixed(1)}</span>}
+                                                            <span className="rating-count" style={{fontSize:'1.2rem'}}>({center.cnt})</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="center-address">
+                                                        <FaMapMarkerAlt className="location-icon" />
+                                                        <span style={{fontSize:"1.6rem"}}>{center.address}</span>
+                                                    </div>
+
+                                                    <div className="center-price" style={{textAlign:"left"}}>
+                                                        <span className="label">최저 가격:</span>
+                                                        {center.price && <span className="value">{center.price.toLocaleString()}원~</span>}
+                                                    </div>
+
+                                                    {center.tags && (
+                                                    <div className="center-tags" style={{marginTop:'0px'}}>
+                                                        {JSON.parse(center.tags).map((tag) => (
+                                                            <span key={tag} className="mypage_tag" style={{fontSize:"1.3rem"}}>{tag}</span>
+                                                        ))}
+                                                    </div>
+                                                        )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="result-section" style={{width:'50%'}}>
+                                    <div className="center-results">
+                                        <div className="search-title" style={{fontSize:'1.5rem'}}>트레이너</div>
+                                        {searchResults.trainers.map((trainer) => (
+                                            <div key={trainer.user_id} className="center-card" style={{height:'178px'}}>
+                                                    <div className="center-image"  style={{width:"fit-content"}}>
+                                                        <img
+                                                            //src={trainer.profile_image || '/default-profile.jpg'}
+                                                            src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
+                                                            alt={trainer.user_name}
+                                                            width={150}
+                                                            height={150}
+                                                            className="facility-image"
+                                                        />
+                                                    </div>
+
+                                                    <div className="center-info" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                        <div style={{display: 'flex', gap:"inherit"}}>
+                                                            <h4 className="center-name" style={{fontSize:'2rem', fontWeight:"bold", textAlign:"left", width:'100%'}}>{trainer.user_name}</h4>
+
+                                                            <div className="center-rating" style={{justifyContent: "flex-end"}}>
+                                                                <FaStar className="star-icon" />
+                                                                {trainer.cnt > 0 &&
+                                                                <span className="rating" style={{fontSize:"1.6rem"}}>{trainer.rating > 1 ? trainer.rating : trainer.rating.toFixed(1)}</span>}
+                                                                <span className="rating-count" style={{fontSize:'1.2rem'}}>({trainer.cnt})</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="center-address">
+                                                            <FaMapMarkerAlt className="location-icon" />
+                                                            <span style={{fontSize:"1.6rem"}}>{trainer.center_name}</span>
+                                                        </div>
+
+                                                        {/*<div className="trainer-exercise-type">*/}
+                                                        {/*    <span className="label">전문 분야:</span>*/}
+                                                        {/*    <span className="value">{trainer.exercise_type}</span>*/}
+                                                        {/*</div>*/}
+
+                                                        <div className="center-price" style={{textAlign:"left"}}>
+                                                            <span className="label">최저 가격:</span>
+                                                            {trainer.price && <span className="value">{trainer.price.toLocaleString()}원~</span>}
+                                                        </div>
+                                                        {trainer.tags && (
+                                                        <div className="center-tags" style={{marginTop:'0px'}}>
+                                                            {JSON.parse(trainer.tags).map((tag) => (
+                                                                <span key={tag} className="mypage_tag" style={{fontSize:"1.3rem"}}>{tag}</span>
+                                                            ))}
+                                                        </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
                 </div>
