@@ -68,8 +68,8 @@ const MemberMyPage = () => {
     }
   };
 
-  const handleMoveReview = (center_id,trainer_id,reservation_idx)=>{
-    router.push(`/component/review?center_id=${center_id}&trainer_id=${trainer_id}&reservation_idx=${reservation_idx}`);
+  const handleMoveReview = (center_id,trainer_id,reservation_idx,trainer_name,center_name)=>{
+    router.push(`/component/review?center_id=${center_id}&trainer_id=${trainer_id}&reservation_idx=${reservation_idx}&trainer_name=${trainer_name}&&center_name=${center_name}`);
   }
 
   useEffect(() => {
@@ -229,7 +229,7 @@ const MemberMyPage = () => {
                     <td>{r.start_time}~{r.end_time}</td>
                     <td>{r.trainer_name}</td>
                     <td>{r.status}</td>
-                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" style={{background:'#444444'}} onClick={()=>handleMoveReview(r.center_id,r.trainer_id,r.reservation_idx)}>리뷰쓰기</button></td>
+                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" style={{background:'#444444'}} onClick={()=>handleMoveReview(r.center_id,r.trainer_id,r.reservation_idx,r.trainer_name,r.center_name)}>리뷰쓰기</button></td>
                   </tr>
                 ))}
               </tbody>
