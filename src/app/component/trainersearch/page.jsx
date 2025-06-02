@@ -6,6 +6,7 @@ import { FaStar, FaMapMarkerAlt, FaFilter } from 'react-icons/fa';
 import Footer from '../../Footer';
 import Header from '../../Header';
 import axios from "axios";
+import {useRouter} from "next/navigation";
 
 const TrainerSearch = () => {
   // 상태 관리
@@ -24,6 +25,11 @@ const TrainerSearch = () => {
   const [districtOptions, setDistrictOptions] = useState([]);
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+  const router = useRouter();
+
+    const handleMoveTrainer = (id) =>{
+        router.push(`/component/trainerdetail?user_id=${id}`)
+    }
 
     useEffect(() => {
         getCity();
@@ -365,7 +371,7 @@ const TrainerSearch = () => {
             <div className="search-results">
                 {filteredResults.length > 0 ? (
                 filteredResults.map((trainer) => (
-                    <div key={trainer.user_id} className="trainer-card">
+                    <div key={trainer.user_id} className="trainer-card" onClick={()=>handleMoveTrainer(trainer.user_id)}>
                     <div className="center-image" style={{width:"fit-content"}}>
                         <img
                         //src={trainer.profile_image || '/default-profile.jpg'}

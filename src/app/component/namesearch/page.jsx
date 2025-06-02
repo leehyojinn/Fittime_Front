@@ -6,6 +6,7 @@ import { FaStar, FaMapMarkerAlt, FaUser, FaBuilding, FaSearch } from 'react-icon
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
+import {useRouter} from "next/navigation";
 
 const NameSearch = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -13,6 +14,15 @@ const NameSearch = () => {
     const [searchResults, setSearchResults] = useState({trainers: [], centers: []});
     const [isLoading, setIsLoading] = useState(false);
     const [page,setPage] = useState(1);
+    const router = useRouter();
+
+    const handleMoveTrainer = (id) =>{
+        router.push(`/component/trainerdetail?user_id=${id}`)
+    }
+
+    const handleMoveCenter = (idx) =>{
+        router.push(`/component/centerdetail?center_idx=${idx}`)
+    }
 
 
     const search=async()=>{
@@ -188,7 +198,7 @@ const NameSearch = () => {
                         
                         <div className="trainer-results">
                             {searchResults.trainers.map((trainer) => (
-                                <div key={trainer.user_id} className="trainer-card">
+                                <div key={trainer.user_id} className="trainer-card" onClick={()=>handleMoveTrainer(trainer.user_id)}>
                                     <div className="center-image" style={{width:"fit-content"}}>
                                         <img
                                             //src={trainer.profile_image || '/default-profile.jpg'}
@@ -247,7 +257,7 @@ const NameSearch = () => {
                         
                         <div className="center-results">
                             {searchResults.centers.map((center) => (
-                                <div key={center.center_idx} className="center-card">
+                                <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_idx)}>
                                     <div className={"center-image"} style={{width:"fit-content"}}>
                                         <img
                                             //src={center.center_image || '/default-center.jpg'}
@@ -301,7 +311,7 @@ const NameSearch = () => {
                                     <div className="center-results" >
                                         <div className="search-title" style={{fontSize:'1.5rem'}}>센터</div>
                                         {searchResults.centers.map((center) => (
-                                            <div key={center.center_idx} className="center-card">
+                                            <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_idx)}>
                                                 <div className="center-image" style={{width:"fit-content"}}>
                                                     <img
                                                         //src={center.center_image || '/default-center.jpg'}
@@ -350,7 +360,7 @@ const NameSearch = () => {
                                     <div className="center-results">
                                         <div className="search-title" style={{fontSize:'1.5rem'}}>트레이너</div>
                                         {searchResults.trainers.map((trainer) => (
-                                            <div key={trainer.user_id} className="center-card" style={{height:'178px'}}>
+                                            <div key={trainer.user_id} className="center-card" style={{height:'178px'}} onClick={()=>handleMoveTrainer(trainer.user_id)}>
                                                     <div className="center-image"  style={{width:"fit-content"}}>
                                                         <img
                                                             //src={trainer.profile_image || '/default-profile.jpg'}

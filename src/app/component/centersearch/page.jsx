@@ -6,6 +6,7 @@ import { FaStar, FaMapMarkerAlt, FaFilter, FaMapMarkedAlt } from 'react-icons/fa
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
+import {useRouter} from "next/navigation";
 
 const CenterSearch = () => {
   // 상태 관리
@@ -24,6 +25,11 @@ const CenterSearch = () => {
   const [districtOptions, setDistrictOptions] = useState([]);
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+  const router = useRouter();
+
+    const handleMoveCenter = (idx) =>{
+        router.push(`/component/centerdetail?center_idx=${idx}`)
+    }
 
     useEffect(() => {
         getCity();
@@ -357,7 +363,7 @@ const CenterSearch = () => {
                 <div className="search-results">
                 {filteredResults?.length > 0 ? (
                     filteredResults?.map((center) => (
-                    <div key={center.center_idx} className="center-card">
+                    <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_idx)}>
                         <div className={"center-image"} style={{width:"fit-content"}}>
                         <img
                             //src={center.center_image || '/default-center.jpg'}
