@@ -1660,7 +1660,7 @@ table tr.selected {
 }
 
 .trainer-rating, .center-rating {
-    font-size: 1.25rem;
+    font-size: 1.75rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -2058,6 +2058,7 @@ table tr.selected {
 .center-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
 }
 
 .center-card.selected {

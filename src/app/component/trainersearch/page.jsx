@@ -6,6 +6,7 @@ import { FaStar, FaMapMarkerAlt, FaFilter } from 'react-icons/fa';
 import Footer from '../../Footer';
 import Header from '../../Header';
 import axios from "axios";
+import {useRouter} from "next/navigation";
 
 const TrainerSearch = () => {
   // 상태 관리
@@ -24,6 +25,11 @@ const TrainerSearch = () => {
   const [districtOptions, setDistrictOptions] = useState([]);
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+  const router = useRouter();
+
+    const handleMoveTrainer = (id) =>{
+        router.push(`/component/trainerdetail?user_id=${id}`)
+    }
 
     useEffect(() => {
         getCity();
@@ -365,8 +371,8 @@ const TrainerSearch = () => {
             <div className="search-results">
                 {filteredResults.length > 0 ? (
                 filteredResults.map((trainer) => (
-                    <div key={trainer.user_id} className="trainer-card">
-                    <div className="trainer-image" style={{width:"fit-content"}}>
+                    <div key={trainer.user_id} className="trainer-card" onClick={()=>handleMoveTrainer(trainer.user_id)}>
+                    <div className="center-image" style={{width:"fit-content"}}>
                         <img
                         //src={trainer.profile_image || '/default-profile.jpg'}
                         src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
@@ -378,9 +384,9 @@ const TrainerSearch = () => {
                     </div>
                     
                     <div className="trainer-info">
-                        <h3 className="trainer-name">{trainer.name}</h3>
+                        <h3 className="center-name">{trainer.name}</h3>
                         
-                        <div className="trainer-center"  style={{fontSize: "1.2rem"}}>
+                        <div className="trainer-center"  style={{fontSize: "1.5rem"}}>
                         <FaMapMarkerAlt className="location-icon" />
                         <span>{trainer.center_name}</span>
                         </div>
@@ -399,13 +405,13 @@ const TrainerSearch = () => {
                         <FaStar className="star-icon" />
                             {trainer.review_cnt > 0 &&
                             <span className="rating">{trainer.rating > 1 ? trainer.rating : trainer.rating.toFixed(1)}</span>}
-                        <span className="rating-count">({trainer.review_cnt})</span>
+                        <span className="rating-count"style={{fontSize:"1.4rem"}}>({trainer.review_cnt})</span>
                         </div>
 
                         {trainer.tags && (
                         <div className="trainer-tags">
                         {JSON.parse(trainer.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
+                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
                         ))}
                         </div>
                             )}

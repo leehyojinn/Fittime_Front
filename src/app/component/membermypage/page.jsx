@@ -104,6 +104,16 @@ const MemberMyPage = () => {
         })
   }
 
+  const handleDeleteReview = async (idx) =>{
+    const {data} = await axios.post(`http://localhost/del/review/${idx}`);
+    console.log(data.success);
+  }
+
+  const handleUpdateReview = (r) =>{
+    console.log(r);
+    router.push(`/component/review?idx=${r.review_idx}`);
+  }
+
   const changeUser = (e) =>{
     let {name,value} = e.target;
     // console.log(value.address);
@@ -229,7 +239,7 @@ const MemberMyPage = () => {
             <h4 className='label text_left font_weight_500'><FaStar /> 내가 쓴 리뷰</h4>
             <table className="mypage-table">
               <thead>
-                <tr><th>대상</th><th>구분</th><th>별점</th><th>내용</th><th>작성일</th></tr>
+                <tr><th>대상</th><th>구분</th><th>별점</th><th>내용</th><th>작성일</th><th>관리</th></tr>
               </thead>
               <tbody>
                 {reviews?.map(r=>(
@@ -239,6 +249,14 @@ const MemberMyPage = () => {
                     <td>{r.rating}</td>
                     <td>{r.content}</td>
                     <td>{r.reg_date.substring(0,10)}</td>
+                    <td style={{textAlign:'center'}}>
+                      <button className="mypage-small-btn white_color label" style={{background:'#444444', marginRight:'5px'}} onClick={()=>handleUpdateReview(r)}>
+                        수정
+                      </button>
+                      <button className="mypage-small-btn white_color label" style={{background:'#444444',letterSpacing:'inherit'}} onClick={()=>handleDeleteReview(r.review_idx)}>
+                        삭제
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -6,6 +6,7 @@ import { FaStar, FaMapMarkerAlt, FaFilter, FaMapMarkedAlt } from 'react-icons/fa
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
+import {useRouter} from "next/navigation";
 
 const CenterSearch = () => {
   // 상태 관리
@@ -24,6 +25,11 @@ const CenterSearch = () => {
   const [districtOptions, setDistrictOptions] = useState([]);
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+  const router = useRouter();
+
+    const handleMoveCenter = (idx) =>{
+        router.push(`/component/centerdetail?center_idx=${idx}`)
+    }
 
     useEffect(() => {
         getCity();
@@ -357,14 +363,12 @@ const CenterSearch = () => {
                 <div className="search-results">
                 {filteredResults?.length > 0 ? (
                     filteredResults?.map((center) => (
-                    <div key={center.center_idx} className="center-card">
+                    <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_idx)}>
                         <div className={"center-image"} style={{width:"fit-content"}}>
                         <img
                             //src={center.center_image || '/default-center.jpg'}
                             src={`http://localhost/profileImg/profile/${center.center_id}`}
                             alt={center.center_name}
-                            width={200}
-                            height={150}
                             className="facility-image"
                         />
                         </div>
@@ -372,7 +376,7 @@ const CenterSearch = () => {
                         <div className="center-info">
                         <h3 className="center-name">{center.center_name}</h3>
                         
-                        <div className="center-address" style={{fontSize:"1.2rem"}}>
+                        <div className="center-address" style={{fontSize:"1.5rem"}}>
                             <FaMapMarkerAlt className="location-icon" />
                             <span>{center.address}</span>
                         </div>
@@ -390,13 +394,13 @@ const CenterSearch = () => {
                             <FaStar className="star-icon" />
                             {center.review_cnt > 0 &&
                                 <span className="rating">{center.rating > 1 ? center.rating : center.rating.toFixed(1)}</span>}
-                            <span className="rating-count">({center.review_cnt})</span>
+                            <span className="rating-count" style={{fontSize:"1.4rem"}}>({center.review_cnt})</span>
                         </div>
 
                         {center.tags && (
                         <div className="center-tags">
                             {JSON.parse(center.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.2rem"}}>{tag}</span>
+                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
                             ))}
                         </div>
                             )}

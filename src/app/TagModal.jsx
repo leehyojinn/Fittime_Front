@@ -87,7 +87,8 @@ function FindModal({ open, onClose }){
                 >
                     닫기
                 </button>
-                <h3 style={{fontSize: '15px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>태그 리스트</h3>
+                <h3 style={{fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', textAlign: 'center' }}>태그 리스트</h3>
+                <h3 style={{fontSize: '13px', marginBottom: '5px'}}>최대 5개까지 가능합니다</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <>
                             <span style={{display: 'grid', gridTemplateColumns:'repeat(3,1fr)', gap: '5px'}} >
