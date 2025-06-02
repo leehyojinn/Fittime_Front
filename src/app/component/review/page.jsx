@@ -6,10 +6,11 @@ import Footer from "@/app/Footer";
 import {useSearchParams} from "next/navigation";
 import axios from "axios";
 import KakaoMap from '../map/kakaomap';
+import {useAlertModalStore} from '@/app/zustand/store';
 
 const ReviewPage = () => {
 
-    // 해야하는거 :/ 리뷰 리스트 
+    // 해야하는거 :/ 리뷰 리스트 / 삭제도...
 
     const [showMap, setShowMap] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
@@ -20,7 +21,6 @@ const ReviewPage = () => {
     const reservationIdx = searchParams.get('reservation_idx');
     const trainerName = searchParams.get('trainer_name');
     const centerName = searchParams.get('center_name');
-    
 
     const [reviewTarget, setReviewTarget] = useState('');
     const [target, setTarget] = useState(centerId);
@@ -31,6 +31,9 @@ const ReviewPage = () => {
     const [files, setFiles] = useState([]);
     const [reviews, setReviews] = useState([]);
     const [page, setPage] = useState(1);
+
+    const {openModal} = useAlertModalStore();
+
     // 별점 클릭/호버
     const handleStarClick = (value) => setStar(value);
     const handleStarHover = (value) => setHoverStar(value);
@@ -47,12 +50,22 @@ const ReviewPage = () => {
     // 리뷰 등록
     const handleReviewSubmit = (e) => {
         e.preventDefault();
-        if (star < 0.5) 
-            return alert('별점을 입력해주세요.');
-        if (reviewText.trim().length < 15) 
-            return alert('리뷰를 15자 이상 입력해주세요.');
-        if (files.some(f => f.size > 10 * 1024 * 1024)) 
-            return alert('각 이미지는 10MB 이하만 가능합니다.');
+        // if (star < 0.5)     return alert('별점을 입력해주세요.'); if (reviewText.trim().length
+        // < 15)     return alert('리뷰를 15자 이상 입력해주세요.'); if (files.some(f => f.size > 10
+        // * 1024 * 1024))     return alert('각 이미지는 10MB 이하만 가능합니다.');
+        if (star < 0.5) {
+            openModal({svg: '★', msg1: '별점을 입력해주세요.', showCancel: false});
+            return;
+        }
+        if (reviewText.trim().length < 15) {
+            openModal({svg: '💬', msg1: '리뷰를 15자 이상 입력해주세요.', showCancel: false});
+            return;
+        }
+
+        if (files.some(f => f.size > 10 * 1024 * 1024)) {
+            openModal({svg: '❗', msg1: '각 이미지는 10MB 이하만 가능합니다.', showCancel: false});
+            return;
+        }
         setReviews({
             target_id: reviewTarget === 'trainer'
                 ? trainerId
@@ -105,7 +118,6 @@ const ReviewPage = () => {
         });
 
         console.log('서버 응답 전체:', data);
-
 
         if (data.success) {
             setReviewText('');
@@ -174,7 +186,7 @@ const ReviewPage = () => {
     // 리뷰
     const handReviewForm = () => {
         if (!reviewTarget) {
-            alert('센터 또는 트레이너를 먼저 선택해주세요.');
+            openModal({svg: '❗', msg1: '리뷰 대상을 선택해주세요', showCancel: false});
             return;
         }
         setShowReviewForm(prev => !prev);
@@ -186,7 +198,7 @@ const ReviewPage = () => {
         address: '서울 강남구 역삼동 123-45',
         contact: '02-1234-5678',
         image: '/center1.jpg',
-        intro: '최신 장비와 쾌적한 환경의 24시간 프리미엄 헬스장',
+        intro: '이거 독재자 이준혁씨가 불러올거라던데여',
         tags: [
             '24시간', '샤워시설', '주차가능'
         ],
@@ -196,14 +208,14 @@ const ReviewPage = () => {
                 review_id: 1,
                 user_name: '회원A',
                 rating: 5,
-                content: '시설이 정말 깨끗하고 좋아요!',
+                content: 'db 및 백 독재 지렸따',
                 date: '2025-05-01',
                 images: []
             }, {
                 review_id: 2,
                 user_name: '회원B',
                 rating: 4.5,
-                content: '트레이너도 친절하고 만족합니다.',
+                content: '독재하는 사람도 연애를 하는데 .... ',
                 date: '2025-05-02',
                 images: []
             }
@@ -265,62 +277,97 @@ const ReviewPage = () => {
                         </div>
 
                     </div>
-                    <div className="center-intro">
-                        <h4>센터 소개</h4>
-                        <p>{centerSample.intro}</p>
-
-                    </div>
-                    {/* 지도 */}
-                    {/* submit-button / cancel-button */}
                     <div>
-                        <button
-                            className='cancel-button'
-                            onClick={handleToggleMap}
-                            style={{
-                                marginBottom: '1rem'
-                            }}>
+
+                        <div className="center-intro">
+                            <h4>센터 소개</h4>
+                            <p>{centerSample.intro}</p>
+
+                        </div>
+                        {/* 지도 */}
+                        {/* submit-button / cancel-button */}
+                        <div>
+                            <button
+                                className='cancel-button'
+                                onClick={handleToggleMap}
+                                style={{
+                                    marginBottom: '1rem'
+
+                                }}>
+                                {
+                                    showMap
+                                        ? '지도 닫기'
+                                        : '위치 보기'
+                                }
+                            </button>
                             {
-                                showMap
-                                    ? '지도 닫기'
-                                    : '위치 보기'
+                                showMap && (
+                                    <div>
+                                        <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+                                    </div>
+                                )
                             }
-                        </button>
-                        {
-                            showMap && (
-                                <div>
-                                    <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+                            <div>
+
+                                <select
+                                    className="review-toggle-select"
+                                    value={reviewTarget}
+                                    onChange={(e) => handleReviewTargetChange(e.target.value)}>
+                                    <option value="">센터 / 트레이너</option>
+
+                                    <option value="center">
+                                        ✦ {centerName}
+                                        ✦
+                                    </option>
+                                    <option value="trainer">
+                                        ✦ {trainerName}
+                                        ✦
+                                    </option>
+                                </select>
+
+                            </div>
+                            <div
+                                style={{
+                                    display: 'flex'
+                                }}>
+
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'flex-end'
+                                    }}>
+
+                                    <button
+                                        onClick={handReviewForm}
+                                        className={`review-toggle-small-btn ${showReviewForm
+                                            ? 'active'
+                                            : ''}`}>
+                                        {
+                                            showReviewForm
+                                                ? reviewTarget === 'center'
+                                                    ? '센터 리뷰 닫기'
+                                                    : reviewTarget === 'trainer'
+                                                        ? '트레이너 리뷰 닫기'
+                                                        : '리뷰 닫기'
+                                                : reviewTarget === 'center'
+                                                    ? '센터 리뷰 작성'
+                                                    : reviewTarget === 'trainer'
+                                                        ? '트레이너 리뷰 작성'
+                                                        : '리뷰를 작성 할 대상을 선택하세요'
+                                        }
+                                    </button>
                                 </div>
-                            )
-                        }
-                    </div>
-
-                    <button
-                        className={`review-toggle-btn ${reviewTarget === 'center'
-                            ? 'active'
-                            : ''}`}
-                        onClick={() => handleReviewTargetChange('center')}>
-                        센터 리뷰
-                    </button>
-                    <button
-                        className={`review-toggle-btn ${reviewTarget === 'trainer'
-                            ? 'active'
-                            : ''}`}
-                        onClick={() => handleReviewTargetChange('trainer')}>
-                        트레이너 리뷰
-                    </button>
-
-                    <div>
-                        <div className="trainer-detail-container"></div>
-                        <button onClick={handReviewForm} className="submit-button">
-                            {
-                                showReviewForm
-                                    ? '리뷰 작성 닫기'
-                                    : '리뷰 작성'
+                            </div>
+                            {/* {
+                                !showReviewForm && (
+                                    <p className='review_insert_guide'>
+                                        리뷰 작성 시 작성 하고자 하는 센터 혹은 트레이너를 선택해주십시오
+                                    </p>
+                                )
+                            } */
                             }
-                        </button>
 
-                        <div></div>
-
+                        </div>
                     </div>
                     {
                         showReviewForm && (
@@ -328,7 +375,6 @@ const ReviewPage = () => {
 
                                 {/* 리뷰 작성 인풋 */}
                                 <div className="trainer-review-write">
-                                    <h2>{targetName} 리뷰 작성</h2>
                                     <form onSubmit={handleReviewSubmit}>
                                         <div className="star-input">
                                             {
@@ -380,7 +426,7 @@ const ReviewPage = () => {
                                         </div>
                                         <textarea
                                             className="review-textarea"
-                                            placeholder="트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
+                                            placeholder="센터 또는 트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
                                             minLength={15}
                                             value={reviewText}
                                             onChange={e => setReviewText(e.target.value)}
@@ -388,7 +434,6 @@ const ReviewPage = () => {
                                         <div className="review-file-input">
                                             <label htmlFor="trainer-review-upload" className="file-label">
                                                 <FaCamera/>
-                                                사진첨부 (최대 5장)
                                                 <input
                                                     id="trainer-review-upload"
                                                     type="file"
@@ -405,13 +450,12 @@ const ReviewPage = () => {
                                                         ?.map((file, i) => (<span key={i} className="file-name">{file.name}</span>))
                                                 }
                                             </div>
+                                            <button
+                                                type="submit"
+                                                className="review-submit-btn"
+                                                onClick={handleReviewSubmit}>✔</button>
                                         </div>
-                                        <button
-                                            type="submit"
-                                            className="review-submit-btn"
-                                            onClick={handleReviewSubmit}>등록하기</button>
                                     </form>
-
                                 </div>
                             </div>
                         )
@@ -423,43 +467,48 @@ const ReviewPage = () => {
                         <div className="trainer-reviews">
                             <h4>리뷰</h4>
                             <ul>
-                                {
-                                    paginatedReviews
-                                        ?.map(r => (
-                                            <li key={r.review_idx}>
-                                                <span className="review-user">{r.user_id}</span>
-                                                <span className="review-rating"><FaStar/> {r.rating}</span>
-                                                <span className="review-content">{r.content}</span>
-                                                {
-                                                    r.file_idx && r.file_idx
-                                                        ?.length > 0 && (
-                                                            <span className="review-images">
-                                                                {
-                                                                    JSON
-                                                                        .parse(r.file_idx)
-                                                                        .map((img, idx) => (
-                                                                            <img
-                                                                                key={idx}
-                                                                                src={`http://localhost/reviewImg/${img}`}
-                                                                                alt="첨부"
-                                                                                style={{
-                                                                                    width: 40,
-                                                                                    height: 40,
-                                                                                    objectFit: 'cover',
-                                                                                    borderRadius: '0.4rem',
-                                                                                    marginLeft: 4
-                                                                                }}/>
-                                                                        ))
-                                                                }
-                                                            </span>
-                                                        )
-                                                }
-                                                <span className="review-date">{r.date}</span>
+                            {
+    paginatedReviews?.map(r => (
+      <li key={r.review_idx} className="review-item" style={{flexDirection:'column'}}>
+        {/* 첫 줄: 작성자 + 별점 + 날짜 */}
+        <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit'}}>
+          <span className="review-user">{r.user_id}</span>
+          <span className="review-rating"><FaStar/> {r.rating}</span>
+          <span className="review-date">{r.date}</span>
+        </div>
 
-                                            </li>
-                                        ))
-                                }
-                            </ul>
+        {/* 둘째 줄: 내용 */}
+        <div className="review-body" style={{textAlign:'left'}}>
+          <span className="review-content" style={{paddingLeft:'30px'}}>{r.content}</span>
+        
+          {/* 이미지 */}
+          {
+            r.file_idx && r.file_idx.length > 0 && (
+              <div className="review-images" style={{textAlign:'left', paddingLeft:'27px'}}>
+                {
+                  JSON.parse(r.file_idx).map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={`http://localhost/reviewImg/${img}`}
+                      alt="첨부"
+                      style={{
+                        width: 132,
+                        height: 132,
+                        objectFit: 'cover',
+                        borderRadius: '1.4rem',
+                        marginLeft: 4
+                      }}
+                    />
+                  ))
+                }
+              </div>
+            )
+          }
+        </div>
+      </li>
+    ))
+  }
+</ul>
                         </div>
                         <div className="pagination-buttons-fixed">
                             {
@@ -486,8 +535,8 @@ const ReviewPage = () => {
 
                     </div>
                 </div>
-                <Footer/>
             </div>
+            <Footer/>
         </div>
     );
 

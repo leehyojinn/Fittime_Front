@@ -2749,6 +2749,15 @@ table tr.selected {
   font-weight: 600;
   color: #3673c1;
 }
+.review-item {
+  background-color: #dbdbdb;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin: 10px;
+  display: flex;
+  gap: 1.5rem;
+}
 
 .review-user {
   font-weight: 500;
@@ -2763,9 +2772,9 @@ table tr.selected {
 }
 
 .center-review-write, .trainer-review-write {
-  background: #dee2e6;
-  border-radius: 1rem;
-  padding: 1.5rem 1rem;
+  background: #e0e0e0;
+  border-radius: 0px 0px 10px 10px;
+  padding: 1rem 1rem;
   margin-bottom: 2rem;
   box-shadow: 0 1px 6px rgba(0,0,0,0.03);
 }
@@ -2815,7 +2824,7 @@ table tr.selected {
   margin-bottom: 1rem;
 }
 .file-label {
-  display: inline-flex;
+  /* display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   background: #e8f1ff;
@@ -2824,7 +2833,18 @@ table tr.selected {
   cursor: pointer;
   font-size: 0.96rem;
   color: #3673c1;
-  border: 1px solid #bcd6f6;
+  border: 1px solid #bcd6f6; */
+  color: #fff;
+  cursor: pointer;
+  float: right;
+  background: #474747;
+  border: none;
+  border-radius: 1.5rem;
+  margin-top: .5rem;
+  padding: .6rem 1.7rem;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background .18s;
 }
 .review-file-preview {
   display: flex;
@@ -2887,7 +2907,12 @@ table tr.selected {
 .review-rating { color: #f8c200; }
 .review-date { color: #aaa; font-size: 0.92rem; margin-left: auto; }
 .review-content { color: #444; }
-.review-images img { margin-left: 4px; }
+.review-images img { 
+  
+  margin: 18px;
+  margin-left: 4px; 
+
+}
 
 .mypage-container {
   max-width: 1100px;
@@ -3030,7 +3055,7 @@ table tr.selected {
 .alert-modal-message {
   font-size: 1.3rem;
   line-height: 2rem;
-  color: #555;
+  color: #444;
   margin-bottom: 24px;
 }
 
@@ -3281,7 +3306,90 @@ img {
 
 .review-toggle-btn.active {
   background-color: #222;
+
   color: #fff;
   border-color: #222;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review_insert_guide{
+  background: #808080;
+  border-radius: 0px 0px 15px 15px;
+  padding: 2.2rem;
+  font-weight: 450;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+}
+.review-toggle-small-btn {
+  vertical-align: top;
+  padding: 1rem;
+  width: 833.2rem;
+  background: #e0e0e0;
+  color: #000000;
+  border-radius: 0.5rem;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-align: center;
+}
+
+
+.review-toggle-small-btn.active{
+  vertical-align: top;
+  padding: 1rem;
+  width: 833.2rem;
+  background: #cccccc;
+  color: #000000;
+  border-radius: 0.5rem;
+  border-radius: 15px 15px 0px 0px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-align: center;
+}
+
+.review-toggle-select {
+  vertical-align: top;
+  width: 400px;
+  background: #dee2e6;
+  color: #000000;
+  border-radius: 0.5rem;
+  border-radius: 15px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-align: center;
+  margin: 30px;
+}
+
+.review-toggle-select option {
+  font-size: 1.5rem; 
+}
+
+.review-toggle-select:hover {
+  background-color:  #444;
+  color: #fff;
+}
+
+.review-toggle-select {
+  background: #444;
+  color: #fff;
+}
+
+.review-toggle-select.selected {
+  background-color: #444;
+  color: #fff;
 }
