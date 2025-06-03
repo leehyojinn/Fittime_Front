@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -10,87 +11,92 @@ import Footer from '../../Footer';
 
 const Reservation = () => {
   const searchParams = useSearchParams();
-  const initialCenterIdx = searchParams.get('center_idx');
+  const initialCenterId = searchParams.get('center_id');
   const initialTrainerId = searchParams.get('trainer_id');
 
   // 상태
   const [step, setStep] = useState(1);
+  const [centers, setCenters] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState(null);
-  const [selectedTrainer, setSelectedTrainer] = useState(null);
+  const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [trainers, setTrainers] = useState([]);
+  const [selectedTrainer, setSelectedTrainer] = useState(null);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('');
   const [availableTimes, setAvailableTimes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resultMsg, setResultMsg] = useState('');
 
-  // 데이터 샘플 (실제에선 API)
-  const centersData = [
-    { center_idx: 1, center_name: '헬스월드 강남점', address: '서울 강남구 역삼동 123-45', contact: '02-1234-5678', image: '/center1.jpg', rating: 4.7 },
-    { center_idx: 2, center_name: '피트니스클럽 송파점', address: '서울 송파구 잠실동 456-78', contact: '02-2345-6789', image: '/center2.jpg', rating: 4.5 },
-    { center_idx: 3, center_name: '웰니스 필라테스', address: '서울 서초구 서초동 789-10', contact: '02-3456-7890', image: '/center3.jpg', rating: 4.9 }
-  ];
-  const trainersData = [
-    { user_id: 'trainer1', user_name: '김트레이너', profile_image: '/trainer1.jpg', center_idx: 1, exercise_type: 'PT', rating: 4.8 },
-    { user_id: 'trainer2', user_name: '박트레이너', profile_image: '/trainer2.jpg', center_idx: 1, exercise_type: '필라테스', rating: 4.9 },
-    { user_id: 'trainer3', user_name: '이트레이너', profile_image: '/trainer3.jpg', center_idx: 2, exercise_type: '요가', rating: 4.7 }
-  ];
-  const productsData = [
-    { product_idx: 1, product_name: '헬스 1개월 이용권', price: 100000, discount_rate: 10, max_count: 0, service_level: 1, center_idx: 1 },
-    { product_idx: 2, product_name: 'PT 10회 이용권', price: 300000, discount_rate: 5, max_count: 1, service_level: 3, center_idx: 1 },
-    { product_idx: 3, product_name: '필라테스 클래스 8회', price: 240000, discount_rate: 0, max_count: 8, service_level: 2, center_idx: 1 },
-    { product_idx: 4, product_name: '헬스 3개월 이용권', price: 250000, discount_rate: 15, max_count: 0, service_level: 1, center_idx: 2 }
-  ];
-  const classesData = [
-    { class_idx: 1, class_name: '필라테스 초급반', start_time: '10:00', end_time: '11:00', day_of_week: '월,수,금', max_count: 10, trainer_id: 'trainer2', product_id: 3 },
-    { class_idx: 2, class_name: '요가 중급반', start_time: '14:00', end_time: '15:00', day_of_week: '화,목', max_count: 8, trainer_id: 'trainer3', product_id: 3 }
-  ];
-
-  // 진입 시 센터/트레이너 자동 선택
+  // 센터 정보 불러오기 (센터 전체 목록 API가 없으니 임시로 하나만)
   useEffect(() => {
-    if (initialCenterIdx && !selectedCenter) {
-      const center = centersData.find(c => String(c.center_idx) === String(initialCenterIdx));
+    axios.post('http://localhost/reservation/center_info/realcenter')
+      .then(res => {
+        setCenters(res.data.list || []);
+        if (res.data.list && res.data.list.length > 0) {
+          setSelectedCenter(res.data.list[0]);
+        }
+      });
+  }, []);
+
+  // 센터/트레이너 자동 선택
+  useEffect(() => {
+    if (!centers.length) return;
+    // 센터 예약 진입
+    if (initialCenterId) {
+      const center = centers.find(c => String(c.center_id) === String(initialCenterId));
       if (center) setSelectedCenter(center);
     }
+    // 트레이너 예약 진입
     if (initialTrainerId && !selectedTrainer) {
-      const trainer = trainersData.find(t => String(t.user_id) === String(initialTrainerId));
-      if (trainer) {
-        setSelectedTrainer(trainer);
-        const center = centersData.find(c => c.center_idx === trainer.center_idx);
-        if (center) setSelectedCenter(center);
-      }
+      axios.post(`http://localhost/reservation/trainer_info/${initialCenterId}`)
+        .then(res => {
+          const trainer = res.data.list?.find(t => String(t.trainer_id) === String(initialTrainerId));
+          if (trainer) setSelectedTrainer(trainer);
+          if (initialCenterId) {
+            const center = centers.find(c => String(c.center_id) === String(initialCenterId));
+            if (center) setSelectedCenter(center);
+          }
+        });
     }
-  }, [initialCenterIdx, initialTrainerId, centersData, trainersData]);
+  }, [centers, initialCenterId, initialTrainerId, selectedTrainer]);
 
-  // 자동 단계 이동
+  // 센터 선택 시 상품/트레이너/클래스 불러오기
+  useEffect(() => {
+    if (!selectedCenter) return;
+    axios.post(`http://localhost/reservation/center_product/${selectedCenter.center_id}`)
+      .then(res => setProducts(res.data.list || []));
+    axios.post(`http://localhost/reservation/trainer_info/${selectedCenter.center_id}`)
+      .then(res => setTrainers(res.data.list || []));
+    axios.post('http://localhost/reservation/class_info', { center_id: selectedCenter.center_id })
+      .then(res => setClasses(res.data.list || []));
+  }, [selectedCenter]);
+
+  // 상품 선택시 트레이너/클래스/날짜/시간 리셋
+  useEffect(() => {
+    setSelectedTrainer(null);
+    setSelectedClass(null);
+    setSelectedDate(new Date());
+    setSelectedTime('');
+  }, [selectedProduct]);
+
+  // 트레이너 예약 진입 시 자동으로 2단계(상품/트레이너)로 이동
   useEffect(() => {
     if (selectedTrainer && selectedCenter) setStep(2);
     else if (selectedCenter) setStep(1);
   }, [selectedCenter, selectedTrainer]);
 
-  // 센터 선택
-  const filteredCenters = centersData;
-
-  // 상품/트레이너 필터
-  const filteredProducts = selectedCenter
-    ? productsData.filter(product => product.center_idx === selectedCenter.center_idx)
-    : [];
-  const filteredTrainers = selectedCenter
-    ? trainersData.filter(trainer => trainer.center_idx === selectedCenter.center_idx)
-    : [];
-
-  // 상품 선택시 트레이너 필요 여부
-  const selectedProductLevel = selectedProduct?.service_level;
-
   // 날짜 변경 시 시간 업데이트
   useEffect(() => {
     if (!selectedProduct) return setAvailableTimes([]);
-    // 자유이용권(1): 시간선택X, 클래스(2): 해당 요일 클래스, PT(3): 1시간 단위
     if (selectedProduct.service_level === 1) {
       setAvailableTimes([]);
     } else if (selectedProduct.service_level === 2) {
       const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][selectedDate.getDay()];
-      const availableClasses = classesData.filter(cls =>
-        cls.day_of_week.includes(dayOfWeek) && cls.product_id === selectedProduct.product_idx
+      const availableClasses = classes.filter(cls =>
+        cls.week.includes(dayOfWeek) && cls.product_idx === selectedProduct.product_idx
       );
       setAvailableTimes(availableClasses.map(cls => ({
         time: cls.start_time,
@@ -111,36 +117,75 @@ const Reservation = () => {
         setAvailableTimes(availableHours);
       }
     }
-  }, [selectedDate, selectedProduct, selectedTrainer]);
+  }, [selectedDate, selectedProduct, selectedTrainer, classes]);
 
-  // 단계 렌더링
+  // 가격 계산
+  const calculateFinalPrice = () => {
+    if (!selectedProduct) return 0;
+    const discountAmount = selectedProduct.price * (selectedProduct.discount_rate / 100);
+    return selectedProduct.price - discountAmount;
+  };
+
+  // 예약 생성
+  const handleSubmitReservation = () => {
+    setIsSubmitting(true);
+    const param = {
+      center_id: selectedCenter.center_id,
+      product_idx: selectedProduct.product_idx,
+      trainer_id: selectedTrainer?.trainer_id,
+      class_idx: selectedClass?.class_idx,
+      date: selectedDate.toISOString().slice(0, 10),
+      time: selectedTime.time || selectedTime
+    };
+    axios.post('http://localhost/booking', param)
+      .then(res => {
+        setIsSubmitting(false);
+        if (res.data.success) {
+          setResultMsg('예약이 완료되었습니다!');
+          setStep(5);
+        } else {
+          setResultMsg('예약에 실패했습니다. 인원 초과 또는 오류');
+        }
+      })
+      .catch(() => {
+        setIsSubmitting(false);
+        setResultMsg('예약 중 오류가 발생했습니다.');
+      });
+  };
+
+  // --- 렌더링 함수들 ---
   const renderCenterSelectionStep = () => (
     <div className="reservation-section">
       <h3>운동 기관 선택</h3>
       <div className="center-list">
-        {filteredCenters.map(center => (
+        {centers.map(center => (
           <div
-            key={center.center_idx}
-            className={`center-card ${selectedCenter?.center_idx === center.center_idx ? 'selected' : ''}`}
+            key={center.center_id}
+            className={`center-card ${selectedCenter?.center_id === center.center_id ? 'selected' : ''}`}
             onClick={() => {
               setSelectedCenter(center);
               setSelectedProduct(null);
               setSelectedTrainer(null);
             }}
           >
-            <div className="center-image">
-              <img src={center.image || '/default-center.jpg'} alt={center.center_name} />
-            </div>
             <div className="center-info">
               <h4>{center.center_name}</h4>
               <p className="center-address"><FaMapMarkerAlt /> {center.address}</p>
-              <p className="center-rating"><FaStar /> {center.rating.toFixed(1)}</p>
+              <p className="center-rating"><FaStar /> {center.avg_rating}</p>
             </div>
           </div>
         ))}
       </div>
     </div>
   );
+
+  const filteredProducts = selectedCenter
+    ? products.filter(product => product.center_id === selectedCenter.center_id)
+    : [];
+  const filteredTrainers = selectedCenter
+    ? trainers.filter(trainer => trainer.center_id === selectedCenter.center_id)
+    : [];
+  const selectedProductLevel = selectedProduct?.service_level;
 
   const renderProductSelectionStep = () => (
     <div className="reservation-section">
@@ -172,8 +217,8 @@ const Reservation = () => {
                     <span className="final-price">{product.price.toLocaleString()}원</span>
                   )}
                 </p>
-                {product.max_count > 0 && (
-                  <p className="product-count">수강 인원: {product.max_count}명</p>
+                {product.max_people > 0 && (
+                  <p className="product-count">수강 인원: {product.max_people}명</p>
                 )}
               </div>
             ))}
@@ -185,17 +230,13 @@ const Reservation = () => {
             <div className="trainer-list">
               {filteredTrainers.map(trainer => (
                 <div
-                  key={trainer.user_id}
-                  className={`trainer-card ${selectedTrainer?.user_id === trainer.user_id ? 'selected' : ''}`}
+                  key={trainer.trainer_id}
+                  className={`trainer-card ${selectedTrainer?.trainer_id === trainer.trainer_id ? 'selected' : ''}`}
                   onClick={() => setSelectedTrainer(trainer)}
                 >
-                  <div className="trainer-image">
-                    <img src={trainer.profile_image || '/default-trainer.jpg'} alt={trainer.user_name} />
-                  </div>
                   <div className="trainer-info">
-                    <h4>{trainer.user_name}</h4>
-                    <p className="trainer-type">{trainer.exercise_type}</p>
-                    <p className="trainer-rating"><FaStar /> {trainer.rating.toFixed(1)}</p>
+                    <h4>{trainer.trainer_name || trainer.trainer_id}</h4>
+                    <p className="trainer-rating"><FaStar /> {trainer.avg_rating}</p>
                   </div>
                 </div>
               ))}
@@ -249,12 +290,6 @@ const Reservation = () => {
     </div>
   );
 
-  const calculateFinalPrice = () => {
-    if (!selectedProduct) return 0;
-    const discountAmount = selectedProduct.price * (selectedProduct.discount_rate / 100);
-    return selectedProduct.price - discountAmount;
-  };
-
   const renderConfirmationStep = () => (
     <div className="reservation-section">
       <h3>예약 정보 확인</h3>
@@ -270,7 +305,7 @@ const Reservation = () => {
         {selectedProductLevel === 3 && (
           <div className="detail-item">
             <span className="label">트레이너:</span>
-            <span className="value">{selectedTrainer?.user_name}</span>
+            <span className="value">{selectedTrainer?.trainer_name || selectedTrainer?.trainer_id}</span>
           </div>
         )}
         <div className="detail-item">
@@ -315,14 +350,6 @@ const Reservation = () => {
     </div>
   );
 
-  const handleSubmitReservation = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStep(5);
-    }, 1500);
-  };
-
   const renderCompletionStep = () => (
     <div className="reservation-section completion">
       <div className="completion-message">
@@ -366,7 +393,6 @@ const Reservation = () => {
     </div>
   );
 
-  // 단계 진행바
   const renderProgressBar = () => {
     const steps = [
       { number: 1, name: '센터 선택' },
@@ -389,7 +415,6 @@ const Reservation = () => {
     );
   };
 
-  // 다음/이전 버튼
   const canGoNext = () => {
     if (step === 1) return !!selectedCenter;
     if (step === 2) return !!selectedProduct && (selectedProductLevel !== 3 || !!selectedTrainer);
@@ -400,6 +425,7 @@ const Reservation = () => {
     return false;
   };
 
+  // 전체 구조
   return (
     <div>
       <Header />
