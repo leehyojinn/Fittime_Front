@@ -27,8 +27,8 @@ const CenterSearch = () => {
   const [availableTags, setAvailableTags] = useState([]);
   const router = useRouter();
 
-    const handleMoveCenter = (idx) =>{
-        router.push(`/component/centerdetail?center_idx=${idx}`)
+    const handleMoveCenter = (id) =>{
+        router.push(`/component/centerdetail?center_id=${id}`)
     }
 
     useEffect(() => {
@@ -363,7 +363,7 @@ const CenterSearch = () => {
                 <div className="search-results">
                 {filteredResults?.length > 0 ? (
                     filteredResults?.map((center) => (
-                    <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_idx)}>
+                    <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_id)}>
                         <div className={"center-image"} style={{width:"fit-content"}}>
                         <img
                             //src={center.center_image || '/default-center.jpg'}

@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { FaStar, FaMapMarkerAlt, FaPhoneAlt, FaTag, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
 import {useSearchParams} from "next/navigation";
+import axios from "axios";
 
 const trainerSample = {
   user_id: 'trainer1',
@@ -32,6 +33,17 @@ const TrainerDetail = () => {
   const [hoverStar, setHoverStar] = useState(0);
   const [files, setFiles] = useState([]);
   const [reviews, setReviews] = useState(trainerSample.reviews);
+  const [trainerInfo, setTrainerInfo] = useState({});
+
+  const getTrainerInfo = async() =>{
+      const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainerId,"user_level":'2'});
+      console.log(data);
+      setTrainerInfo(data);
+  }
+
+  useEffect(() => {
+      getTrainerInfo();
+  }, []);
 
 
   const searchParams = useSearchParams();
@@ -78,37 +90,39 @@ const TrainerDetail = () => {
         <Header/>
         <div className='wrap padding_120_0'>
             <div className="trainer-detail-container">
-            <div className="trainer-header">
-                <img src={trainerSample.profile_image} alt={trainerSample.user_name} className="trainer-main-image" />
-                <div className="trainer-header-info">
-                <h2>{trainerSample.user_name}</h2>
-                <div className="trainer-type">{trainerSample.exercise_type}</div>
-                <div className="trainer-tags">
-                    {trainerSample.tags.map(tag => <span key={tag} className="trainer-tag"><FaTag /> {tag}</span>)}
+                <div>
+                    <div className="trainer-header">
+                        <img src={trainerSample.profile_image} alt={trainerSample.user_name} className="trainer-main-image" />
+                        <div className="trainer-header-info">
+                        <h2>{trainerSample.user_name}</h2>
+                        <div className="trainer-type">{trainerSample.exercise_type}</div>
+                        <div className="trainer-tags">
+                            {trainerSample.tags.map(tag => <span key={tag} className="trainer-tag"><FaTag /> {tag}</span>)}
+                        </div>
+                        <div className="trainer-rating">
+                            <FaStar /> {avgRating} <span style={{fontSize:'0.92rem',color:'#888'}}>({reviews.length}명)</span>
+                        </div>
+                        </div>
+                    </div>
+                    <div className="trainer-intro">
+                        <h4>트레이너 소개</h4>
+                        <p>{trainerSample.intro}</p>
+                        <Link href={'/component/reservation'}>
+                            <div className="review-submit-btn width_fit">예약 하기</div>
+                        </Link>
+                    </div>
+                    <div className="trainer-center-info">
+                        <h4>소속 센터</h4>
+                        <div className="center-brief">
+                        <span className="center-name">{trainerSample.center_name}</span>
+                        <span className="center-address"><FaMapMarkerAlt /> {trainerSample.center_address}</span>
+                        <span className="center-contact"><FaPhoneAlt /> {trainerSample.center_contact}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+                    </div>
                 </div>
-                <div className="trainer-rating">
-                    <FaStar /> {avgRating} <span style={{fontSize:'0.92rem',color:'#888'}}>({reviews.length}명)</span>
-                </div>
-                </div>
-            </div>
-            <div className="trainer-intro">
-                <h4>트레이너 소개</h4>
-                <p>{trainerSample.intro}</p>
-                <Link href={'/component/reservation'}>
-                    <div className="review-submit-btn width_fit">예약 하기</div>
-                </Link>
-            </div>
-            <div className="trainer-center-info">
-                <h4>소속 센터</h4>
-                <div className="center-brief">
-                <span className="center-name">{trainerSample.center_name}</span>
-                <span className="center-address"><FaMapMarkerAlt /> {trainerSample.center_address}</span>
-                <span className="center-contact"><FaPhoneAlt /> {trainerSample.center_contact}</span>
-                </div>
-            </div>
-            <div>
-                <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
-            </div>
             {/* 리뷰 작성 인풋 */}
             <div className="trainer-review-write">
                 <h4>리뷰 작성</h4>

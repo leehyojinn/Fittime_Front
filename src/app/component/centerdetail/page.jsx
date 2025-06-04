@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { FaMapMarkerAlt, FaPhoneAlt, FaStar, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
 import axios from 'axios';
+import {useSearchParams} from "next/navigation";
 
 const centerSample = {
   center_idx: 1,
@@ -29,6 +30,26 @@ const CenterDetail = () => {
   const [hoverStar, setHoverStar] = useState(0);
   const [files, setFiles] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [centerInfo, setCenterInfo] = useState({});
+  const [showMap, setShowMap] = useState(false);
+
+  const searchParams = useSearchParams();
+  const center_id = searchParams.get('center_id');
+
+  const getCenterInfo = async() =>{
+      const {data} = await axios.post('http://localhost/detail/profile',{"center_id":center_id,"user_level":'3'});
+      console.log(data);
+      setCenterInfo(data);
+  }
+
+    useEffect(() => {
+        getCenterInfo();
+    }, []);
+
+  const  handleToggleMap = () =>{
+    setShowMap(!showMap);
+  }
+
 
   // 별점 클릭/호버
   const handleStarClick = (value) => setStar(value);
@@ -114,96 +135,139 @@ const CenterDetail = () => {
         <Header/>
         <div className='wrap padding_120_0'>
             <div className="center-detail-container">
-            <div className="center-header">
-                <img src={centerSample.image} alt={centerSample.center_name} className="center-main-image" />
-                <div className="center-header-info">
-                <h2>{centerSample.center_name}</h2>
-                <div className="center-tags">
-                    {centerSample.tags.map(tag => <span key={tag} className="center-tag">{tag}</span>)}
-                </div>
-                <div className="center-rating">
-                    <FaStar /> {avgRating} <span style={{fontSize:'0.92rem',color:'#888'}}>({reviews.length}명)</span>
-                </div>
-                <div className="center-contact">
-                    <FaMapMarkerAlt /> {centerSample.address}
-                    <span className="center-contact-phone"><FaPhoneAlt /> {centerSample.contact}</span>
-                </div>
-                </div>
-            </div>
-            <div className="center-intro">
-                <h4>센터 소개</h4>
-                <p>{centerSample.intro}</p>
-                <Link href={'/component/reservation'}>
-                    <div className="review-submit-btn width_fit">예약 하기</div>
-                </Link>
-            </div>
-            <div style={{margin:'50px 0'}}>
-                <KakaoMap address={centerSample.address}/>
-            </div>
-            {/* 리뷰 작성 인풋 */}
-            <div className="center-review-write">
-                <h4>리뷰 작성</h4>
-                <form onSubmit={handleReviewSubmit}>
-                <div className="star-input">
-                    {[1,2,3,4,5].map(i=>(
-                    <span key={i} style={{position:'relative',display:'inline-block'}}>
-                        <FaStar
-                        className="star"
-                        color={((hoverStar||star) >= i) ? '#FFC107' : '#e4e5e9'}
-                        onMouseEnter={()=>handleStarHover(i)}
-                        onMouseLeave={handleStarOut}
-                        onClick={()=>handleStarClick(i)}
-                        style={{cursor:'pointer',fontSize:'2rem'}}
-                        />
-                        {/* 0.5점 지원 */}
-                        <FaStar
-                        className="star half"
-                        color={((hoverStar||star) >= i-0.5) && ((hoverStar||star)<i) ? '#FFC107':'transparent'}
-                        style={{
-                            cursor:'pointer',
-                            fontSize:'2rem',
-                            position:'absolute',
-                            left:0,
-                            zIndex:1,
-                            clipPath:'inset(0 50% 0 0)'
-                        }}
-                        onMouseEnter={()=>handleStarHover(i-0.5)}
-                        onMouseLeave={handleStarOut}
-                        onClick={()=>handleStarClick(i-0.5)}
-                        />
-                    </span>
-                    ))}
-                    <span className="star-score">{star>0?star:''}</span>
-                </div>
-                <textarea
-                    className="review-textarea"
-                    placeholder="어떤 점이 좋았나요? 15자 이상 작성해주세요."
-                    minLength={15}
-                    value={reviewText}
-                    onChange={e=>setReviewText(e.target.value)}
-                    required
-                />
-                <div className="review-file-input">
-                    <label htmlFor="center-review-upload" className="file-label">
-                    <FaCamera /> 사진첨부 (최대 5장)
-                    <input
-                        id="center-review-upload"
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        multiple
-                        onChange={handleFileChange}
-                        style={{ display: 'none' }}
-                    />
-                    </label>
-                    <div className="review-file-preview">
-                    {files.map((file, i) => (
-                        <span key={i} className="file-name">{file.name}</span>
-                    ))}
+                <div>
+                    <h2 style={{fontSize: "3.5rem",
+                        fontWeight: 'bold',
+                        color:'#3673c1'}}>{centerInfo.center_name}</h2>
+                    <Link href={'/component/reservation'}>
+                        <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}}>예약 하기</div>
+                    </Link>
+                    <div className="center-header">
+                        <img
+                            src={`http://localhost/profileImg/profile/${center_id}`}
+                            alt={centerInfo.center_name}
+                            className="center-main-image"/>
+                        <div className="center-header-info">
+
+                            <div className="center-tags ">
+                                { centerInfo.tags && (
+                                    centerInfo.tags
+                                        .map(tag => <span key={tag} className="center-tag" style={{fontSize:'1.5rem'}}>{tag}</span>))
+                                }
+                            </div>
+                            <div className="center-rating" style={{marginBottom:'10px'}}>
+                                <FaStar/> {avgRating}
+                                <span
+                                    style={{
+                                        fontSize: '1.3rem',
+                                        color: '#888'
+                                    }}>({reviews.length}명)</span>
+                            </div>
+                            <div className="center-contact" style={{fontSize:'1.3rem'}}>
+                                <FaMapMarkerAlt/> {centerInfo.address}
+                                <span className="center-contact-phone" ><FaPhoneAlt/> {centerInfo.phone}</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div className="center-intro">
+                        <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>센터 소개</h4>
+                        <p style={{fontSize:'1.45rem',marginBottom:'10px',color:'gray'}}>운영시간 : {centerInfo.operation_hours}</p>
+                        <p style={{fontSize:'1.5rem'}}>{centerInfo.introduction}</p>
+
+                    </div>
+                    <div>
+                        {/* 지도 */}
+                        {/* submit-button / cancel-button */}
+                        <div>
+                            <button
+                                className='cancel-button'
+                                onClick={handleToggleMap}
+                                style={{
+                                    marginBottom: '1rem',
+                                    fontSize:'1.3rem'
+                                }}>
+                                {
+                                    showMap
+                                        ? '지도 닫기'
+                                        : '위치 보기'
+                                }
+                            </button>
+                            {
+                                showMap && (
+                                    <div>
+                                        <KakaoMap address={centerInfo.address}/>
+                                    </div>
+                                )
+                            }
+                        </div>
                     </div>
                 </div>
-                <button type="submit" className="review-submit-btn" onClick={insertReview}>등록하기</button>
-                </form>
-            </div>
+            {/* 리뷰 작성 인풋 */}
+            {/*<div className="center-review-write">*/}
+            {/*    <h4>리뷰 작성</h4>*/}
+            {/*    <form onSubmit={handleReviewSubmit}>*/}
+            {/*    <div className="star-input">*/}
+            {/*        {[1,2,3,4,5].map(i=>(*/}
+            {/*        <span key={i} style={{position:'relative',display:'inline-block'}}>*/}
+            {/*            <FaStar*/}
+            {/*            className="star"*/}
+            {/*            color={((hoverStar||star) >= i) ? '#FFC107' : '#e4e5e9'}*/}
+            {/*            onMouseEnter={()=>handleStarHover(i)}*/}
+            {/*            onMouseLeave={handleStarOut}*/}
+            {/*            onClick={()=>handleStarClick(i)}*/}
+            {/*            style={{cursor:'pointer',fontSize:'2rem'}}*/}
+            {/*            />*/}
+            {/*            /!* 0.5점 지원 *!/*/}
+            {/*            <FaStar*/}
+            {/*            className="star half"*/}
+            {/*            color={((hoverStar||star) >= i-0.5) && ((hoverStar||star)<i) ? '#FFC107':'transparent'}*/}
+            {/*            style={{*/}
+            {/*                cursor:'pointer',*/}
+            {/*                fontSize:'2rem',*/}
+            {/*                position:'absolute',*/}
+            {/*                left:0,*/}
+            {/*                zIndex:1,*/}
+            {/*                clipPath:'inset(0 50% 0 0)'*/}
+            {/*            }}*/}
+            {/*            onMouseEnter={()=>handleStarHover(i-0.5)}*/}
+            {/*            onMouseLeave={handleStarOut}*/}
+            {/*            onClick={()=>handleStarClick(i-0.5)}*/}
+            {/*            />*/}
+            {/*        </span>*/}
+            {/*        ))}*/}
+            {/*        <span className="star-score">{star>0?star:''}</span>*/}
+            {/*    </div>*/}
+            {/*    <textarea*/}
+            {/*        className="review-textarea"*/}
+            {/*        placeholder="어떤 점이 좋았나요? 15자 이상 작성해주세요."*/}
+            {/*        minLength={15}*/}
+            {/*        value={reviewText}*/}
+            {/*        onChange={e=>setReviewText(e.target.value)}*/}
+            {/*        required*/}
+            {/*    />*/}
+            {/*    <div className="review-file-input">*/}
+            {/*        <label htmlFor="center-review-upload" className="file-label">*/}
+            {/*        <FaCamera /> 사진첨부 (최대 5장)*/}
+            {/*        <input*/}
+            {/*            id="center-review-upload"*/}
+            {/*            type="file"*/}
+            {/*            accept="image/jpeg,image/png"*/}
+            {/*            multiple*/}
+            {/*            onChange={handleFileChange}*/}
+            {/*            style={{ display: 'none' }}*/}
+            {/*        />*/}
+            {/*        </label>*/}
+            {/*        <div className="review-file-preview">*/}
+            {/*        {files.map((file, i) => (*/}
+            {/*            <span key={i} className="file-name">{file.name}</span>*/}
+            {/*        ))}*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*    <button type="submit" className="review-submit-btn" onClick={insertReview}>등록하기</button>*/}
+            {/*    </form>*/}
+            {/*</div>*/}
             {/* 리뷰 리스트 */}
             <div className="center-reviews">
                 <h4>리뷰</h4>

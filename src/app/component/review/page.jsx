@@ -1,12 +1,13 @@
 'use client'
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Header from "@/app/Header";
-import {FaCamera, FaMapMarkerAlt, FaStar, FaPhoneAlt} from "react-icons/fa";
+import {FaCamera, FaMapMarkerAlt, FaStar, FaPhoneAlt, FaTag} from "react-icons/fa";
 import Footer from "@/app/Footer";
 import {useSearchParams} from "next/navigation";
 import axios from "axios";
 import KakaoMap from '../map/kakaomap';
 import {useAlertModalStore} from '@/app/zustand/store';
+import Link from "next/link";
 
 const ReviewPage = () => {
 
@@ -33,6 +34,27 @@ const ReviewPage = () => {
     const [page, setPage] = useState(1);
 
     const {openModal} = useAlertModalStore();
+
+    const [trainerInfo, setTrainerInfo] = useState({});
+    const [centerInfo, setCenterInfo] = useState({});
+
+    const getTrainerInfo = async() =>{
+        const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainerId,"user_level":'2'});
+        console.log(data);
+        setTrainerInfo(data);
+
+    }
+
+    const getCenterInfo = async() =>{
+        const {data} = await axios.post('http://localhost/detail/profile',{"center_id":centerId,"user_level":'3'});
+        console.log(data);
+        setCenterInfo(data);
+    }
+
+    useEffect(() => {
+        getTrainerInfo();
+        getCenterInfo();
+    }, []);
 
     // 별점 클릭/호버
     const handleStarClick = (value) => setStar(value);
@@ -248,44 +270,107 @@ const ReviewPage = () => {
             </div>
             <div className='wrap padding_120_0'>
                 <div className="center-detail-container">
-                    <div className="center-header">
-                        <img
-                            src={centerSample.image}
-                            alt={centerSample.center_name}
-                            className="center-main-image"/>
-                        <div className="center-header-info">
-                            <h2>{centerSample.center_name}</h2>
-                            <div className="center-tags">
-                                {
-                                    centerSample
-                                        .tags
-                                        .map(tag => <span key={tag} className="center-tag">{tag}</span>)
-                                }
-                            </div>
-                            <div className="center-rating">
-                                <FaStar/> {avgRating}
-                                <span
-                                    style={{
-                                        fontSize: '0.92rem',
-                                        color: '#888'
-                                    }}>({reviews.length}명)</span>
-                            </div>
-                            <div className="center-contact">
-                                <FaMapMarkerAlt/> {centerSample.address}
-                                <span className="center-contact-phone"><FaPhoneAlt/> {centerSample.contact}</span>
-                            </div>
-                        </div>
-
-                    </div>
+                    {target === 'center' ? (
                     <div>
+                        <h2 style={{fontSize: "3.5rem",
+                            fontWeight: 'bold',
+                            color:'#3673c1'}}>{centerInfo.center_name}</h2>
+                        <Link href={'/component/reservation'}>
+                            <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}}>예약 하기</div>
+                        </Link>
+                        <div className="center-header">
+                            <img
+                                src={`http://localhost/profileImg/profile/${centerId}`}
+                                alt={centerInfo.center_name}
+                                className="center-main-image"/>
+                            <div className="center-header-info">
+
+                                <div className="center-tags ">
+                                    { centerInfo.tags && (
+                                        centerInfo.tags
+                                            .map(tag => <span key={tag} className="center-tag" style={{fontSize:'1.5rem'}}>{tag}</span>))
+                                    }
+                                </div>
+                                <div className="center-rating" style={{marginBottom:'10px'}}>
+                                    <FaStar/> {avgRating}
+                                    <span
+                                        style={{
+                                            fontSize: '1.3rem',
+                                            color: '#888'
+                                        }}>({reviews.length}명)</span>
+                                </div>
+                                <div className="center-contact" style={{fontSize:'1.3rem'}}>
+                                    <FaMapMarkerAlt/> {centerInfo.address}
+                                    <span className="center-contact-phone" ><FaPhoneAlt/> {centerInfo.phone}</span>
+                                </div>
+                            </div>
+
+                        </div>
 
                         <div className="center-intro">
-                            <h4>센터 소개</h4>
-                            <p>{centerSample.intro}</p>
+                            <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>센터 소개</h4>
+                            <p style={{fontSize:'1.45rem',marginBottom:'10px',color:'gray'}}>운영시간 : {centerInfo.operation_hours}</p>
+                            <p style={{fontSize:'1.5rem'}}>{centerInfo.introduction}</p>
 
                         </div>
-                        {/* 지도 */}
-                        {/* submit-button / cancel-button */}
+                        <div>
+                            {/* 지도 */}
+                            {/* submit-button / cancel-button */}
+                            <div>
+                                <button
+                                    className='cancel-button'
+                                    onClick={handleToggleMap}
+                                    style={{
+                                        marginBottom: '1rem',
+                                        fontSize:'1.3rem'
+                                    }}>
+                                    {
+                                        showMap
+                                            ? '지도 닫기'
+                                            : '위치 보기'
+                                    }
+                                </button>
+                                {
+                                    showMap && (
+                                        <div>
+                                            <KakaoMap address={centerInfo.address}/>
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    ) :
+                    <div>
+                        <div className="trainer-header">
+                            <img src={`http://localhost/profileImg/profile/${trainerId}`} alt={trainerInfo.name} className="trainer-main-image" />
+                            <div className="trainer-header-info">
+                                <h2>{trainerInfo.name}</h2>
+                                <div className="trainer-type">{trainerInfo.exercise}</div>
+                                <div className="trainer-tags">
+                                    {trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"><FaTag />{tag}</span>)}
+                                </div>
+                                <div className="trainer-rating">
+                                    <FaStar /> {avgRating} <span style={{fontSize:'0.92rem',color:'#888'}}>({reviews.length}명)</span>
+                                </div>
+                            </div>
+                            <Link href={'/component/reservation'}>
+                                <div className="review-submit-btn width_fit">예약 하기</div>
+                            </Link>
+                        </div>
+                        <div className="trainer-intro">
+                            <h4>트레이너 소개</h4>
+                            <p>{trainerInfo.career}</p>
+
+                        </div>
+                        <div className="trainer-center-info">
+                            <h4>소속 센터</h4>
+                            <div className="center-brief">
+                                <span className="center-name">{trainerInfo.center_name}</span>
+                                <span className="center-address"><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
+                                <span className="center-contact"><FaPhoneAlt /> {trainerInfo.center_phone}</span>
+                            </div>
+                        </div>
                         <div>
                             <button
                                 className='cancel-button'
@@ -303,71 +388,75 @@ const ReviewPage = () => {
                             {
                                 showMap && (
                                     <div>
-                                        <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+                                        <KakaoMap address={trainerInfo.center_address}/>
                                     </div>
                                 )
                             }
-                            <div>
+                        </div>
+                    </div>
+                    }
+                    <div>
 
-                                <select
-                                    className="review-toggle-select"
-                                    value={reviewTarget}
-                                    onChange={(e) => handleReviewTargetChange(e.target.value)}>
-                                    <option value="">센터 / 트레이너</option>
+                        <div>
 
-                                    <option value="center">
-                                        ✦ {centerName}
-                                        ✦
-                                    </option>
-                                    <option value="trainer">
-                                        ✦ {trainerName}
-                                        ✦
-                                    </option>
-                                </select>
+                            <select
+                                className="review-toggle-select"
+                                value={reviewTarget}
+                                onChange={(e) => handleReviewTargetChange(e.target.value)}>
+                                <option value="">센터 / 트레이너</option>
 
-                            </div>
+                                <option value="center">
+                                    ✦ {centerName}
+                                    ✦
+                                </option>
+                                <option value="trainer">
+                                    ✦ {trainerName}
+                                    ✦
+                                </option>
+                            </select>
+
+                        </div>
+                        <div
+                            style={{
+                                display: 'flex'
+                            }}>
+
                             <div
                                 style={{
-                                    display: 'flex'
+                                    display: 'flex',
+                                    justifyContent: 'flex-end'
                                 }}>
 
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'flex-end'
-                                    }}>
-
-                                    <button
-                                        onClick={handReviewForm}
-                                        className={`review-toggle-small-btn ${showReviewForm
-                                            ? 'active'
-                                            : ''}`}>
-                                        {
-                                            showReviewForm
-                                                ? reviewTarget === 'center'
-                                                    ? '센터 리뷰 닫기'
-                                                    : reviewTarget === 'trainer'
-                                                        ? '트레이너 리뷰 닫기'
-                                                        : '리뷰 닫기'
-                                                : reviewTarget === 'center'
-                                                    ? '센터 리뷰 작성'
-                                                    : reviewTarget === 'trainer'
-                                                        ? '트레이너 리뷰 작성'
-                                                        : '리뷰를 작성 할 대상을 선택하세요'
-                                        }
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={handReviewForm}
+                                    className={`review-toggle-small-btn ${showReviewForm
+                                        ? 'active'
+                                        : ''}`}>
+                                    {
+                                        showReviewForm
+                                            ? reviewTarget === 'center'
+                                                ? '센터 리뷰 닫기'
+                                                : reviewTarget === 'trainer'
+                                                    ? '트레이너 리뷰 닫기'
+                                                    : '리뷰 닫기'
+                                            : reviewTarget === 'center'
+                                                ? '센터 리뷰 작성'
+                                                : reviewTarget === 'trainer'
+                                                    ? '트레이너 리뷰 작성'
+                                                    : '리뷰를 작성 할 대상을 선택하세요'
+                                    }
+                                </button>
                             </div>
-                            {/* {
+                        </div>
+                        {/* {
                                 !showReviewForm && (
                                     <p className='review_insert_guide'>
                                         리뷰 작성 시 작성 하고자 하는 센터 혹은 트레이너를 선택해주십시오
                                     </p>
                                 )
                             } */
-                            }
+                        }
 
-                        </div>
                     </div>
                     {
                         showReviewForm && (
