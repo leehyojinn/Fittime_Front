@@ -229,7 +229,7 @@ const MemberMyPage = () => {
                     <td>{r.start_time}~{r.end_time}</td>
                     <td>{r.trainer_name}</td>
                     <td>{r.status}</td>
-                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" style={{background:'#444444'}} onClick={()=>handleMoveReview(r.center_id,r.trainer_id,r.reservation_idx,r.trainer_name,r.center_name)}>리뷰쓰기</button></td>
+                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" onClick={()=>handleMoveReview(r.center_id,r.trainer_id,r.reservation_idx,r.trainer_name,r.center_name)}>리뷰쓰기</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -250,10 +250,10 @@ const MemberMyPage = () => {
                     <td>{r.content}</td>
                     <td>{r.reg_date.substring(0,10)}</td>
                     <td style={{textAlign:'center'}}>
-                      <button className="mypage-small-btn white_color label" style={{background:'#444444', marginRight:'5px'}} onClick={()=>handleUpdateReview(r)}>
+                      <button className="mypage-small-btn white_color label" style={{ marginRight:'5px'}} onClick={()=>handleUpdateReview(r)}>
                         수정
                       </button>
-                      <button className="mypage-small-btn white_color label" style={{background:'#444444',letterSpacing:'inherit'}} onClick={()=>handleDeleteReview(r.review_idx)}>
+                      <button className="mypage-small-btn white_color label" style={{letterSpacing:'inherit'}} onClick={()=>handleDeleteReview(r.review_idx)}>
                         삭제
                       </button>
                     </td>

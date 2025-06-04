@@ -273,7 +273,7 @@ const JoinPage = () => {
                                 onChange={handleChange}
                                 ref={inputRefs.user_id}
                             />
-                            <button className='btn white_color label' onClick={handleCheckId}>중복체크</button>
+                            <button className='btn white_color label overlay_btn' onClick={handleCheckId}>중복체크</button>
                         </div>
                     </div>
 
@@ -352,7 +352,7 @@ const JoinPage = () => {
                                 onChange={handleChange}
                                 ref={inputRefs.email}
                             />
-                            <button className='btn white_color label' onClick={handleCheckEmail}>중복체크</button>
+                            <button className='btn white_color label overlay_btn' onClick={handleCheckEmail}>중복체크</button>
                         </div>
                     </div>
 

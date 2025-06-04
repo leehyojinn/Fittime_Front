@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 import Calendar from 'react-calendar';
@@ -8,6 +8,31 @@ import 'react-calendar/dist/Calendar.css';
 import { FaMapMarkerAlt, FaClock, FaCheckCircle, FaStar } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import { differenceInCalendarDays, isWithinInterval, parseISO } from 'date-fns';
+
+const weekMap = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
+
+// 1시간 단위 시간 슬롯 생성 함수
+function getHourSlots(start, end) {
+  const slots = [];
+  let [sh, sm] = start.split(':').map(Number);
+  let [eh, em] = end.split(':').map(Number);
+
+  let current = new Date(0, 0, 0, sh, sm);
+  const endTime = new Date(0, 0, 0, eh, em);
+
+  while (current < endTime) {
+    const next = new Date(current.getTime() + 60 * 60 * 1000);
+    if (next > endTime) break;
+    const pad = n => n.toString().padStart(2, '0');
+    slots.push({
+      time: `${pad(current.getHours())}:00`,
+      endTime: `${pad(next.getHours())}:00`
+    });
+    current = next;
+  }
+  return slots;
+}
 
 const Reservation = () => {
   const searchParams = useSearchParams();
@@ -22,15 +47,25 @@ const Reservation = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [trainers, setTrainers] = useState([]);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
-  const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+
+  // 클래스 관련
+  const [classInfo, setClassInfo] = useState(null); // 선택 상품의 클래스 정보
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState('');
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [selectedTime, setSelectedTime] = useState(null);
+
+  // 예약 인원 체크 상태
+  const [timeSlotCounts, setTimeSlotCounts] = useState({}); // 시간별 예약 인원
+  const [dateBookedCount, setDateBookedCount] = useState(0); // 날짜별 예약 인원
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultMsg, setResultMsg] = useState('');
+  const [disabledDates, setDisabledDates] = useState([]);
+  const [productTrainerInfo, setProductTrainerInfo] = useState(null);
 
-  // 센터 정보 불러오기 (센터 전체 목록 API가 없으니 임시로 하나만)
+  const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+
+  // 센터 정보 불러오기
   useEffect(() => {
     axios.post('http://localhost/reservation/center_info/realcenter')
       .then(res => {
@@ -44,98 +79,161 @@ const Reservation = () => {
   // 센터/트레이너 자동 선택
   useEffect(() => {
     if (!centers.length) return;
-    // 센터 예약 진입
     if (initialCenterId) {
       const center = centers.find(c => String(c.center_id) === String(initialCenterId));
       if (center) setSelectedCenter(center);
     }
-    // 트레이너 예약 진입
     if (initialTrainerId && !selectedTrainer) {
-      axios.post(`http://localhost/reservation/trainer_info/${initialCenterId}`)
+      const center = centers.find(c => String(c.center_id) === String(initialCenterId));
+      if (!center) return;
+      axios.post(`http://localhost/reservation/trainer_info/${center.center_idx}`)
         .then(res => {
           const trainer = res.data.list?.find(t => String(t.trainer_id) === String(initialTrainerId));
           if (trainer) setSelectedTrainer(trainer);
-          if (initialCenterId) {
-            const center = centers.find(c => String(c.center_id) === String(initialCenterId));
-            if (center) setSelectedCenter(center);
-          }
         });
     }
   }, [centers, initialCenterId, initialTrainerId, selectedTrainer]);
 
-  // 센터 선택 시 상품/트레이너/클래스 불러오기
+  // 센터 선택 시 상품/트레이너 불러오기
   useEffect(() => {
     if (!selectedCenter) return;
     axios.post(`http://localhost/reservation/center_product/${selectedCenter.center_id}`)
       .then(res => setProducts(res.data.list || []));
-    axios.post(`http://localhost/reservation/trainer_info/${selectedCenter.center_id}`)
+    axios.post(`http://localhost/reservation/trainer_info/${selectedCenter.center_idx}`)
       .then(res => setTrainers(res.data.list || []));
-    axios.post('http://localhost/reservation/class_info', { center_id: selectedCenter.center_id })
-      .then(res => setClasses(res.data.list || []));
   }, [selectedCenter]);
 
-  // 상품 선택시 트레이너/클래스/날짜/시간 리셋
-  useEffect(() => {
+  // 상품 클릭 시 클래스 정보 불러오기
+  const handleProductClick = async (product) => {
+    setSelectedProduct(product);
     setSelectedTrainer(null);
-    setSelectedClass(null);
+    setClassInfo(null);
+    setAvailableTimes([]);
+    setSelectedTime(null);
     setSelectedDate(new Date());
-    setSelectedTime('');
-  }, [selectedProduct]);
+    setProductTrainerInfo(null);
+    setTimeSlotCounts({});
+    setDateBookedCount(0);
 
-  // 트레이너 예약 진입 시 자동으로 2단계(상품/트레이너)로 이동
-  useEffect(() => {
-    if (selectedTrainer && selectedCenter) setStep(2);
-    else if (selectedCenter) setStep(1);
-  }, [selectedCenter, selectedTrainer]);
+    // 트레이너 있는 상품만 클래스 정보 조회
+    if (product.trainer_id) {
+      const res = await axios.post('http://localhost/reservation/class_info', {
+        center_id: product.center_id,
+        trainer_id: product.trainer_id,
+        product_idx: product.product_idx
+      });
+      const cls = (res.data.list || []).find(c => !c.delete);
+      setClassInfo(cls || null);
+      // 트레이너 정보도 세팅
+      const trainer = trainers.find(t => t.trainer_id === product.trainer_id);
+      setProductTrainerInfo(trainer || null);
+    } else {
+      // 시간 없는 상품: 날짜별 예약 인원 조회 필요
+      setClassInfo(null);
+    }
+  };
 
-  // 날짜 변경 시 시간 업데이트
+  // 날짜 변경 시 시간 슬롯 생성 및 예약 인원 체크
   useEffect(() => {
-    if (!selectedProduct) return setAvailableTimes([]);
-    if (selectedProduct.service_level === 1) {
-      setAvailableTimes([]);
-    } else if (selectedProduct.service_level === 2) {
-      const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][selectedDate.getDay()];
-      const availableClasses = classes.filter(cls =>
-        cls.week.includes(dayOfWeek) && cls.product_idx === selectedProduct.product_idx
-      );
-      setAvailableTimes(availableClasses.map(cls => ({
-        time: cls.start_time,
-        endTime: cls.end_time,
-        className: cls.class_name
-      })));
-    } else if (selectedProduct.service_level === 3) {
-      if (selectedTrainer) {
-        const availableHours = [];
-        for (let i = 10; i <= 20; i++) {
-          if (i !== 13) {
-            availableHours.push({
-              time: `${i}:00`,
-              endTime: `${i + 1}:00`
-            });
-          }
-        }
-        setAvailableTimes(availableHours);
+    if (!selectedProduct) return;
+    // 시간 있는 상품(클래스)
+    if (classInfo && classInfo.start_time && classInfo.end_time) {
+      const day = selectedDate.getDay();
+      const weekArr = classInfo.week.split(',').map(w => weekMap[w.trim()]);
+      if (!weekArr.includes(day)) {
+        setAvailableTimes([]);
+        setTimeSlotCounts({});
+        return;
+      }
+      const slots = getHourSlots(classInfo.start_time, classInfo.end_time);
+      setAvailableTimes(slots);
+
+      // 시간별 예약 인원 조회
+      axios.post('http://localhost/reservation/booked_count', {
+        class_idx: classInfo.class_idx,
+        date: selectedDate.toISOString().slice(0, 10),
+        times: slots.map(slot => ({ start_time: slot.time, end_time: slot.endTime }))
+      }).then(res => {
+        // { "15:00:00-16:00:00": 2, ... }
+        setTimeSlotCounts(res.data.counts || {});
+      });
+    } else {
+      // 시간 없는 상품: 날짜별 예약 인원 조회
+      axios.post('http://localhost/reservation/booked_count_date', {
+        product_idx: selectedProduct.product_idx,
+        date: selectedDate.toISOString().slice(0, 10)
+      }).then(res => {
+        setDateBookedCount(res.data.count || 0);
+      });
+    }
+  }, [selectedDate, classInfo, selectedProduct]);
+
+  // 캘린더에서 week에 포함된 요일만 선택 가능(시간 없는 상품은 모두 가능)
+  const tileDisabled = useCallback(({ date, view }) => {
+    if (view !== 'month') return false;
+    if (classInfo) {
+      const weekArr = classInfo.week.split(',').map(w => weekMap[w.trim()]);
+      if (!weekArr.includes(date.getDay())) return true;
+    }
+    // 시간 없는 상품: 날짜별 예약 인원이 max_people 이상이면 비활성화
+    if (!classInfo && selectedProduct) {
+      if (selectedProduct.max_people > 0 && dateBookedCount >= selectedProduct.max_people) {
+        return true;
       }
     }
-  }, [selectedDate, selectedProduct, selectedTrainer, classes]);
+    return false;
+  }, [classInfo, selectedProduct, dateBookedCount]);
 
-  // 가격 계산
-  const calculateFinalPrice = () => {
-    if (!selectedProduct) return 0;
-    const discountAmount = selectedProduct.price * (selectedProduct.discount_rate / 100);
-    return selectedProduct.price - discountAmount;
-  };
+  // 휴무일 정보 불러오기 (기존 유지)
+  useEffect(() => {
+    if (!selectedCenter) return;
+    axios.post('http://localhost/reservation/schedule_info', {
+      center_id: selectedCenter?.center_id,
+      trainer_id: selectedTrainer?.trainer_id
+    }).then(res => {
+      const list = res.data.list || [];
+      const disabled = [];
+      list.forEach(item => {
+        if (item.start_date === item.end_date) {
+          disabled.push(item.start_date);
+        } else {
+          disabled.push({ start: item.start_date, end: item.end_date });
+        }
+      });
+      setDisabledDates(disabled);
+    });
+  }, [selectedCenter, selectedTrainer]);
+
+  // 휴무일 + 클래스 요일 비활성화 동시 적용
+  const isDateDisabled = useCallback(({ date, view }) => {
+    if (tileDisabled({ date, view })) return true;
+    // 휴무일 체크
+    return disabledDates.some(disabled => {
+      if (typeof disabled === 'string') {
+        return differenceInCalendarDays(date, parseISO(disabled)) === 0;
+      }
+      if (typeof disabled === 'object' && disabled.start && disabled.end) {
+        return isWithinInterval(date, {
+          start: parseISO(disabled.start),
+          end: parseISO(disabled.end)
+        });
+      }
+      return false;
+    });
+  }, [tileDisabled, disabledDates]);
 
   // 예약 생성
   const handleSubmitReservation = () => {
     setIsSubmitting(true);
     const param = {
+      user_id: user_id,
       center_id: selectedCenter.center_id,
       product_idx: selectedProduct.product_idx,
-      trainer_id: selectedTrainer?.trainer_id,
-      class_idx: selectedClass?.class_idx,
+      trainer_id: selectedProduct.trainer_id,
+      class_idx: classInfo?.class_idx,
       date: selectedDate.toISOString().slice(0, 10),
-      time: selectedTime.time || selectedTime
+      start_time: selectedTime?.time || null,
+      end_time: selectedTime?.endTime || null
     };
     axios.post('http://localhost/booking', param)
       .then(res => {
@@ -153,6 +251,14 @@ const Reservation = () => {
       });
   };
 
+  const calculateFinalPrice = () => {
+    if (!selectedProduct) return 0;
+    const discountAmount = selectedProduct.price * (selectedProduct.discount_rate / 100);
+    return selectedProduct.price - discountAmount;
+  };
+
+  console.log(centers);
+
   // --- 렌더링 함수들 ---
   const renderCenterSelectionStep = () => (
     <div className="reservation-section">
@@ -166,12 +272,29 @@ const Reservation = () => {
               setSelectedCenter(center);
               setSelectedProduct(null);
               setSelectedTrainer(null);
+              setClassInfo(null);
+              setAvailableTimes([]);
+              setSelectedTime(null);
+              setStep(1);
             }}
           >
             <div className="center-info">
-              <h4>{center.center_name}</h4>
+            {center.profile_image ? (
+              <img src={center.profile_image} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
+            ) : (
+              <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#ddd',marginBottom:10}} />
+            )}
+              <h4 className='page-title' style={{margin:0}}>{center.center_name}</h4>
               <p className="center-address"><FaMapMarkerAlt /> {center.address}</p>
-              <p className="center-rating"><FaStar /> {center.avg_rating}</p>
+              <p className="center-rating">
+                <FaStar />
+                <span style={{fontWeight: '600', fontSize: '18px', color:'#000'}}>
+                  {center.avg_rating !== null && center.avg_rating !== undefined
+                  ? Math.round(center.avg_rating * 10) / 10
+                  : '-'}
+                </span>
+                <span style={{color: 'rgb(136, 136, 136)', fontSize:'15px'}}> ({center.rating_count})</span>
+              </p>
             </div>
           </div>
         ))}
@@ -182,165 +305,190 @@ const Reservation = () => {
   const filteredProducts = selectedCenter
     ? products.filter(product => product.center_id === selectedCenter.center_id)
     : [];
-  const filteredTrainers = selectedCenter
-    ? trainers.filter(trainer => trainer.center_id === selectedCenter.center_id)
-    : [];
-  const selectedProductLevel = selectedProduct?.service_level;
 
   const renderProductSelectionStep = () => (
     <div className="reservation-section">
-      <div className="selection-container">
-        <div className="product-selection">
-          <h3>상품 선택</h3>
-          <div className="product-list">
-            {filteredProducts.map(product => (
-              <div
-                key={product.product_idx}
-                className={`product-card ${selectedProduct?.product_idx === product.product_idx ? 'selected' : ''}`}
-                onClick={() => {
-                  setSelectedProduct(product);
-                  setSelectedTrainer(null);
-                  setAvailableTimes([]);
-                }}
-              >
-                <h4>{product.product_name}</h4>
-                <p className="product-price">
-                  {product.discount_rate > 0 ? (
-                    <>
-                      <span className="original-price">{product.price.toLocaleString()}원</span>
-                      <span className="discount-rate">{product.discount_rate}% 할인</span>
-                      <span className="final-price">
-                        {(product.price * (1 - product.discount_rate / 100)).toLocaleString()}원
-                      </span>
-                    </>
-                  ) : (
-                    <span className="final-price">{product.price.toLocaleString()}원</span>
-                  )}
-                </p>
-                {product.max_people > 0 && (
-                  <p className="product-count">수강 인원: {product.max_people}명</p>
-                )}
+      <h3>상품 선택</h3>
+      <div className="product-list">
+        {filteredProducts.map(product => (
+          <div
+            key={product.product_idx}
+            className={`product-card ${selectedProduct?.product_idx === product.product_idx ? 'selected' : ''}`}
+            onClick={() => handleProductClick(product)}
+          >
+            <h4>{product.product_name}</h4>
+            <p className="product-price">
+              {product.discount_rate > 0 ? (
+                <>
+                  <span className="original-price">{product.price.toLocaleString()}원</span>
+                  <span className="discount-rate">{product.discount_rate}% 할인</span>
+                  <span className="final-price">
+                    {(product.price * (1 - product.discount_rate / 100)).toLocaleString()}원
+                  </span>
+                </>
+              ) : (
+                <span className="final-price">{product.price.toLocaleString()}원</span>
+              )}
+            </p>
+            {product.max_people > 0 && (
+              <p className="product-count">수강 인원: {product.max_people}명</p>
+            )}
+            {product.trainer_id && (
+              <div>
+                <p className='label font_weight_700'>트레이너 상품</p>
               </div>
-            ))}
+            )}
           </div>
-        </div>
-        {selectedProductLevel === 3 && (
-          <div className="trainer-selection">
-            <h3>트레이너 선택</h3>
-            <div className="trainer-list">
-              {filteredTrainers.map(trainer => (
-                <div
-                  key={trainer.trainer_id}
-                  className={`trainer-card ${selectedTrainer?.trainer_id === trainer.trainer_id ? 'selected' : ''}`}
-                  onClick={() => setSelectedTrainer(trainer)}
-                >
-                  <div className="trainer-info">
-                    <h4>{trainer.trainer_name || trainer.trainer_id}</h4>
-                    <p className="trainer-rating"><FaStar /> {trainer.avg_rating}</p>
-                  </div>
-                </div>
-              ))}
+        ))}
+      </div>
+      {/* 트레이너 정보 노출 */}
+      {selectedProduct && selectedProduct.trainer_id && productTrainerInfo && (
+        <div className="trainer-info-box" style={{marginTop: '16px', padding: '16px', border: '1px solid #eee', borderRadius: '8px', background: '#fafafa'}}>
+          <div className="flex column align_center justify_con_center gap_20">
+            {productTrainerInfo.profile_image ? (
+              <img src={productTrainerInfo.profile_image} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
+            ) : (
+              <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#ddd'}} />
+            )}
+            <div className='flex column gap_3'>
+              <h4 className='page-title mb_0'>{productTrainerInfo.name || productTrainerInfo.trainer_id}</h4>
+              <p className='label'>{productTrainerInfo.career}</p>
+              <p className='label flex align_center justify_con_center gap_3'>
+                <FaStar color='rgb(255, 193, 7)'/> {productTrainerInfo.avg_rating ? productTrainerInfo.avg_rating.toFixed(1) : '-'}
+                {' '}({productTrainerInfo.rating_count || 0}건)
+              </p>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 
   const renderDateTimeSelectionStep = () => (
     <div className="reservation-section">
-      <div className="datetime-container">
-        <div className="date-selection">
-          <h3>날짜 선택</h3>
-          <div className="calendar-wrapper">
-            <Calendar
-              onChange={setSelectedDate}
-              value={selectedDate}
-              minDate={new Date()}
-              className="reservation-calendar"
-            />
-          </div>
-        </div>
-        {selectedProductLevel !== 1 && (
-          <div className="time-selection">
-            <h3>시간 선택</h3>
-            {availableTimes.length > 0 ? (
-              <div className="time-slots">
-                {availableTimes.map((timeSlot, idx) => (
-                  <div
-                    key={idx}
-                    className={`time-slot ${selectedTime === timeSlot ? 'selected' : ''}`}
-                    onClick={() => setSelectedTime(timeSlot)}
-                  >
-                    <FaClock /> {timeSlot.time} - {timeSlot.endTime}
-                    {timeSlot.className && <span className="class-name">{timeSlot.className}</span>}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-results">
-                {selectedProductLevel === 1
-                  ? "자유 이용권은 시간 선택이 필요 없습니다."
-                  : "선택한 날짜에 예약 가능한 시간이 없습니다."}
-              </div>
-            )}
+
+      <div className="date-selection">
+        {classInfo && (
+          <div className='label mb_10'>
+            <strong>클래스 시간 : </strong> {classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})
           </div>
         )}
+        {productTrainerInfo && (
+          <div className='label mb_10'>
+            <strong>트레이너 : </strong> {productTrainerInfo.name || productTrainerInfo.trainer_id}
+          </div>
+        )}
+        <h3>날짜 선택</h3>
+        <Calendar
+          onChange={setSelectedDate}
+          value={selectedDate}
+          minDate={new Date()}
+          className="reservation-calendar"
+          tileDisabled={isDateDisabled}
+        />
+        {/* 시간 없는 상품: 날짜별 예약 인원 마감 안내 */}
+        {!classInfo && selectedProduct && selectedProduct.max_people > 0 && dateBookedCount >= selectedProduct.max_people && (
+          <div style={{color:'#d00',marginTop:8}}>이 날짜는 예약이 마감되었습니다.</div>
+        )}
       </div>
+      {/* 시간 있는 상품: 시간별 예약 인원 마감 안내 및 버튼 */}
+      {classInfo && availableTimes.length > 0 && (
+        <div className="time-selection" style={{marginTop: '16px'}}>
+          <h3>시간 선택</h3>
+          <div className="time-slots">
+            {availableTimes.map((slot, idx) => {
+              const key = `${slot.time}-${slot.endTime}`;
+              const booked = timeSlotCounts[key] || 0;
+              const isFull = booked >= (selectedProduct?.max_people || 0);
+              return (
+                <button
+                  key={idx}
+                  className={`time-slot ${selectedTime === slot ? 'selected' : ''}`}
+                  style={{
+                    background: selectedTime === slot ? '#27262a' : isFull ? '#ccc' : '#eee',
+                    color: isFull ? '#999' : selectedTime === slot ? '#fff' : '#222',
+                    padding: '13px 16px',
+                    borderRadius: 4,
+                    border: 'none',
+                    marginRight: 8,
+                    cursor: isFull ? 'not-allowed' : 'pointer'
+                  }}
+                  disabled={isFull}
+                  onClick={() => !isFull && setSelectedTime(slot)}
+                >
+                  <FaClock /> {slot.time} - {slot.endTime}
+                  {isFull && <span style={{color:'#d00',marginLeft:4}}>(마감)</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {/* 시간 없는 상품은 시간 선택 UI 없음 */}
     </div>
   );
 
   const renderConfirmationStep = () => (
     <div className="reservation-section">
-      <h3>예약 정보 확인</h3>
+      <h3 className='page-title'>예약 정보 확인</h3>
       <div className="confirmation-details">
         <div className="detail-item">
-          <span className="label">센터:</span>
-          <span className="value">{selectedCenter.center_name}</span>
+          <span className="label">센터 : </span>
+          <span className="value label text_left">{selectedCenter.center_name}</span>
         </div>
         <div className="detail-item">
-          <span className="label">상품:</span>
-          <span className="value">{selectedProduct.product_name}</span>
+          <span className="label">상품 : </span>
+          <span className="value label text_left">{selectedProduct.product_name}</span>
         </div>
-        {selectedProductLevel === 3 && (
+        {productTrainerInfo && (
           <div className="detail-item">
-            <span className="label">트레이너:</span>
-            <span className="value">{selectedTrainer?.trainer_name || selectedTrainer?.trainer_id}</span>
+            <span className="label">트레이너 : </span>
+            <span className="value label text_left">{productTrainerInfo.name || productTrainerInfo.trainer_id}</span>
+          </div>
+        )}
+        {classInfo && (
+          <div className="detail-item">
+            <span className="label">클래스 시간 : </span>
+            <span className="value label text_left">{classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})</span>
           </div>
         )}
         <div className="detail-item">
-          <span className="label">예약 날짜:</span>
-          <span className="value">{selectedDate.toLocaleDateString()}</span>
+          <span className="label">예약 날짜 : </span>
+          <span className="value label text_left">{selectedDate.toLocaleDateString()}</span>
         </div>
-        {selectedProductLevel !== 1 && selectedTime && (
+        {selectedTime && (
           <div className="detail-item">
-            <span className="label">예약 시간:</span>
-            <span className="value">{selectedTime.time} - {selectedTime.endTime}</span>
+            <span className="label">예약 시간 : </span>
+            <span className="value label text_left">{selectedTime.time} - {selectedTime.endTime}</span>
           </div>
         )}
         <div className="detail-item price">
-          <span className="label">최종 가격:</span>
-          <span className="value final-price">{calculateFinalPrice().toLocaleString()}원</span>
+          <span className="label">최종 가격 : </span>
+          <span className="value text_left final-price label">{calculateFinalPrice().toLocaleString()}원</span>
         </div>
         <div className="payment-methods">
-          <h4>결제 수단 선택</h4>
+          <h4 className='page-title'>결제 수단 선택</h4>
           <div className="payment-options">
             <label className="payment-option">
               <input type="radio" name="payment" value="card" defaultChecked />
-              <span>카드 결제</span>
+              <span className='label'>카드 결제</span>
             </label>
             <label className="payment-option">
-              <input type="radio" name="payment" value="transfer" />
-              <span>계좌 이체</span>
+              <input type="radio" name="payment" value="direct" />
+              <span className='label'>현장결제</span>
             </label>
             <label className="payment-option">
               <input type="radio" name="payment" value="kakao" />
-              <span>카카오페이</span>
+              <span className='label'>카카오페이</span>
+            </label>
+            <label className="payment-option">
+              <input type="radio" name="payment" value="myProduct" />
+              <span className='label'>내 상품</span>
             </label>
           </div>
         </div>
         <button
-          className="submit-button"
+          className="btn label white_color"
           onClick={handleSubmitReservation}
           disabled={isSubmitting}
         >
@@ -360,32 +508,44 @@ const Reservation = () => {
           <h3>예약 정보</h3>
           <div className="detail-item">
             <span className="label">예약번호:</span>
-            <span className="value">R{Date.now().toString().substring(5)}</span>
+            <span className="value label">{selectedProduct.product_idx}</span>
           </div>
           <div className="detail-item">
             <span className="label">센터:</span>
-            <span className="value">{selectedCenter.center_name}</span>
+            <span className="value label">{selectedCenter.center_name}</span>
           </div>
           <div className="detail-item">
             <span className="label">상품:</span>
-            <span className="value">{selectedProduct.product_name}</span>
+            <span className="value label">{selectedProduct.product_name}</span>
           </div>
+          {classInfo && (
+            <div className="detail-item">
+              <span className="label">클래스 시간:</span>
+              <span className="value label">{classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})</span>
+            </div>
+          )}
+          {productTrainerInfo && (
+            <div className="detail-item">
+              <span className="label">트레이너:</span>
+              <span className="value label">{productTrainerInfo.name || productTrainerInfo.trainer_id}</span>
+            </div>
+          )}
           <div className="detail-item">
             <span className="label">날짜:</span>
-            <span className="value">{selectedDate.toLocaleDateString()}</span>
+            <span className="value label">{selectedDate.toLocaleDateString()}</span>
           </div>
           {selectedTime && (
             <div className="detail-item">
               <span className="label">시간:</span>
-              <span className="value">{selectedTime.time} - {selectedTime.endTime}</span>
+              <span className="value label">{selectedTime.time} - {selectedTime.endTime}</span>
             </div>
           )}
         </div>
         <div className="action-buttons">
-          <button className="primary-button" onClick={() => window.location.href = '/mypage'}>
+          <button className="btn label white_color" onClick={() => window.location.href = '/component/membermypage'}>
             예약 내역 확인
           </button>
-          <button className="secondary-button" onClick={() => window.location.href = '/'}>
+          <button className="btn label white_color" onClick={() => window.location.href = '/'}>
             홈으로 이동
           </button>
         </div>
@@ -396,7 +556,7 @@ const Reservation = () => {
   const renderProgressBar = () => {
     const steps = [
       { number: 1, name: '센터 선택' },
-      { number: 2, name: '상품/트레이너' },
+      { number: 2, name: '상품' },
       { number: 3, name: '날짜/시간' },
       { number: 4, name: '예약 확인' }
     ];
@@ -417,10 +577,11 @@ const Reservation = () => {
 
   const canGoNext = () => {
     if (step === 1) return !!selectedCenter;
-    if (step === 2) return !!selectedProduct && (selectedProductLevel !== 3 || !!selectedTrainer);
+    if (step === 2) return !!selectedProduct;
     if (step === 3) {
-      if (selectedProductLevel === 1) return !!selectedDate;
-      return !!selectedDate && (availableTimes.length === 0 || !!selectedTime);
+      // 시간 있는 상품: 날짜+시간, 시간 없는 상품: 날짜만
+      if (classInfo && classInfo.start_time && classInfo.end_time) return !!selectedDate && !!selectedTime;
+      return !!selectedDate;
     }
     return false;
   };
@@ -429,10 +590,12 @@ const Reservation = () => {
   return (
     <div>
       <Header />
+      <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
+        <p className='title'>예약 페이지</p>
+      </div>
       <div className='wrap padding_120_0'>
         <div className="reservation-container">
-          <h2 className="middle_title mb_20">예약하기</h2>
-          {step < 4 && renderProgressBar()}
+          {step < 5 && renderProgressBar()}
           <div className="reservation-content">
             {step === 1 && renderCenterSelectionStep()}
             {step === 2 && renderProductSelectionStep()}
@@ -449,7 +612,22 @@ const Reservation = () => {
               )}
               <button
                 className="next-button"
-                onClick={() => setStep(step + 1)}
+                onClick={async () => {
+                  // step2→step3로 이동할 때 클래스 정보가 없는 경우(트레이너 상품)라면 여기서 불러오기
+                  if (step === 2 && selectedProduct && selectedProduct.trainer_id && !classInfo) {
+                    const res = await axios.post('http://localhost/reservation/class_info', {
+                      center_id: selectedProduct.center_id,
+                      trainer_id: selectedProduct.trainer_id,
+                      product_idx: selectedProduct.product_idx
+                    });
+                    const cls = (res.data.list || []).find(c => !c.delete);
+                    setClassInfo(cls || null);
+                    // 트레이너 정보도 세팅
+                    const trainer = trainers.find(t => t.trainer_id === selectedProduct.trainer_id);
+                    setProductTrainerInfo(trainer || null);
+                  }
+                  setStep(step + 1);
+                }}
                 disabled={!canGoNext()}
               >
                 다음

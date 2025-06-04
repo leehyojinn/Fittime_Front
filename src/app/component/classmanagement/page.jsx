@@ -302,7 +302,7 @@ const ClassManagement = () => {
                         <td>{classItem.week}</td>
                         <td>{classItem.start_time}</td>
                         <td>{classItem.end_time}</td>
-                        {exerciseLevel === '3' ? <td>1명</td> : <td>{product ? product.max_people : ''}명</td>}
+                        <td>{product ? product.max_people : ''}명</td>
                         <td>{trainer ? trainer.user_name : ''}</td>
                         <td>
                           <button 

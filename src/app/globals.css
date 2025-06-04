@@ -222,10 +222,17 @@ table {
     justify-content: space-between;
 }
 
+.mb_0 {
+  margin-bottom: 0 !important;
+}
+
 .mb_20{
     margin-bottom: 20px;
 }
 
+.mb_10{
+  margin-bottom: 10px;
+}
 
 .radius_text{
     border-radius : 100px;
@@ -1647,7 +1654,7 @@ table tr.selected {
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   color: var(--gray-color);
-  font-size: 0.875rem;
+  font-size: 1.3rem;
 }
 
 .trainer-exercise-type, .trainer-price, .center-price {
@@ -1987,7 +1994,7 @@ table tr.selected {
 }
 
 .reservation-section h3 {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   margin-bottom: 2rem;
   font-weight: 700;
 }
@@ -2040,9 +2047,7 @@ table tr.selected {
 
 /* 센터 선택 */
 .center-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  display: flex;
 }
 
 .center-card {
@@ -2078,21 +2083,11 @@ table tr.selected {
 
 .center-info {
   padding: 1.25rem;
-}
-
-.center-info h4 {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.center-address {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  color: var(--gray-color);
-  font-size: 0.875rem;
+  justify-content: center;
+  gap: 10px;
 }
 
 .center-rating {
@@ -2125,6 +2120,9 @@ table tr.selected {
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .product-card:hover {
@@ -2137,7 +2135,7 @@ table tr.selected {
 }
 
 .product-card h4 {
-  font-size: 1.125rem;
+  font-size: 1.4rem;
   margin-bottom: 0.75rem;
   font-weight: 500;
 }
@@ -2150,7 +2148,7 @@ table tr.selected {
   text-decoration: line-through;
   color: var(--gray-color);
   margin-right: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 1.1rem;
 }
 
 .discount-rate {
@@ -2158,7 +2156,7 @@ table tr.selected {
   color: #d17e06;
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 1.1rem;
   font-weight: 600;
   margin-right: 0.5rem;
 }
@@ -2170,7 +2168,7 @@ table tr.selected {
 
 .product-count {
   color: var(--gray-color);
-  font-size: 0.875rem;
+  font-size: 1.1rem;
 }
 
 .trainer-card {
@@ -2261,24 +2259,26 @@ table tr.selected {
   align-items: center;
   gap: 0.5rem;
   background-color: #fff;
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid var(--border-color);
   flex-direction: column;
+  justify-content: center;
   text-align: center;
   font-size: 1.3rem;
 }
 
 .time-slot:hover {
-  background-color: #f8f9fa;
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
 .time-slot.selected {
-  border: 2px solid var(--primary-color);
-  background-color: var(--primary-light);
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
 .class-name {
@@ -2300,6 +2300,7 @@ table tr.selected {
   display: flex;
   margin-bottom: 1rem;
   font-size: 1rem;
+  align-items: center;
 }
 
 .detail-item .label {
@@ -2318,24 +2319,14 @@ table tr.selected {
   border-top: 1px solid var(--border-color);
 }
 
-.detail-item.price .value {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
 .payment-methods {
   margin-top: 2rem;
-}
-
-.payment-methods h4 {
-  font-size: 1.125rem;
-  margin-bottom: 1rem;
-  font-weight: 500;
 }
 
 .payment-options {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -2398,7 +2389,8 @@ table tr.selected {
 
 .completion-message p {
   color: var(--gray-color);
-  margin-bottom: 2rem;
+  margin: 1.3rem 0 2rem 0;
+  font-size: 1.3rem;
 }
 
 .reservation-summary {
@@ -2408,13 +2400,6 @@ table tr.selected {
   margin: 0 auto 2rem;
   max-width: 500px;
   text-align: left;
-}
-
-.reservation-summary h3 {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-  font-weight: 500;
-  text-align: center;
 }
 
 .action-buttons {
@@ -2570,6 +2555,7 @@ table tr.selected {
   width: 100% !important;
   border: none !important;
   font-family: 'Noto Sans KR', sans-serif !important;
+  font-size: 1.7rem;
 }
 
 .react-calendar__tile--active {
@@ -2587,7 +2573,7 @@ table tr.selected {
 }
 
 .center-detail-container, .trainer-detail-container {
-  max-width: 900px;
+  max-width: 1400px;
   margin: 0 auto;
   background: #fff;
   border-radius: 1rem;
@@ -2641,7 +2627,7 @@ table tr.selected {
 
 .center-contact, .center-contact-phone, .center-address, .trainer-type {
   color: #4a5568;
-  font-size: 1rem;
+  font-size: 1.5rem;
   margin-right: 1.2rem;
   display: inline-flex;
   align-items: center;
@@ -3393,4 +3379,10 @@ img {
 .review-toggle-select.selected {
   background-color: #444;
   color: #fff;
+}
+
+.overlay_btn {
+  position: absolute;
+  right: 50%;
+  transform: translateX(350px);
 }
