@@ -272,7 +272,7 @@ const ReviewPage = () => {
             </div>
             <div className='wrap padding_120_0'>
                 <div className="center-detail-container">
-                    {target === 'center' ? (
+                    {target === centerId ? (
                     <div>
                         <h2 style={{fontSize: "3.5rem",
                             fontWeight: 'bold',
@@ -335,7 +335,7 @@ const ReviewPage = () => {
                                 {
                                     showMap && (
                                         <div>
-                                            <KakaoMap address={centerInfo.address}/>
+                                            <KakaoMap address={centerInfo.center_address}/>
                                         </div>
                                     )
                                 }

@@ -50,6 +50,9 @@ const CenterDetail = () => {
     setShowMap(!showMap);
   }
 
+    useEffect(() => {
+        console.log('center info : ',centerInfo.address);
+    }, [centerInfo]);
 
   // 별점 클릭/호버
   const handleStarClick = (value) => setStar(value);
@@ -197,7 +200,7 @@ const CenterDetail = () => {
                             {
                                 showMap && (
                                     <div>
-                                        <KakaoMap address={centerInfo.address}/>
+                                        <KakaoMap address={centerInfo.center_address}/>
                                     </div>
                                 )
                             }

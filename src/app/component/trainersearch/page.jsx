@@ -28,7 +28,7 @@ const TrainerSearch = () => {
   const router = useRouter();
 
     const handleMoveTrainer = (id) =>{
-        router.push(`/component/trainerdetail?user_id=${id}`)
+        router.push(`/component/trainerdetail?trainer_id=${id}`)
     }
 
     useEffect(() => {

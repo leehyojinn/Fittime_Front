@@ -34,9 +34,13 @@ const TrainerDetail = () => {
   const [files, setFiles] = useState([]);
   const [reviews, setReviews] = useState(trainerSample.reviews);
   const [trainerInfo, setTrainerInfo] = useState({});
+  const [showMap, setShowMap] = useState(false);
+
+  const searchParams = useSearchParams();
+  const trainer_id = searchParams.get('trainer_id');
 
   const getTrainerInfo = async() =>{
-      const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainerId,"user_level":'2'});
+      const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainer_id,"user_level":'2'});
       console.log(data);
       setTrainerInfo(data);
   }
@@ -45,9 +49,12 @@ const TrainerDetail = () => {
       getTrainerInfo();
   }, []);
 
+  const  handleToggleMap = () =>{
+      setShowMap(!showMap);
+  }
 
-  const searchParams = useSearchParams();
-  const trainer_idx = searchParams.get('trainer_idx');
+
+
 
   // 별점 클릭/호버
   const handleStarClick = (value) => setStar(value);
@@ -91,102 +98,127 @@ const TrainerDetail = () => {
         <div className='wrap padding_120_0'>
             <div className="trainer-detail-container">
                 <div>
+                    <h2 style={{fontSize: "3.5rem",
+                        fontWeight: 'bold',
+                        color:'#3673c1'}}>{trainerInfo.name}</h2>
+                    <Link href={'/component/reservation'}>
+                        <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}}>예약 하기</div>
+                    </Link>
                     <div className="trainer-header">
-                        <img src={trainerSample.profile_image} alt={trainerSample.user_name} className="trainer-main-image" />
+                        <img src={`http://localhost/profileImg/profile/${trainer_id}`} alt={trainerInfo.name} className="trainer-main-image" />
                         <div className="trainer-header-info">
-                        <h2>{trainerSample.user_name}</h2>
-                        <div className="trainer-type">{trainerSample.exercise_type}</div>
-                        <div className="trainer-tags">
-                            {trainerSample.tags.map(tag => <span key={tag} className="trainer-tag"><FaTag /> {tag}</span>)}
+
+                            <div className="trainer-tags">
+                                {/*{trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"  style={{fontSize:'1.5rem'}}><FaTag />{tag}</span>)}*/}
+                                {trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"  style={{fontSize:'1.5rem'}}>{tag}</span>)}
+                            </div>
+                            <div className="trainer-type"  style={{fontSize:'1.5rem'}}>{trainerInfo.exercise}</div>
+                            <div className="trainer-rating" style={{fontSize:'1.3rem'}}>
+                                <FaStar /> {avgRating} <span style={{fontSize:'1.3rem',color:'#888'}}>({reviews.length}명)</span>
+                            </div>
                         </div>
-                        <div className="trainer-rating">
-                            <FaStar /> {avgRating} <span style={{fontSize:'0.92rem',color:'#888'}}>({reviews.length}명)</span>
-                        </div>
-                        </div>
+
                     </div>
                     <div className="trainer-intro">
-                        <h4>트레이너 소개</h4>
-                        <p>{trainerSample.intro}</p>
-                        <Link href={'/component/reservation'}>
-                            <div className="review-submit-btn width_fit">예약 하기</div>
-                        </Link>
+                        <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>트레이너 소개</h4>
+                        <p style={{fontSize:'1.5rem'}}>{trainerInfo.career}</p>
+
                     </div>
                     <div className="trainer-center-info">
-                        <h4>소속 센터</h4>
+                        <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>소속 센터</h4>
                         <div className="center-brief">
-                        <span className="center-name">{trainerSample.center_name}</span>
-                        <span className="center-address"><FaMapMarkerAlt /> {trainerSample.center_address}</span>
-                        <span className="center-contact"><FaPhoneAlt /> {trainerSample.center_contact}</span>
+                            <span className="center-name">{trainerInfo.center_name}</span>
+                            <span className="center-address" style={{fontSize:'1.4rem'}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
+                            <span className="center-contact" style={{fontSize:'1.3rem'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
                         </div>
                     </div>
                     <div>
-                        <KakaoMap Lat={37.570656845556} Lng={126.9930055114}/>
+                        <button
+                            className='cancel-button'
+                            onClick={handleToggleMap}
+                            style={{
+                                marginBottom: '1rem'
+
+                            }}>
+                            {
+                                showMap
+                                    ? '지도 닫기'
+                                    : '위치 보기'
+                            }
+                        </button>
+                        {
+                            showMap && (
+                                <div>
+                                    <KakaoMap address={trainerInfo.center_address}/>
+                                </div>
+                            )
+                        }
                     </div>
                 </div>
             {/* 리뷰 작성 인풋 */}
-            <div className="trainer-review-write">
-                <h4>리뷰 작성</h4>
-                <form onSubmit={handleReviewSubmit}>
-                <div className="star-input">
-                    {[1,2,3,4,5].map(i=>(
-                    <span key={i} style={{position:'relative',display:'inline-block'}}>
-                        <FaStar
-                        className="star"
-                        color={((hoverStar||star) >= i) ? '#FFC107' : '#e4e5e9'}
-                        onMouseEnter={()=>handleStarHover(i)}
-                        onMouseLeave={handleStarOut}
-                        onClick={()=>handleStarClick(i)}
-                        style={{cursor:'pointer',fontSize:'2rem'}}
-                        />
-                        {/* 0.5점 지원 */}
-                        <FaStar
-                        className="star half"
-                        color={((hoverStar||star) >= i-0.5) && ((hoverStar||star)<i) ? '#FFC107':'transparent'}
-                        style={{
-                            cursor:'pointer',
-                            fontSize:'2rem',
-                            position:'absolute',
-                            left:0,
-                            zIndex:1,
-                            clipPath:'inset(0 50% 0 0)'
-                        }}
-                        onMouseEnter={()=>handleStarHover(i-0.5)}
-                        onMouseLeave={handleStarOut}
-                        onClick={()=>handleStarClick(i-0.5)}
-                        />
-                    </span>
-                    ))}
-                    <span className="star-score">{star>0?star:''}</span>
-                </div>
-                <textarea
-                    className="review-textarea"
-                    placeholder="트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
-                    minLength={15}
-                    value={reviewText}
-                    onChange={e=>setReviewText(e.target.value)}
-                    required
-                />
-                <div className="review-file-input">
-                    <label htmlFor="trainer-review-upload" className="file-label">
-                    <FaCamera /> 사진첨부 (최대 5장)
-                    <input
-                        id="trainer-review-upload"
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        multiple
-                        onChange={handleFileChange}
-                        style={{ display: 'none' }}
-                    />
-                    </label>
-                    <div className="review-file-preview">
-                    {files.map((file, i) => (
-                        <span key={i} className="file-name">{file.name}</span>
-                    ))}
-                    </div>
-                </div>
-                <button type="submit" className="review-submit-btn">등록하기</button>
-                </form>
-            </div>
+            {/*<div className="trainer-review-write">*/}
+            {/*    <h4>리뷰 작성</h4>*/}
+            {/*    <form onSubmit={handleReviewSubmit}>*/}
+            {/*    <div className="star-input">*/}
+            {/*        {[1,2,3,4,5].map(i=>(*/}
+            {/*        <span key={i} style={{position:'relative',display:'inline-block'}}>*/}
+            {/*            <FaStar*/}
+            {/*            className="star"*/}
+            {/*            color={((hoverStar||star) >= i) ? '#FFC107' : '#e4e5e9'}*/}
+            {/*            onMouseEnter={()=>handleStarHover(i)}*/}
+            {/*            onMouseLeave={handleStarOut}*/}
+            {/*            onClick={()=>handleStarClick(i)}*/}
+            {/*            style={{cursor:'pointer',fontSize:'2rem'}}*/}
+            {/*            />*/}
+            {/*            /!* 0.5점 지원 *!/*/}
+            {/*            <FaStar*/}
+            {/*            className="star half"*/}
+            {/*            color={((hoverStar||star) >= i-0.5) && ((hoverStar||star)<i) ? '#FFC107':'transparent'}*/}
+            {/*            style={{*/}
+            {/*                cursor:'pointer',*/}
+            {/*                fontSize:'2rem',*/}
+            {/*                position:'absolute',*/}
+            {/*                left:0,*/}
+            {/*                zIndex:1,*/}
+            {/*                clipPath:'inset(0 50% 0 0)'*/}
+            {/*            }}*/}
+            {/*            onMouseEnter={()=>handleStarHover(i-0.5)}*/}
+            {/*            onMouseLeave={handleStarOut}*/}
+            {/*            onClick={()=>handleStarClick(i-0.5)}*/}
+            {/*            />*/}
+            {/*        </span>*/}
+            {/*        ))}*/}
+            {/*        <span className="star-score">{star>0?star:''}</span>*/}
+            {/*    </div>*/}
+            {/*    <textarea*/}
+            {/*        className="review-textarea"*/}
+            {/*        placeholder="트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"*/}
+            {/*        minLength={15}*/}
+            {/*        value={reviewText}*/}
+            {/*        onChange={e=>setReviewText(e.target.value)}*/}
+            {/*        required*/}
+            {/*    />*/}
+            {/*    <div className="review-file-input">*/}
+            {/*        <label htmlFor="trainer-review-upload" className="file-label">*/}
+            {/*        <FaCamera /> 사진첨부 (최대 5장)*/}
+            {/*        <input*/}
+            {/*            id="trainer-review-upload"*/}
+            {/*            type="file"*/}
+            {/*            accept="image/jpeg,image/png"*/}
+            {/*            multiple*/}
+            {/*            onChange={handleFileChange}*/}
+            {/*            style={{ display: 'none' }}*/}
+            {/*        />*/}
+            {/*        </label>*/}
+            {/*        <div className="review-file-preview">*/}
+            {/*        {files.map((file, i) => (*/}
+            {/*            <span key={i} className="file-name">{file.name}</span>*/}
+            {/*        ))}*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*    <button type="submit" className="review-submit-btn">등록하기</button>*/}
+            {/*    </form>*/}
+            {/*</div>*/}
             {/* 리뷰 리스트 */}
             <div className="trainer-reviews">
                 <h4>리뷰</h4>
