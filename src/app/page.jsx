@@ -17,7 +17,6 @@ const MainPage = () => {
 
     const center_list = async () => {
         let { data } = await axios.post('http://localhost/center_rating/list');
-        console.log(data)
         if (data && data.list) setCenterList(data.list);
     };
     const trainer_list = async () => {
@@ -153,7 +152,7 @@ const MainPage = () => {
                                         />
                                         <div className='flex column gap_10 mt_20'>
                                             <p className='content_text' style={{ fontWeight: 600, fontSize: 20 }}>
-                                                {trainer.trainer_name}
+                                                {trainer.name}
                                             </p>
                                             {/* 별점 + 참여인원수 */}
                                             <div className="flex align_center gap_8 justify_con_center">
