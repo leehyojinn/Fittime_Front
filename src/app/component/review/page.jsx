@@ -72,12 +72,17 @@ const ReviewPage = () => {
         axios.get(`http://localhost/get/review/${review_idx}`)
             .then(({data})=>{
                 console.log(data);
+                console.log(review_idx);
                 setReview(data.map);
+                if(data.photos?.length) {
+                    setFiles(data.photos);
+                }
             })
     }, [review_idx]);
 
     useEffect(() => {
         console.log('review',review);
+        console.log('files',files);
         setTarget(review.target_id);
         setReviewText(review.content);
         setStar(review.rating);
@@ -559,7 +564,7 @@ const ReviewPage = () => {
                                             <div className="review-file-preview">
                                                 {
                                                     files
-                                                        ?.map((file, i) => (<span key={i} className="file-name">{file.name}</span>))
+                                                        ?.map((file, i) => (<span key={i} className="file-name">{file instanceof File? file.name : file}</span>))
                                                 }
                                             </div>
                                             <button

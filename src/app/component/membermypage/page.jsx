@@ -107,6 +107,9 @@ const MemberMyPage = () => {
   const handleDeleteReview = async (idx) =>{
     const {data} = await axios.post(`http://localhost/del/review/${idx}`);
     console.log(data.success);
+    if(data.success){
+      getReviews();
+    }
   }
 
   const handleUpdateReview = async(idx) =>{
