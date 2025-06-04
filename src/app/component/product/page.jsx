@@ -9,7 +9,6 @@ import AlertModal from '../alertmodal/page';
 import { useAlertModalStore } from '@/app/zustand/store';
 
 const ProductManagement = () => {
-  // 운동레벨(카테고리)은 클라이언트에서만 읽어서 사용
   const [exerciseLevel, setExerciseLevel] = useState('');
   const [isReady, setIsReady] = useState(false);
 
@@ -28,7 +27,6 @@ const ProductManagement = () => {
   const { openModal } = useAlertModalStore();
   const serviceLevel = watch('service_level');
 
-  // 클라이언트에서만 운동레벨 값 세팅
   useEffect(() => {
     if (typeof window !== "undefined") {
       const level = sessionStorage.getItem("exercise_level") || "";
@@ -38,7 +36,6 @@ const ProductManagement = () => {
     }
   }, [reset]);
 
-  // 운동레벨 없으면 AlertModal 안내 후 이동
   useEffect(() => {
     if (isReady && !exerciseLevel) {
       openModal({
@@ -92,12 +89,15 @@ const ProductManagement = () => {
         discount_rate: Number(data.discount_rate),
         expiration_period: Number(data.validity_period) || 0,
         status: "1",
+        max_people: Number(data.max_people) || 0, // 항상 포함
       };
       if (data.service_level === "1" || data.service_level === 1) {
         req.duration = Number(data.duration) || 0;
-      } else if (data.service_level === "2" || data.service_level === 2) {
+      }
+      if (data.service_level === "2" || data.service_level === 2) {
         req.max_people = Number(data.max_people) || 0;
-      } else if (data.service_level === "3" || data.service_level === 3) {
+      }
+      if (data.service_level === "3" || data.service_level === 3) {
         req.count = Number(data.count) || 0;
       }
       req.exercise_level = Number(data.service_level);
@@ -158,14 +158,17 @@ const ProductManagement = () => {
         product_idx: selectedProduct.product_idx,
         product_name: data.product_name,
         price: Number(data.price),
+        max_people: Number(data.max_people) || 0, // 항상 포함
         discount_rate: Number(data.discount_rate),
         expiration_period: Number(data.validity_period) || 0,
       };
       if (data.service_level === "1" || data.service_level === 1) {
         req.duration = Number(data.duration) || 0;
-      } else if (data.service_level === "2" || data.service_level === 2) {
+      }
+      if (data.service_level === "2" || data.service_level === 2) {
         req.max_people = Number(data.max_people) || 0;
-      } else if (data.service_level === "3" || data.service_level === 3) {
+      }
+      if (data.service_level === "3" || data.service_level === 3) {
         req.count = Number(data.count) || 0;
       }
       req.exercise_level = Number(data.service_level);
@@ -302,26 +305,38 @@ const ProductManagement = () => {
     );
   };
 
-  // 운동레벨별 필드 노출
+  // 운동레벨별 필드 노출 + max_people 항상 노출
   const renderLevelSpecificFields = () => {
     const level = serviceLevel || exerciseLevel;
-    if (level === '1' || level === 1) {
-      return (
-        <div className="form-group">
-          <label htmlFor="duration" className='label font_weight_500'>이용 기간(일)</label>
-          <input
-            id="duration"
-            type="number"
-            {...register("duration", { required: "이용 기간을 입력해주세요", min: 1 })}
-            disabled={selectedProduct && !isEditing}
-            style={errors.duration ? { border: '2px solid red' } : {}}
-          />
-          {errors.duration && <span className="error-message">{errors.duration.message}</span>}
-        </div>
-      );
-    }
-    if (level === '2' || level === 2) {
-      return (
+    return (
+      <>
+        {(level === '1' || level === 1) && (
+          <div className="form-group">
+            <label htmlFor="duration" className='label font_weight_500'>이용 기간(일)</label>
+            <input
+              id="duration"
+              type="number"
+              {...register("duration", { required: "이용 기간을 입력해주세요", min: 1 })}
+              disabled={selectedProduct && !isEditing}
+              style={errors.duration ? { border: '2px solid red' } : {}}
+            />
+            {errors.duration && <span className="error-message">{errors.duration.message}</span>}
+          </div>
+        )}
+        {(level === '3' || level === 3) && (
+          <div className="form-group">
+            <label htmlFor="count" className='label font_weight_500'>횟수</label>
+            <input
+              id="count"
+              type="number"
+              {...register("count", { required: "횟수를 입력해주세요", min: 1 })}
+              disabled={selectedProduct && !isEditing}
+              style={errors.count ? { border: '2px solid red' } : {}}
+            />
+            {errors.count && <span className="error-message">{errors.count.message}</span>}
+          </div>
+        )}
+        {/* max_people은 항상 노출 */}
         <div className="form-group">
           <label htmlFor="max_people" className='label font_weight_500'>수강 인원 수</label>
           <input
@@ -333,27 +348,10 @@ const ProductManagement = () => {
           />
           {errors.max_people && <span className="error-message">{errors.max_people.message}</span>}
         </div>
-      );
-    }
-    if (level === '3' || level === 3) {
-      return (
-        <div className="form-group">
-          <label htmlFor="count" className='label font_weight_500'>횟수</label>
-          <input
-            id="count"
-            type="number"
-            {...register("count", { required: "횟수를 입력해주세요", min: 1 })}
-            disabled={selectedProduct && !isEditing}
-            style={errors.count ? { border: '2px solid red' } : {}}
-          />
-          {errors.count && <span className="error-message">{errors.count.message}</span>}
-        </div>
-      );
-    }
-    return null;
+      </>
+    );
   };
 
-  // 서비스 레벨명 (상품에 없으면 exerciseLevel 사용)
   const getServiceLevelName = (level) => {
     const realLevel = level || exerciseLevel;
     switch (Number(realLevel)) {
@@ -405,7 +403,8 @@ const ProductManagement = () => {
                     <th>상품명</th>
                     <th>가격</th>
                     <th>할인율</th>
-                    <th>수강인원/기간/횟수</th>
+                    <th>수강인원</th>
+                    <th>기간/횟수</th>
                     <th>카테고리</th>
                     <th>관리</th>
                   </tr>
@@ -428,7 +427,10 @@ const ProductManagement = () => {
                           {product.discount_rate}%
                         </td>
                         <td onClick={() => handleSelectProduct(product)}>
-                          {product.duration ? `${product.duration}일` : product.max_people ? `${product.max_people}명` : product.count ? `${product.count}회` : '-'}
+                          {product.max_people}명
+                        </td>
+                        <td onClick={() => handleSelectProduct(product)}>
+                          {product.duration ? `${product.duration}일` : product.count ? `${product.count}회` : '-'}
                         </td>
                         <td onClick={() => handleSelectProduct(product)}>
                           {getServiceLevelName(product.exercise_level)}
