@@ -34,6 +34,7 @@ const ReviewPage = () => {
     const [reviews, setReviews] = useState({});
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(1);
+    const [review, setReview] = useState({});
 
     const {openModal} = useAlertModalStore();
 
@@ -50,11 +51,6 @@ const ReviewPage = () => {
         }
     }
 
-    const getReview = async () => {
-        console.log('review_idx',review_idx);
-        console.log(data);
-    }
-
     const getTrainerInfo = async() =>{
         const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainerId,"user_level":'2'});
         console.log(data);
@@ -68,10 +64,26 @@ const ReviewPage = () => {
     }
 
     useEffect(() => {
-        getTrainerInfo();
-        getCenterInfo();
-        getReview();
+            getTrainerInfo();
+            getCenterInfo();
     }, []);
+
+    useEffect(() => {
+        axios.get(`http://localhost/get/review/${review_idx}`)
+            .then(({data})=>{
+                console.log(data);
+                setReview(data.map);
+            })
+    }, [review_idx]);
+
+    useEffect(() => {
+        console.log('review',review);
+        setTarget(review.target_id);
+        setReviewText(review.content);
+        setStar(review.rating);
+        setShowReviewForm(true);
+        setReviewTarget(review.target_id===review.center_id?'center':'trainer');
+    }, [review]);
 
     // 별점 클릭/호버
     const handleStarClick = (value) => setStar(value);

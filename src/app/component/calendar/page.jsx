@@ -119,6 +119,7 @@ export default function MyCalendar() {
 
         // 클래스 요일
         classScheduleRes.data.scheduleList.forEach(item => {
+          console.log(item.user_name);
           const start = new Date(`${item.date}T${item.start_time}`);
           const end = new Date(`${item.date}T${item.end_time}`);
           combinedEvents.push({
@@ -131,7 +132,7 @@ export default function MyCalendar() {
               product_name: item.title,
               start_time: item.start_time,
               end_time: item.end_time,
-              user_name: "", // 클래스에는 없으니 빈값
+              user_name: '', // 클래스에는 없으니 빈값
             },
           });
         });
@@ -179,6 +180,7 @@ export default function MyCalendar() {
 
   // 일정 클릭: 상세정보 모달
   const handleSelectEvent = (event) => {
+    console.log(event);
     setDetailInfo({
       open: true,
       event: event,
@@ -339,6 +341,7 @@ export default function MyCalendar() {
 
   // 캘린더에 보여지는 이벤트
   const CustomEvent = ({event}) => {
+    console.log(event.resource.user_name);
     const {product_name, start_time, end_time, user_name} = event.resource || {};
 
     if (!product_name || !start_time || !end_time) {
@@ -548,9 +551,12 @@ export default function MyCalendar() {
             ) : (
               <div className='flex column gap_10'>
                 <h4 className='middle_title2'>{detailInfo.event.title}</h4>
-                <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(addDays(detailInfo.event.end, +1), 'yyyy-MM-dd')
-                  ? format(detailInfo.event.start, 'yyyy-MM-dd')
-                  : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')}`}</p>
+                {/*<p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(addDays(detailInfo.event.end, +1), 'yyyy-MM-dd')*/}
+                {/*  ? format(detailInfo.event.start, 'yyyy-MM-dd')*/}
+                {/*  : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')}`}</p>*/}
+                <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(detailInfo.event.end, 'yyyy-MM-dd')
+                    ? format(detailInfo.event.start, 'yyyy-MM-dd')
+                    : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(detailInfo.event.end, 'yyyy-MM-dd')}`}</p>
                 <p className='label'>내용 : {detailInfo.event.resource.content}</p>
                 <p className='label'>시간 : {detailInfo.event.resource.start_time} ~ {detailInfo.event.resource.end_time}</p>
                 <p className='label'>{detailInfo.event.resource.status}</p>

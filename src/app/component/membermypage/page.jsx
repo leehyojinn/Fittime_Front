@@ -68,8 +68,8 @@ const MemberMyPage = () => {
     }
   };
 
-  const handleMoveReview = (center_id,trainer_id,reservation_idx,trainer_name,center_name)=>{
-    router.push(`/component/review?center_id=${center_id}&trainer_id=${trainer_id}&reservation_idx=${reservation_idx}&trainer_name=${trainer_name}&&center_name=${center_name}`);
+  const handleMoveReview = (r)=>{
+    router.push(`/component/review?center_id=${r.center_id}&trainer_id=${r.trainer_id}&reservation_idx=${r.reservation_idx}&trainer_name=${r.trainer_name}&&center_name=${r.center_name}`);
   }
 
   useEffect(() => {
@@ -109,9 +109,11 @@ const MemberMyPage = () => {
     console.log(data.success);
   }
 
-  const handleUpdateReview = (r) =>{
-    console.log(r);
-    router.push(`/component/review?review_idx=${r.review_idx}`);
+  const handleUpdateReview = async(idx) =>{
+    const {data} = await axios.get(`http://localhost/get/review/${idx}`);
+    console.log(data);
+    router.push(`/component/review?center_id=${data.map.center_id}&trainer_id=${data.map.trainer_id}&reservation_idx=${data.map.reservation_idx}&trainer_name=${data.map.trainer_name}&&center_name=${data.map.center_name}&review_idx=${idx}`);
+    //router.push(`/component/review?`);
   }
 
   const changeUser = (e) =>{
@@ -229,7 +231,7 @@ const MemberMyPage = () => {
                     <td>{r.start_time}~{r.end_time}</td>
                     <td>{r.trainer_name}</td>
                     <td>{r.status}</td>
-                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" onClick={()=>handleMoveReview(r.center_id,r.trainer_id,r.reservation_idx,r.trainer_name,r.center_name)}>리뷰쓰기</button></td>
+                    <td style={{textAlign:'center'}}><button className="mypage-small-btn white_color label" onClick={()=>handleMoveReview(r)}>리뷰쓰기</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -250,7 +252,7 @@ const MemberMyPage = () => {
                     <td>{r.content}</td>
                     <td>{r.reg_date.substring(0,10)}</td>
                     <td style={{textAlign:'center'}}>
-                      <button className="mypage-small-btn white_color label" style={{ marginRight:'5px'}} onClick={()=>handleUpdateReview(r)}>
+                      <button className="mypage-small-btn white_color label" style={{ marginRight:'5px'}} onClick={()=>handleUpdateReview(r.review_idx)}>
                         수정
                       </button>
                       <button className="mypage-small-btn white_color label" style={{letterSpacing:'inherit'}} onClick={()=>handleDeleteReview(r.review_idx)}>

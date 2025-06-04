@@ -35,6 +35,7 @@ const CenterDetail = () => {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
 
+
   const searchParams = useSearchParams();
   const center_id = searchParams.get('center_id');
 
