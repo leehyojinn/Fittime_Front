@@ -32,6 +32,7 @@ const ReviewPage = () => {
     const [files, setFiles] = useState([]);
     const [reviews, setReviews] = useState([]);
     const [page, setPage] = useState(1);
+    const [totalPage, setTotalPage] = useState(1);
 
     const {openModal} = useAlertModalStore();
 
@@ -152,7 +153,7 @@ const ReviewPage = () => {
 
     const handleReviewTargetChange = (target) => {
         try {
-
+            console.log(target);
             if (target === 'trainer') {
                 setReviewTarget('trainer');
                 setTarget(trainerId);
@@ -165,12 +166,12 @@ const ReviewPage = () => {
                 setTargetName(centerName);
                 setShowReviewForm(true);
             } else if (target === '') {
-                setReviewText('');
+                setShowReviewForm(false);
+            }
+            setReviewText('');
                 setStar(0);
                 setFiles([]);
                 setPage(1);
-                setShowReviewForm(false);
-            }
         } catch (e) {
             alert('작성된 리뷰가 없습니다');
         }
@@ -195,6 +196,8 @@ const ReviewPage = () => {
             (review) => String(review.target_id) === target
         );
         setReviews({data, list: relatedReviews});
+        console.log(relatedReviews.length);
+        setTotalPage(relatedReviews.length / 10) ;
         console.log('필터링된 리뷰:', relatedReviews);
     };
 
@@ -272,7 +275,7 @@ const ReviewPage = () => {
             </div>
             <div className='wrap padding_120_0'>
                 <div className="center-detail-container">
-                    {target === 'center' ? (
+                    {target === centerId ? (
                     <div>
                         <h2 style={{fontSize: "3.5rem",
                             fontWeight: 'bold',
@@ -316,8 +319,6 @@ const ReviewPage = () => {
 
                         </div>
                         <div>
-                            {/* 지도 */}
-                            {/* submit-button / cancel-button */}
                             <div>
                                 <button
                                     className='cancel-button'
@@ -342,7 +343,7 @@ const ReviewPage = () => {
                             </div>
                         </div>
                     </div>
-                    ) :
+                    ) :(
                     <div>
                         <h2 style={{fontSize: "3.5rem",
                             fontWeight: 'bold',
@@ -401,7 +402,7 @@ const ReviewPage = () => {
                             }
                         </div>
                     </div>
-                    }
+                    )}
                     <div>
 
                         <div>
@@ -435,7 +436,7 @@ const ReviewPage = () => {
                                 }}>
 
                                 <button
-                                    onClick={handReviewForm}
+                                    onClick={handReviewForm} style={{ backgroundColor: '#cadbe3'}}
                                     className={`review-toggle-small-btn ${showReviewForm
                                         ? 'active'
                                         : ''}`}>
@@ -445,7 +446,7 @@ const ReviewPage = () => {
                                                 ? '센터 리뷰 닫기'
                                                 : reviewTarget === 'trainer'
                                                     ? '트레이너 리뷰 닫기'
-                                                    : '리뷰 닫기'
+                                                    : '트레이너 리뷰 닫기'
                                             : reviewTarget === 'center'
                                                 ? '센터 리뷰 작성'
                                                 : reviewTarget === 'trainer'
@@ -455,22 +456,13 @@ const ReviewPage = () => {
                                 </button>
                             </div>
                         </div>
-                        {/* {
-                                !showReviewForm && (
-                                    <p className='review_insert_guide'>
-                                        리뷰 작성 시 작성 하고자 하는 센터 혹은 트레이너를 선택해주십시오
-                                    </p>
-                                )
-                            } */
-                        }
-
                     </div>
                     {
                         showReviewForm && (
                             <div>
 
                                 {/* 리뷰 작성 인풋 */}
-                                <div className="trainer-review-write">
+                                <div className="trainer-review-write" style={{ backgroundColor: '#d7e4ea'}} >
                                     <form onSubmit={handleReviewSubmit}>
                                         <div className="star-input">
                                             {
@@ -528,7 +520,7 @@ const ReviewPage = () => {
                                             onChange={e => setReviewText(e.target.value)}
                                             required="required"/>
                                         <div className="review-file-input">
-                                            <label htmlFor="trainer-review-upload" className="file-label">
+                                            <label htmlFor="trainer-review-upload" className="file-label"  style={{ backgroundColor: '#9BB5BC'}}>
                                                 <FaCamera/>
                                                 <input
                                                     id="trainer-review-upload"
@@ -564,47 +556,47 @@ const ReviewPage = () => {
                             <h4>리뷰</h4>
                             <ul>
                             {
-    paginatedReviews?.map(r => (
-      <li key={r.review_idx} className="review-item" style={{flexDirection:'column'}}>
-        {/* 첫 줄: 작성자 + 별점 + 날짜 */}
-        <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit'}}>
-          <span className="review-user">{r.user_id}</span>
-          <span className="review-rating"><FaStar/> {r.rating}</span>
-          <span className="review-date">{r.date}</span>
-        </div>
+                            paginatedReviews?.map(r => (
+                            <li key={r.review_idx} className="review-item" style={{flexDirection:'column'}}>
+                                {/* 첫 줄: 작성자 + 별점 + 날짜 */}
+                                <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit'}}>
+                                <span className="review-user">{r.user_id}</span>
+                                <span className="review-rating"><FaStar/> {r.rating}</span>
+                                <span className="review-date">{r.date}</span>
+                                </div>
 
-        {/* 둘째 줄: 내용 */}
-        <div className="review-body" style={{textAlign:'left'}}>
-          <span className="review-content" style={{paddingLeft:'30px'}}>{r.content}</span>
-        
-          {/* 이미지 */}
-          {
-            r.file_idx && r.file_idx.length > 0 && (
-              <div className="review-images" style={{textAlign:'left', paddingLeft:'27px'}}>
-                {
-                  JSON.parse(r.file_idx).map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={`http://localhost/reviewImg/${img}`}
-                      alt="첨부"
-                      style={{
-                        width: 132,
-                        height: 132,
-                        objectFit: 'cover',
-                        borderRadius: '1.4rem',
-                        marginLeft: 4
-                      }}
-                    />
-                  ))
-                }
-              </div>
-            )
-          }
-        </div>
-      </li>
-    ))
-  }
-</ul>
+                                {/* 둘째 줄: 내용 */}
+                                <div className="review-body" style={{textAlign:'left'}}>
+                                <span className="review-content" style={{paddingLeft:'30px'}}>{r.content}</span>
+                                
+                                {/* 이미지 */}
+                                {
+                                    r.file_idx && r.file_idx.length > 0 && (
+                                    <div className="review-images" style={{textAlign:'left', paddingLeft:'27px'}}>
+                                        {
+                                        JSON.parse(r.file_idx).map((img, idx) => (
+                                            <img
+                                            key={idx}
+                                            src={`http://localhost/reviewImg/${img}`}
+                                            alt="첨부"
+                                            style={{
+                                                width: 132,
+                                                height: 132,
+                                                objectFit: 'cover',
+                                                borderRadius: '1.4rem',
+                                                marginLeft: 4
+                                            }}
+                                            />
+                                        ))
+                                        }
+                                    </div>
+                                    )
+                                }
+                                </div>
+                            </li>
+                            ))
+                        }
+                        </ul>
                         </div>
                         <div className="pagination-buttons-fixed">
                             {
@@ -620,15 +612,18 @@ const ReviewPage = () => {
                                 )
                             }
                         </div>
-
-                        <div>
-                            {
-                                reviews.list && reviews.list.length === 10 && (
-                                    <button onClick={() => setPage(prev => prev + 1)}>다음 페이지</button>
-                                )
-                            }
+                        <div style={{ justifyContent: 'flex-end' ,display:'flex'}}>
+                        {
+                            reviews.list && reviews.list.length > 9 && page <= totalPage && (
+                            <button
+                                className="review-submit-btn-n"
+                                onClick={() => setPage(prev => prev + 1)}
+                                
+                            > 다음 페이지
+                            </button>
+                            )
+                        }
                         </div>
-
                     </div>
                 </div>
             </div>
