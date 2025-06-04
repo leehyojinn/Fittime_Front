@@ -81,7 +81,6 @@ const JoinPage = () => {
                     params: { query: form.address },
                     headers: { Authorization: 'KakaoAK a2b3e94b94e46217dd7c653496948190' },
                 });
-            console.log(data);
             return {
                 sido: data.documents[0].address.region_1depth_name,
                 gugun: data.documents[0].address.region_2depth_name,
@@ -218,16 +217,15 @@ const JoinPage = () => {
 
         const { data } = await axios.post('http://localhost/join', fullForm);
         if (data.success) {
-            // openModal({
-            //     svg: '✔',
-            //     msg1: '회원가입 성공!',
-            //     msg2: '로그인 페이지로 이동합니다.',
-            //     onConfirm: () => {
-            //         window.location.href = '/component/login';
-            //     },
-            //     showCancel: false,
-            // });
-            console.log(fullForm);
+            openModal({
+                svg: '✔',
+                msg1: '회원가입 성공!',
+                msg2: '로그인 페이지로 이동합니다.',
+                onConfirm: () => {
+                    window.location.href = '/component/login';
+                },
+                showCancel: false,
+            });
         } else {
             openModal({
                 svg: '❗',

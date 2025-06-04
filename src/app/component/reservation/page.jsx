@@ -496,10 +496,6 @@ const Reservation = () => {
           <h4 className='page-title'>결제 수단 선택</h4>
           <div className="payment-options">
             <label className="payment-option">
-              <input type="radio" name="payment" value="card" defaultChecked />
-              <span className='label'>카드 결제</span>
-            </label>
-            <label className="payment-option">
               <input type="radio" name="payment" value="direct" />
               <span className='label'>현장결제</span>
             </label>
