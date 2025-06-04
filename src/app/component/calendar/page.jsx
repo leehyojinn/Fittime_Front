@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import Header from '../../Header';
 import Footer from '../../Footer';
@@ -15,6 +15,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useAlertModalStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
 import CustomToolbar from './CustomToolbar';
+import * as endDate from "date-fns";
 
 const locales = {
   'ko': ko,
@@ -58,33 +59,98 @@ export default function MyCalendar() {
     '예약': '#ffd54f'  // 노랑
   };
 
-  // 일정 리스트 불러오기
-  const fetchEvents = async () => {
-    try {
-      const res = await axios.post(`http://localhost/schedule_list/${user_id}`);
-      setEvents(
-        res.data.list.map(item => ({
-          id: item.schedule_idx,
-          title: item.title,
-          start: new Date(item.start_date),
-          end: new Date(item.end_date),
-          allDay: true,
-          resource: { ...item }
-        }))
-      );
-    } catch (err) {
-      openModal({
-        svg: '❗',
-        msg1: '오류',
-        msg2: '일정 불러오기 실패',
-        showCancel: false,
-      });
-    }
-  };
+    // 일정, 예약 스케줄 불러오기
+    const fetchEvents = useCallback(async () => {
+      try {
+        const trainer_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+        const [eventRes, reservationRes, dayoffRes, classScheduleRes] = await Promise.all([
+          axios.post(`http://localhost/schedule_list/${user_id}`), // 개인 일정
+          axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`), // 트레이너용 예약 일정
+          axios.post(`http://localhost/center_dayoff/${trainer_id}`), // 트레이너 휴무
+          axios.post('http://localhost/get_class_schedule', {trainer_id: user_id}), // 클래스 요일
+        ]);
+        const combinedEvents = [];
+
+        // 개인 일정
+        eventRes.data.list.forEach(item => {
+          combinedEvents.push({
+            id: item.schedule_idx,
+            title: item.title,
+            start: new Date(item.start_date),
+            end: new Date(item.end_date),
+            allDay: true,
+            resource: { ...item }
+          });
+        });
+
+        // 트레이너용 예약 일정 (1:1 또는 클래스)
+        reservationRes.data.trainerList.forEach(item => {
+          const title =
+              `${item.product_name} (${item.start_time} ~ ${item.end_time}) ${item.user_name ? ` - ${item.user_name}` : ''}`;
+          console.log("타이틀:",`${item.product_name} (${item.start_time} ~ ${item.end_time})${item.user_name ? ` - ${item.user_name}` : ''}`);
+          const today = new Date(item.date);
+          const [sh, sm] = item.start_time.split(':');
+          const [eh, em] = item.end_time.split(':');
+          const start = new Date(today.setHours(+sh, +sm, 0, 0));
+          const end = new Date(today.setHours(+eh, +em, 0, 0));
+
+          combinedEvents.push({
+            title,
+            start: new Date(start),
+            end: new Date(end),
+            allDay: false,
+            status: '예약',
+            resource: {...item}
+          });
+        });
+
+        // 휴무 일정
+        dayoffRes.data.dayoff.forEach(item => {
+          combinedEvents.push({
+            title: item.title || '휴무',
+            start: new Date(item.start_date),
+            end: new Date(item.end_date),
+            allDay: true,
+            status: '휴무',
+            resource: {...item},
+          });
+        });
+
+        // 클래스 요일
+        classScheduleRes.data.scheduleList.forEach(item => {
+          const start = new Date(`${item.date}T${item.start_time}`);
+          const end = new Date(`${item.date}T${item.end_time}`);
+          combinedEvents.push({
+            title: `[클래스] ${item.title}`,
+            start,
+            end,
+            allDay: false,
+            status: '예약',
+            resource: {
+              product_name: item.title,
+              start_time: item.start_time,
+              end_time: item.end_time,
+              user_name: "", // 클래스에는 없으니 빈값
+            },
+          });
+        });
+
+        setEvents(combinedEvents);
+      }catch(err) {
+        console.log(err);
+        openModal({
+          svg: '❗',
+          msg1: '오류',
+          msg2: '일정 불러오기 실패',
+          showCancel: false,
+        });
+      }
+    }, [user_id]);
+
+    useEffect(() => {
+      fetchEvents();
+    }, [fetchEvents]);
 
   // 날짜 클릭: 등록 인풋 오픈 (단일 날짜)
   const handleSelectSlot = (slotInfo) => {
@@ -238,7 +304,7 @@ export default function MyCalendar() {
     // status는 event.resource.status에 들어있음
     const status = event.resource?.status || '일정';
     const backgroundColor = STATUS_COLORS[status] || '#2196f3';
-  
+
     return {
       style: {
         backgroundColor,
@@ -253,7 +319,6 @@ export default function MyCalendar() {
       }
     };
   };
-  
 
   // 상세정보에서 수정 버튼 클릭 시
   const startEdit = () => {
@@ -272,11 +337,33 @@ export default function MyCalendar() {
     setEditForm(null);
   };
 
+  // 캘린더에 보여지는 이벤트
+  const CustomEvent = ({event}) => {
+    const {product_name, start_time, end_time, user_name} = event.resource || {};
+
+    if (!product_name || !start_time || !end_time) {
+      return (
+          <div style={{whiteSpace: 'pre-line'}}>
+            {event.title}
+          </div>
+      );
+    }
+
+    return (
+        <div style={{ whiteSpace: 'pre-line' }}>
+          {product_name}
+          {"\n"}
+          {start_time} ~ {end_time}
+          {user_name ? `\n- ${user_name}` : ''}
+        </div>
+    );
+  };
+
   return (
     <div>
       <Header />
       <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
-        <p className='title'>개인일정</p>
+        <p className='title'>스케줄 관리</p>
       </div>
       <div className='wrap padding_120_0' style={{ position: 'relative' }}>
         <Calendar
@@ -295,8 +382,8 @@ export default function MyCalendar() {
           eventPropGetter={eventPropGetter}
           style={{ height: '80vh' }}
           messages={{
-            next: "다음",
-            previous: "이전",
+            next: "다음달",
+            previous: "이전달",
             today: "오늘",
             month: "월",
             week: "주",
@@ -304,7 +391,7 @@ export default function MyCalendar() {
             showMore: total => `+${total}개 더보기`
           }}
           culture="ko"
-          components={{ toolbar: CustomToolbar }} 
+          components={{ toolbar: CustomToolbar, event: CustomEvent }}
         />
         {/* 일정 등록 인풋 모달 */}
         {inputInfo.open && (
@@ -388,7 +475,7 @@ export default function MyCalendar() {
         {detailInfo.open && detailInfo.event && (
           <div
             ref={detailModalRef}
-            className="custom-modal"
+            className="custom-modal flex column gap_10"
             style={{
               width: '800px',
               left: '50%',
@@ -461,7 +548,7 @@ export default function MyCalendar() {
             ) : (
               <div className='flex column gap_10'>
                 <h4 className='middle_title2'>{detailInfo.event.title}</h4>
-                <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')
+                <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(addDays(detailInfo.event.end, +1), 'yyyy-MM-dd')
                   ? format(detailInfo.event.start, 'yyyy-MM-dd')
                   : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')}`}</p>
                 <p className='label'>내용 : {detailInfo.event.resource.content}</p>
