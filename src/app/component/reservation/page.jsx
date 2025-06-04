@@ -63,6 +63,8 @@ const Reservation = () => {
   const [disabledDates, setDisabledDates] = useState([]);
   const [productTrainerInfo, setProductTrainerInfo] = useState(null);
 
+  const [dateBookedCounts, setDateBookedCounts] = useState({});
+
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
   // 센터 정보 불러오기
@@ -102,6 +104,22 @@ const Reservation = () => {
     axios.post(`http://localhost/reservation/trainer_info/${selectedCenter.center_idx}`)
       .then(res => setTrainers(res.data.list || []));
   }, [selectedCenter]);
+
+  useEffect(() => {
+    if (!selectedProduct || classInfo) return;
+    // 한 달치(혹은 원하는 범위) 예약 인원 카운트
+    const start = new Date();
+    const end = new Date();
+    end.setMonth(end.getMonth() + 1);
+    axios.post('http://localhost/reservation/booked_count_date_range', {
+      product_idx: selectedProduct.product_idx,
+      start_date: start.toISOString().slice(0, 10),
+      end_date: end.toISOString().slice(0, 10)
+    }).then(res => {
+      setDateBookedCounts(res.data.counts || {});
+    });
+  }, [selectedProduct, classInfo]);
+  
 
   // 상품 클릭 시 클래스 정보 불러오기
   const handleProductClick = async (product) => {
@@ -177,12 +195,20 @@ const Reservation = () => {
     }
     // 시간 없는 상품: 날짜별 예약 인원이 max_people 이상이면 비활성화
     if (!classInfo && selectedProduct) {
-      if (selectedProduct.max_people > 0 && dateBookedCount >= selectedProduct.max_people) {
+      const dateStr = date.toISOString().slice(0, 10);
+      const booked = dateBookedCounts[dateStr] || 0;
+      if (selectedProduct.max_people > 0 && booked >= selectedProduct.max_people) {
         return true;
       }
     }
     return false;
   }, [classInfo, selectedProduct, dateBookedCount]);
+
+  useEffect(() => {
+    if (!selectedProduct || classInfo) return;
+    const dateStr = selectedDate.toISOString().slice(0, 10);
+    setDateBookedCount(dateBookedCounts[dateStr] || 0);
+  }, [selectedDate, selectedProduct, classInfo, dateBookedCounts]);
 
   // 휴무일 정보 불러오기 (기존 유지)
   useEffect(() => {
