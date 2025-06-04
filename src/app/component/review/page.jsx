@@ -157,18 +157,20 @@ const ReviewPage = () => {
                 setReviewTarget('trainer');
                 setTarget(trainerId);
                 setTargetName(trainerName);
+                setShowReviewForm(true);
 
             } else if (target === 'center') {
                 setReviewTarget('center');
                 setTarget(centerId);
                 setTargetName(centerName);
+                setShowReviewForm(true);
+            } else if (target === '') {
+                setReviewText('');
+                setStar(0);
+                setFiles([]);
+                setPage(1);
+                setShowReviewForm(false);
             }
-
-            setReviewText('');
-            setStar(0);
-            setFiles([]);
-            setPage(1);
-
         } catch (e) {
             alert('작성된 리뷰가 없습니다');
         }
@@ -342,33 +344,38 @@ const ReviewPage = () => {
                     </div>
                     ) :
                     <div>
+                        <h2 style={{fontSize: "3.5rem",
+                            fontWeight: 'bold',
+                            color:'#3673c1'}}>{trainerInfo.name}</h2>
+                        <Link href={'/component/reservation'}>
+                            <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}}>예약 하기</div>
+                        </Link>
                         <div className="trainer-header">
                             <img src={`http://localhost/profileImg/profile/${trainerId}`} alt={trainerInfo.name} className="trainer-main-image" />
                             <div className="trainer-header-info">
-                                <h2>{trainerInfo.name}</h2>
-                                <div className="trainer-type">{trainerInfo.exercise}</div>
+
                                 <div className="trainer-tags">
-                                    {trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"><FaTag />{tag}</span>)}
+                                    {/*{trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"  style={{fontSize:'1.5rem'}}><FaTag />{tag}</span>)}*/}
+                                    {trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"  style={{fontSize:'1.5rem'}}>{tag}</span>)}
                                 </div>
-                                <div className="trainer-rating">
-                                    <FaStar /> {avgRating} <span style={{fontSize:'0.92rem',color:'#888'}}>({reviews.length}명)</span>
+                                <div className="trainer-type"  style={{fontSize:'1.5rem'}}>{trainerInfo.exercise}</div>
+                                <div className="trainer-rating" style={{fontSize:'1.3rem'}}>
+                                    <FaStar /> {avgRating} <span style={{fontSize:'1.3rem',color:'#888'}}>({reviews.length}명)</span>
                                 </div>
                             </div>
-                            <Link href={'/component/reservation'}>
-                                <div className="review-submit-btn width_fit">예약 하기</div>
-                            </Link>
+
                         </div>
                         <div className="trainer-intro">
-                            <h4>트레이너 소개</h4>
-                            <p>{trainerInfo.career}</p>
+                            <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>트레이너 소개</h4>
+                            <p style={{fontSize:'1.5rem'}}>{trainerInfo.career}</p>
 
                         </div>
                         <div className="trainer-center-info">
-                            <h4>소속 센터</h4>
+                            <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>소속 센터</h4>
                             <div className="center-brief">
                                 <span className="center-name">{trainerInfo.center_name}</span>
-                                <span className="center-address"><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
-                                <span className="center-contact"><FaPhoneAlt /> {trainerInfo.center_phone}</span>
+                                <span className="center-address" style={{fontSize:'1.4rem'}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
+                                <span className="center-contact" style={{fontSize:'1.3rem'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
                             </div>
                         </div>
                         <div>
