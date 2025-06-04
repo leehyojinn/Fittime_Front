@@ -111,7 +111,7 @@ const MemberMyPage = () => {
 
   const handleUpdateReview = (r) =>{
     console.log(r);
-    router.push(`/component/review?idx=${r.review_idx}`);
+    router.push(`/component/review?review_idx=${r.review_idx}`);
   }
 
   const changeUser = (e) =>{

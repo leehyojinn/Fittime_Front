@@ -3,7 +3,7 @@ import React, {useEffect, useState} from 'react';
 import Header from "@/app/Header";
 import {FaCamera, FaMapMarkerAlt, FaStar, FaPhoneAlt, FaTag} from "react-icons/fa";
 import Footer from "@/app/Footer";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import axios from "axios";
 import KakaoMap from '../map/kakaomap';
 import {useAlertModalStore} from '@/app/zustand/store';
@@ -22,6 +22,7 @@ const ReviewPage = () => {
     const reservationIdx = searchParams.get('reservation_idx');
     const trainerName = searchParams.get('trainer_name');
     const centerName = searchParams.get('center_name');
+    const review_idx = searchParams.get('review_idx');
 
     const [reviewTarget, setReviewTarget] = useState('');
     const [target, setTarget] = useState(centerId);
@@ -30,7 +31,7 @@ const ReviewPage = () => {
     const [star, setStar] = useState(0);
     const [hoverStar, setHoverStar] = useState(0);
     const [files, setFiles] = useState([]);
-    const [reviews, setReviews] = useState([]);
+    const [reviews, setReviews] = useState({});
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(1);
 
@@ -39,11 +40,25 @@ const ReviewPage = () => {
     const [trainerInfo, setTrainerInfo] = useState({});
     const [centerInfo, setCenterInfo] = useState({});
 
+    const router = useRouter();
+
+    const handleMoveReservation =()=>{
+        if(target === trainerId) {
+            router.push(`/component/reservation?trainer_id=${trainerInfo.trainer_id}&trainer_idx=${trainerInfo.trainer_idx}&center_id=${trainerInfo.center_id}&center_idx=${trainerInfo.center_idx}`);
+        } else if(target === centerId) {
+            router.push(`/component/reservation?center_id=${centerId}&center_idx=${centerInfo.center_idx}`);
+        }
+    }
+
+    const getReview = async () => {
+        console.log('review_idx',review_idx);
+        console.log(data);
+    }
+
     const getTrainerInfo = async() =>{
         const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainerId,"user_level":'2'});
         console.log(data);
         setTrainerInfo(data);
-
     }
 
     const getCenterInfo = async() =>{
@@ -55,6 +70,7 @@ const ReviewPage = () => {
     useEffect(() => {
         getTrainerInfo();
         getCenterInfo();
+        getReview();
     }, []);
 
     // 별점 클릭/호버
@@ -280,9 +296,7 @@ const ReviewPage = () => {
                         <h2 style={{fontSize: "3.5rem",
                             fontWeight: 'bold',
                             color:'#3673c1'}}>{centerInfo.center_name}</h2>
-                        <Link href={'/component/reservation'}>
-                            <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}}>예약 하기</div>
-                        </Link>
+                            <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                         <div className="center-header">
                             <img
                                 src={`http://localhost/profileImg/profile/${centerId}`}
@@ -348,9 +362,7 @@ const ReviewPage = () => {
                         <h2 style={{fontSize: "3.5rem",
                             fontWeight: 'bold',
                             color:'#3673c1'}}>{trainerInfo.name}</h2>
-                        <Link href={'/component/reservation'}>
-                            <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}}>예약 하기</div>
-                        </Link>
+                            <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                         <div className="trainer-header">
                             <img src={`http://localhost/profileImg/profile/${trainerId}`} alt={trainerInfo.name} className="trainer-main-image" />
                             <div className="trainer-header-info">
