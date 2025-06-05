@@ -45,6 +45,7 @@ const Reservation = () => {
   const [selectedCenter, setSelectedCenter] = useState(null);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isMyProductSelected, setIsMyProductSelected] = useState(false);
   const [trainers, setTrainers] = useState([]);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
 
@@ -71,6 +72,8 @@ const Reservation = () => {
   const [kakaoTid, setKakaoTid] = useState('');
   const [waitingKakao, setWaitingKakao] = useState(false);
 
+  const [myProducts, setMyProducts] = useState([]);
+  const [myProductLoading, setMyProductLoading] = useState(true);
 
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
@@ -84,6 +87,15 @@ const Reservation = () => {
         }
       });
   }, []);
+
+  useEffect(() => {
+    if (!user_id) return;
+    setMyProductLoading(true);
+    axios.post(`http://localhost/reservation/myproudct_list/${user_id}`)
+      .then(res => setMyProducts(res.data.list || []))
+      .catch(() => setMyProducts([]))
+      .finally(() => setMyProductLoading(false));
+  }, [user_id]);
 
   // 센터/트레이너 자동 선택
   useEffect(() => {
@@ -129,8 +141,9 @@ const Reservation = () => {
   
 
   // 상품 클릭 시 클래스 정보 불러오기
-  const handleProductClick = async (product) => {
+  const handleProductClick = (product, isMyProduct = false) => {
     setSelectedProduct(product);
+    setIsMyProductSelected(isMyProduct);
     setSelectedTrainer(null);
     setClassInfo(null);
     setAvailableTimes([]);
@@ -139,21 +152,20 @@ const Reservation = () => {
     setProductTrainerInfo(null);
     setTimeSlotCounts({});
     setDateBookedCount(0);
-
-    // 트레이너 있는 상품만 클래스 정보 조회
+  
+    // 트레이너 정보 등은 기존과 동일하게 처리
     if (product.trainer_id) {
-      const res = await axios.post('http://localhost/reservation/class_info', {
+      axios.post('http://localhost/reservation/class_info', {
         center_id: product.center_id,
         trainer_id: product.trainer_id,
         product_idx: product.product_idx
+      }).then(res => {
+        const cls = (res.data.list || []).find(c => !c.delete);
+        setClassInfo(cls || null);
+        const trainer = trainers.find(t => t.trainer_id === product.trainer_id);
+        setProductTrainerInfo(trainer || null);
       });
-      const cls = (res.data.list || []).find(c => !c.delete);
-      setClassInfo(cls || null);
-      // 트레이너 정보도 세팅
-      const trainer = trainers.find(t => t.trainer_id === product.trainer_id);
-      setProductTrainerInfo(trainer || null);
     } else {
-      // 시간 없는 상품: 날짜별 예약 인원 조회 필요
       setClassInfo(null);
     }
   };
@@ -258,31 +270,63 @@ const Reservation = () => {
   // 예약 생성
   const handleSubmitReservation = () => {
     setIsSubmitting(true);
-    const param = {
-      user_id: user_id,
-      center_id: selectedCenter.center_id,
-      product_idx: selectedProduct.product_idx,
-      trainer_id: selectedProduct.trainer_id,
-      class_idx: classInfo?.class_idx,
-      date: selectedDate.toISOString().slice(0, 10),
-      start_time: selectedTime?.time || null,
-      end_time: selectedTime?.endTime || null
-    };
-    axios.post('http://localhost/booking', param)
-      .then(res => {
-        setIsSubmitting(false);
-        if (res.data.success) {
-          setResultMsg('예약이 완료되었습니다!');
-          setStep(5);
-        } else {
-          setResultMsg('예약에 실패했습니다. 인원 초과 또는 오류');
-        }
-      })
-      .catch(() => {
-        setIsSubmitting(false);
-        setResultMsg('예약 중 오류가 발생했습니다.');
-      });
+  
+    // 내상품 예약
+    if (isMyProductSelected) {
+      const param = {
+        user_id: user_id,
+        buy_idx: selectedProduct.buy_idx, // 내상품 PK
+        product_idx: selectedProduct.product_idx,
+        date: selectedDate.toISOString().slice(0, 10),
+        start_time: selectedTime?.time || null,
+        end_time: selectedTime?.endTime || null,
+        trainer_id: selectedProduct.trainer_id,
+        class_idx: classInfo?.class_idx,
+        center_id: selectedCenter.center_id,
+      };
+      axios.post('http://localhost/booking', param)
+        .then(res => {
+          setIsSubmitting(false);
+          if (res.data.success) {
+            setResultMsg('예약이 완료되었습니다!');
+            setStep(5);
+          } else {
+            setResultMsg('예약에 실패했습니다. 인원 초과 또는 오류');
+          }
+        })
+        .catch(() => {
+          setIsSubmitting(false);
+          setResultMsg('예약 중 오류가 발생했습니다.');
+        });
+    } else {
+      // 전체상품 예약(현장결제)
+      const param = {
+        user_id: user_id,
+        center_id: selectedCenter.center_id,
+        product_idx: selectedProduct.product_idx,
+        trainer_id: selectedProduct.trainer_id,
+        class_idx: classInfo?.class_idx,
+        date: selectedDate.toISOString().slice(0, 10),
+        start_time: selectedTime?.time || null,
+        end_time: selectedTime?.endTime || null
+      };
+      axios.post('http://localhost/booking', param)
+        .then(res => {
+          setIsSubmitting(false);
+          if (res.data.success) {
+            setResultMsg('예약이 완료되었습니다!');
+            setStep(5);
+          } else {
+            setResultMsg('예약에 실패했습니다. 인원 초과 또는 오류');
+          }
+        })
+        .catch(() => {
+          setIsSubmitting(false);
+          setResultMsg('예약 중 오류가 발생했습니다.');
+        });
+    }
   };
+  
 
   const calculateFinalPrice = () => {
     if (!selectedProduct) return 0;
@@ -340,38 +384,78 @@ const Reservation = () => {
   const renderProductSelectionStep = () => (
     <div className="reservation-section">
       <h3>상품 선택</h3>
-      <div className="product-list">
-        {filteredProducts.map(product => (
-          <div
-            key={product.product_idx}
-            className={`product-card ${selectedProduct?.product_idx === product.product_idx ? 'selected' : ''}`}
-            onClick={() => handleProductClick(product)}
-          >
-            <h4>{product.product_name}</h4>
-            <p className="product-price">
-              {product.discount_rate > 0 ? (
-                <>
-                  <span className="original-price">{product.price.toLocaleString()}원</span>
-                  <span className="discount-rate">{product.discount_rate}% 할인</span>
-                  <span className="final-price">
-                    {(product.price * (1 - product.discount_rate / 100)).toLocaleString()}원
-                  </span>
-                </>
-              ) : (
-                <span className="final-price">{product.price.toLocaleString()}원</span>
-              )}
-            </p>
-            {product.max_people > 0 && (
-              <p className="product-count">수강 인원: {product.max_people}명</p>
-            )}
-            {product.trainer_id && (
-              <div>
-                <p className='label font_weight_700'>트레이너 상품</p>
-              </div>
-            )}
+  
+      {/* 내가 구매한 상품 영역 */}
+      <div className="my-product-section" style={{marginBottom: 24}}>
+        <h3>내가 구매한 상품</h3>
+        {myProducts && myProducts.filter(prod =>
+            prod.count > 0 || prod.rest_period > 0 || prod.status === '결제'
+          ).length > 0 ? (
+          <div className="product-list">
+            {myProducts
+              .filter(prod => prod.count > 0 && prod.rest_period > 0 && prod.status === '결제')
+              .map(product => (
+                <div
+                  key={product.buy_idx}
+                  className={`product-card ${ isMyProductSelected && selectedProduct?.buy_idx === product.buy_idx ? 'selected' : ''}`}
+                  onClick={() => handleProductClick(product, true)} // 두 번째 인자로 내상품 여부
+                >
+                  <h4>{product.product_name}</h4>
+                  <div className='flex column gap_10'>
+                    <p style={{fontSize:'1.3rem'}}>남은횟수: {product.count}, 남은기간: {product.rest_period}일</p>
+                    <p style={{fontSize:'1.3rem'}}>구매일: {product.reg_date?.split('T')[0]}</p>
+                    <p style={{fontSize:'1.3rem'}}>결제수단: {product.payment_method}</p>
+                  </div>
+                  {product.trainer_id && (
+                    <div>
+                      <p className='label font_weight_700'>트레이너 상품</p>
+                    </div>
+                  )}
+                </div>
+              ))}
           </div>
-        ))}
+        ) : (
+          <p style={{color: '#aaa'}}>구매한 상품이 없습니다.</p>
+        )}
       </div>
+  
+      {/* 전체 상품 영역 */}
+      <div className="all-product-section">
+        <h3>전체 상품</h3>
+        <div className="product-list">
+          {filteredProducts.map(product => (
+            <div
+              key={product.product_idx}
+              className={`product-card ${!isMyProductSelected && selectedProduct?.product_idx === product.product_idx ? 'selected' : ''}`}
+              onClick={() => handleProductClick(product, false)}
+            >
+              <h4>{product.product_name}</h4>
+              <p className="product-price">
+                {product.discount_rate > 0 ? (
+                  <>
+                    <span className="original-price">{product.price.toLocaleString()}원</span>
+                    <span className="discount-rate">{product.discount_rate}% 할인</span>
+                    <span className="final-price">
+                      {(product.price * (1 - product.discount_rate / 100)).toLocaleString()}원
+                    </span>
+                  </>
+                ) : (
+                  <span className="final-price">{product.price.toLocaleString()}원</span>
+                )}
+              </p>
+              {product.max_people > 0 && (
+                <p className="product-count">수강 인원: {product.max_people}명</p>
+              )}
+              {product.trainer_id && (
+                <div>
+                  <p className='label font_weight_700'>트레이너 상품</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+  
       {/* 트레이너 정보 노출 */}
       {selectedProduct && selectedProduct.trainer_id && productTrainerInfo && (
         <div className="trainer-info-box" style={{marginTop: '16px', padding: '16px', border: '1px solid #eee', borderRadius: '8px', background: '#fafafa'}}>
@@ -394,6 +478,7 @@ const Reservation = () => {
       )}
     </div>
   );
+  
 
   const renderDateTimeSelectionStep = () => (
     <div className="reservation-section">
@@ -460,21 +545,27 @@ const Reservation = () => {
   );
 
   const handleReservationPayment = async () => {
+    if (isMyProductSelected) {
+      // 내상품은 결제 없이 바로 예약만 처리
+      handleSubmitReservation();
+      return;
+    }
+  
+    // 전체상품 결제 플로우
     if (paymentMethod === 'direct') {
       handleSubmitReservation();
     } else if (paymentMethod === 'kakao') {
       setIsSubmitting(true);
   
-      // 1. 예약 파라미터를 결제 준비 전에 localStorage에 저장
       const bookingParam = {
         user_id: user_id,
         center_id: selectedCenter.center_id,
         product_idx: selectedProduct.product_idx,
         trainer_id: selectedProduct.trainer_id,
-        payment_price : calculateFinalPrice(),
+        payment_price: calculateFinalPrice(),
         class_idx: classInfo?.class_idx,
-        count : selectedProduct.count - 1,
-        rest_period : selectedProduct.duration,
+        count: selectedProduct.count - 1,
+        rest_period: selectedProduct.duration,
         date: selectedDate.toISOString().slice(0, 10),
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
@@ -482,7 +573,6 @@ const Reservation = () => {
       window.localStorage.setItem("booking_param", JSON.stringify(bookingParam));
   
       try {
-        // 2. 결제 준비 API 호출 (tid, 결제창 URL 받기)
         const res = await axios.post('http://localhost/kakaopay/ready', {
           user_id: user_id,
           product_idx: selectedProduct.product_idx,
@@ -500,6 +590,7 @@ const Reservation = () => {
       }
     }
   };
+  
   
   
   useEffect(() => {
@@ -568,38 +659,49 @@ const Reservation = () => {
           <span className="label">최종 가격 : </span>
           <span className="value text_left final-price label">{calculateFinalPrice().toLocaleString()}원</span>
         </div>
-        <div className="payment-methods">
-          <h4 className='page-title'>결제 수단 선택</h4>
-          <div className="payment-options">
-            <label className="payment-option">
-              <input
-                type="radio"
-                name="payment"
-                value="direct"
-                checked={paymentMethod === 'direct'}
-                onChange={() => setPaymentMethod('direct')}
-              />
-              <span className='label'>현장결제</span>
-            </label>
-            <label className="payment-option">
-              <input
-                type="radio"
-                name="payment"
-                value="kakao"
-                checked={paymentMethod === 'kakao'}
-                onChange={() => setPaymentMethod('kakao')}
-              />
-              <span className='label'>카카오페이</span>
-            </label>
+        {/* 내상품 예약일 때만 버튼만 노출 */}
+        {isMyProductSelected ? (
+          <button
+            className="btn label white_color"
+            onClick={handleReservationPayment}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '처리 중...' : '내상품으로 예약하기'}
+          </button>
+        ) : (
+          <div className="payment-methods">
+            <h4 className='page-title'>결제 수단 선택</h4>
+            <div className="payment-options">
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="direct"
+                  checked={paymentMethod === 'direct'}
+                  onChange={() => setPaymentMethod('direct')}
+                />
+                <span className='label'>현장결제</span>
+              </label>
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="kakao"
+                  checked={paymentMethod === 'kakao'}
+                  onChange={() => setPaymentMethod('kakao')}
+                />
+                <span className='label'>카카오페이</span>
+              </label>
+            </div>
+            <button
+              className="btn label white_color"
+              onClick={handleReservationPayment}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '처리 중...' : '예약 및 결제하기'}
+            </button>
           </div>
-        </div>
-        <button
-          className="btn label white_color"
-          onClick={handleReservationPayment}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? '처리 중...' : '예약 및 결제하기'}
-        </button>
+        )}
       </div>
     </div>
   );

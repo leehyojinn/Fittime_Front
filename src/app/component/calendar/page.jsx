@@ -61,146 +61,144 @@ export default function MyCalendar() {
     '트레이너예약': '#98afba',
   };
 
-    // 일정, 예약 스케줄 불러오기
-    const fetchEvents = useCallback(async () => {
-      try {
-        const trainer_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+  const fetchEvents = useCallback(async () => {
+    try {
+      const trainer_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+  
+      const [eventRes, userRes, reservationRes, dayoffRes, userClassRes, classScheduleRes] = await Promise.all([
+        axios.post(`http://localhost/schedule_list/${user_id}`), // 개인 일정
+        axios.post(`http://localhost/user_reservation_schedule/${user_id}`), // 회원용 예약 일정
+        axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`), // 트레이너용 예약 일정
+        axios.post(`http://localhost/center_dayoff/${trainer_id}`), // 트레이너 휴무
+        axios.post('http://localhost/get_user_class_schedule', { user_id: user_id }), // 회원용 클래스 요일
+        axios.post('http://localhost/get_class_schedule', { trainer_id: user_id }), // 트레이너용 클래스 요일
+      ]);
+      const combinedEvents = [];
 
-        const [eventRes, userRes, reservationRes, dayoffRes,userClassRes, classScheduleRes] = await Promise.all([
-          axios.post(`http://localhost/schedule_list/${user_id}`), // 개인 일정
-          axios.post(`http://localhost/user_reservation_schedule/${user_id}`), // 회원용 예약 일정
-          axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`), // 트레이너용 예약 일정
-          axios.post(`http://localhost/center_dayoff/${trainer_id}`), // 트레이너 휴무
-          axios.post('http://localhost/get_user_class_schedule', {user_id: user_id}), // 회원용 클래스 요일
-          axios.post('http://localhost/get_class_schedule', {trainer_id: user_id}), // 트레이너용 클래스 요일
-        ]);
-        const combinedEvents = [];
-
-        // 개인 일정
-        eventRes.data.list.forEach(item => {
-          combinedEvents.push({
-            id: item.schedule_idx,
-            title: item.title,
-            start: new Date(item.start_date),
-            end: new Date(item.end_date),
-            allDay: true,
-            resource: { ...item }
-          });
+      // 개인 일정
+      (eventRes.data.list || []).forEach(item => {
+        combinedEvents.push({
+          id: item.schedule_idx,
+          title: item.title,
+          start: new Date(item.start_date),
+          end: new Date(item.end_date),
+          allDay: true,
+          resource: { ...item }
         });
-
-        // 회원용 예약 일정
-        userRes.data.userList.forEach(item => {
-          const title =
-              `${item.center_name} (${item.start_time} ~ ${item.end_time})`;
-          const today = new Date(item.date);
-          const [sh, sm] = item.start_time.split(':');
-          const [eh, em] = item.end_time.split(':');
-          const start = new Date(today.setHours(+sh, +sm, 0, 0));
-          const end = new Date(today.setHours(+eh, +em, 0, 0));
-
-          combinedEvents.push({
-            title,
-            start: new Date(start),
-            end: new Date(end),
-            allDay: false,
-            resource: {
-              product_name: item.title,
-              start_time: item.start_time,
-              end_time: item.end_time,
-              status: '회원예약',
-              center_name: item.center_name
-            }
-          });
+      });
+  
+      // 회원용 예약 일정
+      (userRes.data.userList || []).forEach(item => {
+        const title = `${item.center_name} (${item.start_time} ~ ${item.end_time})`;
+        const today = new Date(item.date);
+        const [sh, sm] = (item.start_time || '').split(':');
+        const [eh, em] = (item.end_time || '').split(':');
+        const start = sh && sm ? new Date(today.setHours(+sh, +sm, 0, 0)) : new Date(today);
+        const end = eh && em ? new Date(today.setHours(+eh, +em, 0, 0)) : new Date(today);
+  
+        combinedEvents.push({
+          title,
+          start: new Date(start),
+          end: new Date(end),
+          allDay: false,
+          resource: {
+            product_name: item.title,
+            start_time: item.start_time,
+            end_time: item.end_time,
+            status: '회원예약',
+            center_name: item.center_name
+          }
         });
-
-        // 트레이너용 예약 일정 (1:1 또는 클래스)
-        reservationRes.data.trainerList.forEach(item => {
-          const title =
-              `${item.product_name} (${item.start_time} ~ ${item.end_time})`;
-          const today = new Date(item.date);
-          const [sh, sm] = item.start_time.split(':');
-          const [eh, em] = item.end_time.split(':');
-          const start = new Date(today.setHours(+sh, +sm, 0, 0));
-          const end = new Date(today.setHours(+eh, +em, 0, 0));
-
-          combinedEvents.push({
-            title,
-            start: new Date(start),
-            end: new Date(end),
-            allDay: false,
-            resource: {
-              product_name: item.product_name,
-              start_time: item.start_time,
-              end_time: item.end_time,
-              status: '트레이너예약',
-              user_name: item.user_name,
-              center_name: item.center_name
-            }
-          });
+      });
+  
+      // 트레이너용 예약 일정
+      (reservationRes.data.trainerList || []).forEach(item => {
+        const title = `${item.product_name} (${item.start_time} ~ ${item.end_time})`;
+        const today = new Date(item.date);
+        const [sh, sm] = (item.start_time || '').split(':');
+        const [eh, em] = (item.end_time || '').split(':');
+        const start = sh && sm ? new Date(today.setHours(+sh, +sm, 0, 0)) : new Date(today);
+        const end = eh && em ? new Date(today.setHours(+eh, +em, 0, 0)) : new Date(today);
+  
+        combinedEvents.push({
+          title,
+          start: new Date(start),
+          end: new Date(end),
+          allDay: false,
+          resource: {
+            product_name: item.product_name,
+            start_time: item.start_time,
+            end_time: item.end_time,
+            status: '트레이너예약',
+            user_name: item.user_name,
+            center_name: item.center_name
+          }
         });
-
-        // 휴무 일정
-        dayoffRes.data.dayoff.forEach(item => {
-          combinedEvents.push({
-            title: item.title || '휴무',
-            start: new Date(item.start_date),
-            end: new Date(item.end_date),
-            allDay: true,
-            status: '휴무',
-            resource: {...item},
-          });
+      });
+  
+      // 휴무 일정
+      (dayoffRes.data.dayoff || []).forEach(item => {
+        combinedEvents.push({
+          title: item.title || '휴무',
+          start: new Date(item.start_date),
+          end: new Date(item.end_date),
+          allDay: true,
+          status: '휴무',
+          resource: { ...item },
         });
-
-        // 회원용 클래스 요일
-        userClassRes.data.scheduleList.forEach(item => {
-          const start = new Date(`${item.date}T${item.start_time}`);
-          const end = new Date(`${item.date}T${item.end_time}`);
-          combinedEvents.push({
-            title: `[예약] ${item.title}`,
-            start,
-            end,
-            allDay: false,
-            resource: {
-              product_name: item.title,
-              start_time: item.start_time,
-              end_time: item.end_time,
-              status: '회원예약',
-              center_name: item.center_name
-            },
-          });
+      });
+  
+      // 회원용 클래스 요일
+      (userClassRes.data.scheduleList || []).forEach(item => {
+        const start = new Date(`${item.date}T${item.start_time}`);
+        const end = new Date(`${item.date}T${item.end_time}`);
+        combinedEvents.push({
+          title: `[예약] ${item.title}`,
+          start,
+          end,
+          allDay: false,
+          resource: {
+            product_name: item.title,
+            start_time: item.start_time,
+            end_time: item.end_time,
+            status: '회원예약',
+            center_name: item.center_name
+          },
         });
-
-        // 트레이너용 클래스 요일
-        classScheduleRes.data.scheduleList.forEach(item => {
-          const start = new Date(`${item.date}T${item.start_time}`);
-          const end = new Date(`${item.date}T${item.end_time}`);
-          combinedEvents.push({
-            title: `[클래스] ${item.title}`,
-            start,
-            end,
-            allDay: false,
-            resource: {
-              product_name: item.title,
-              start_time: item.start_time,
-              end_time: item.end_time,
-              status: '트레이너예약',
-              user_name: item.user_name,
-              center_name: item.center_name
-            },
-          });
+      });
+  
+      // 트레이너용 클래스 요일
+      (classScheduleRes.data.scheduleList || []).forEach(item => {
+        const start = new Date(`${item.date}T${item.start_time}`);
+        const end = new Date(`${item.date}T${item.end_time}`);
+        combinedEvents.push({
+          title: `[클래스] ${item.title}`,
+          start,
+          end,
+          allDay: false,
+          resource: {
+            product_name: item.title,
+            start_time: item.start_time,
+            end_time: item.end_time,
+            status: '트레이너예약',
+            user_name: item.user_name,
+            center_name: item.center_name
+          },
         });
-
-        setEvents(combinedEvents);
-      }catch(err) {
-        console.log(err);
-        openModal({
-          svg: '❗',
-          msg1: '오류',
-          msg2: '일정 불러오기 실패',
-          showCancel: false,
-        });
-      }
-    }, [user_id]);
+      });
+  
+      setEvents(combinedEvents);
+    } catch (err) {
+      console.log(err);
+      openModal({
+        svg: '❗',
+        msg1: '오류',
+        msg2: '일정 불러오기 실패',
+        showCancel: false,
+      });
+    }
+  }, [user_id]);
+  
 
     useEffect(() => {
       fetchEvents();
