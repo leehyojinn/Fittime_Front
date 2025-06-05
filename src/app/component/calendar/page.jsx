@@ -57,7 +57,8 @@ export default function MyCalendar() {
   const STATUS_COLORS = {
     '일정': '#b9d394',
     '휴무': '#ff8d8f',
-    '예약': '#98afba'
+    '회원예약': '#98afba',
+    '트레이너예약': '#98afba',
   };
 
     // 일정, 예약 스케줄 불러오기
@@ -65,11 +66,13 @@ export default function MyCalendar() {
       try {
         const trainer_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
-        const [eventRes, reservationRes, dayoffRes, classScheduleRes] = await Promise.all([
+        const [eventRes, userRes, reservationRes, dayoffRes,userClassRes, classScheduleRes] = await Promise.all([
           axios.post(`http://localhost/schedule_list/${user_id}`), // 개인 일정
+          axios.post(`http://localhost/user_reservation_schedule/${user_id}`), // 회원용 예약 일정
           axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`), // 트레이너용 예약 일정
           axios.post(`http://localhost/center_dayoff/${trainer_id}`), // 트레이너 휴무
-          axios.post('http://localhost/get_class_schedule', {trainer_id: user_id}), // 클래스 요일
+          axios.post('http://localhost/get_user_class_schedule', {user_id: user_id}), // 회원용 클래스 요일
+          axios.post('http://localhost/get_class_schedule', {trainer_id: user_id}), // 트레이너용 클래스 요일
         ]);
         const combinedEvents = [];
 
@@ -85,11 +88,10 @@ export default function MyCalendar() {
           });
         });
 
-        // 트레이너용 예약 일정 (1:1 또는 클래스)
-        reservationRes.data.trainerList.forEach(item => {
-          console.log(item);
+        // 회원용 예약 일정
+        userRes.data.userList.forEach(item => {
           const title =
-              `${item.product_name} (${item.start_time} ~ ${item.end_time})`;
+              `${item.center_name} (${item.start_time} ~ ${item.end_time})`;
           const today = new Date(item.date);
           const [sh, sm] = item.start_time.split(':');
           const [eh, em] = item.end_time.split(':');
@@ -105,8 +107,34 @@ export default function MyCalendar() {
               product_name: item.title,
               start_time: item.start_time,
               end_time: item.end_time,
-              status: '예약',
-              user_name: item.user_name
+              status: '회원예약',
+              center_name: item.center_name
+            }
+          });
+        });
+
+        // 트레이너용 예약 일정 (1:1 또는 클래스)
+        reservationRes.data.trainerList.forEach(item => {
+          const title =
+              `${item.product_name} (${item.start_time} ~ ${item.end_time})`;
+          const today = new Date(item.date);
+          const [sh, sm] = item.start_time.split(':');
+          const [eh, em] = item.end_time.split(':');
+          const start = new Date(today.setHours(+sh, +sm, 0, 0));
+          const end = new Date(today.setHours(+eh, +em, 0, 0));
+
+          combinedEvents.push({
+            title,
+            start: new Date(start),
+            end: new Date(end),
+            allDay: false,
+            resource: {
+              product_name: item.product_name,
+              start_time: item.start_time,
+              end_time: item.end_time,
+              status: '트레이너예약',
+              user_name: item.user_name,
+              center_name: item.center_name
             }
           });
         });
@@ -123,9 +151,27 @@ export default function MyCalendar() {
           });
         });
 
-        // 클래스 요일
+        // 회원용 클래스 요일
+        userClassRes.data.scheduleList.forEach(item => {
+          const start = new Date(`${item.date}T${item.start_time}`);
+          const end = new Date(`${item.date}T${item.end_time}`);
+          combinedEvents.push({
+            title: `[예약] ${item.title}`,
+            start,
+            end,
+            allDay: false,
+            resource: {
+              product_name: item.title,
+              start_time: item.start_time,
+              end_time: item.end_time,
+              status: '회원예약',
+              center_name: item.center_name
+            },
+          });
+        });
+
+        // 트레이너용 클래스 요일
         classScheduleRes.data.scheduleList.forEach(item => {
-          console.log(item.user_name);
           const start = new Date(`${item.date}T${item.start_time}`);
           const end = new Date(`${item.date}T${item.end_time}`);
           combinedEvents.push({
@@ -137,8 +183,9 @@ export default function MyCalendar() {
               product_name: item.title,
               start_time: item.start_time,
               end_time: item.end_time,
-              status: '예약',
-              user_name: item.user_name
+              status: '트레이너예약',
+              user_name: item.user_name,
+              center_name: item.center_name
             },
           });
         });
@@ -347,8 +394,7 @@ export default function MyCalendar() {
 
   // 캘린더에 보여지는 이벤트
   const CustomEvent = ({event}) => {
-    console.log(event.resource.user_name);
-    const {product_name, start_time, end_time, user_name} = event.resource || {};
+    const {product_name, start_time, end_time, center_name, status} = event.resource || {};
 
     if (!product_name || !start_time || !end_time) {
       return (
@@ -358,13 +404,26 @@ export default function MyCalendar() {
       );
     }
 
-    return (
-        <div style={{ whiteSpace: 'pre-line' }}>
-          {product_name}
-          {"\n"}
-          {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
-        </div>
-    );
+    if (status === '회원예약') {
+      return (
+          <div style={{whiteSpace: 'pre-line'}}>
+            {center_name}
+            {"\n"}
+            {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
+          </div>
+      );
+    }
+
+    if (status === '트레이너예약') {
+      return (
+          <div style={{whiteSpace: 'pre-line'}}>
+            {product_name}
+            {"\n"}
+            {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
+          </div>
+      );
+    }
+    return <div style={{ whiteSpace: 'pre-line'}}>{event.title}</div>
   };
 
   return (
@@ -577,9 +636,17 @@ export default function MyCalendar() {
                       ? format(detailInfo.event.start, 'yyyy-MM-dd')
                       : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(detailInfo.event.end, 'yyyy-MM-dd')}`}</p>
                     <p className='label'>내용 : {detailInfo.event.resource.content}</p>
-                    <p className='label'>시간 : {detailInfo.event.resource.start_time?.substring(0, 5)} ~ {detailInfo.event.resource.end_time?.substring(0, 5)}</p>
-                    <p className='label'>회원명 : {detailInfo.event.resource.user_name}</p>
-                    <p className='label'>{detailInfo.event.resource.status}</p>
+                    {detailInfo.event.resource.start_time !== null && detailInfo.event.resource.end_time !== null && (
+                        <p className='label'>시간 : {detailInfo.event.resource.start_time?.substring(0, 5)} ~ {detailInfo.event.resource.end_time?.substring(0, 5)}</p>
+                    )}
+                    <p className='label'>
+                      {detailInfo.event.resource.user_name ? `회원명 : ${detailInfo.event.resource.user_name}`
+                          : detailInfo.event.resource.trainer_name ? `강사명 : ${detailInfo.event.resource.trainer_name}`
+                          : ''}</p>
+                      {detailInfo.event.resource.status !== '회원예약' &&
+                          detailInfo.event.resource.status !== '트레이너예약' && (
+                            <p className='label'>{detailInfo.event.resource.status}</p>
+                          )}
                     <div className='flex justify_con_end align_center modal-btns'>
                       <button className='label' onClick={startEdit}>수정</button>
                       <button className='label' onClick={() => handleDelete(detailInfo.event)}>삭제</button>
