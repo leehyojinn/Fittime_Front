@@ -6,6 +6,7 @@ import Image from 'next/image';
 import axios from 'axios';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import {useSearchParams} from "next/navigation";
 
 const ComplaintForm = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -13,6 +14,11 @@ const ComplaintForm = () => {
   const [complaintList, setComplaintList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openIdx, setOpenIdx] = useState(null); // 클릭된 신고번호
+
+  const searchParams = useSearchParams();
+  const review_idx = searchParams.get('review_idx');
+  const report_id = searchParams.get('report_id');
+  const target_id = searchParams.get('target_id');
 
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
@@ -42,7 +48,7 @@ const ComplaintForm = () => {
       const formData = new FormData();
       const complaintData = {
         report_id: data.report_id,
-        admin_id: data.admin_id,
+        // admin_id: data.admin_id,
         reason: data.reason,
         report_text: data.report_text,
         review_idx: Number(data.review_idx)
@@ -71,6 +77,7 @@ const ComplaintForm = () => {
       alert('신고 접수 중 오류가 발생했습니다.');
     }
     setLoading(false);
+    getComplaintList();
   };
 
   // 신고내역 불러오기
@@ -78,6 +85,7 @@ const ComplaintForm = () => {
     try {
       const { data } = await axios.post(`http://localhost/complaint_list/${user_id}`);
       setComplaintList(data.list || []);
+      console.log(data.list);
     } catch (err) {
       console.error(err);
       setComplaintList([]);
@@ -133,26 +141,28 @@ const ComplaintForm = () => {
                   type="number"
                   {...register("review_idx", { required: "리뷰 번호를 입력해주세요" })}
                   placeholder="연결할 리뷰 번호"
+                  value={review_idx}
                 />
                 {errors.review_idx && <span className="error-message">{errors.review_idx.message}</span>}
               </div>
+              {/*<div className="form-group">*/}
+              {/*  <label htmlFor="admin_id" className='label font_weight_500'>관리자아이디 (admin_id)</label>*/}
+              {/*  <input*/}
+              {/*    id="admin_id"*/}
+              {/*    type="text"*/}
+              {/*    {...register("admin_id", { required: "admin 아이디를 입력해주세요" })}*/}
+              {/*    placeholder="admin 아이디"*/}
+              {/*  />*/}
+              {/*  {errors.admin_id && <span className="error-message">{errors.admin_id.message}</span>}*/}
+              {/*</div>*/}
               <div className="form-group">
-                <label htmlFor="admin_id" className='label font_weight_500'>관리자아이디 (admin_id)</label>
-                <input
-                  id="admin_id"
-                  type="text"
-                  {...register("admin_id", { required: "admin 아이디를 입력해주세요" })}
-                  placeholder="admin 아이디"
-                />
-                {errors.admin_id && <span className="error-message">{errors.admin_id.message}</span>}
-              </div>
-              <div className="form-group">
-                <label htmlFor="report_id" className='label font_weight_500'>신고 대상 아이디</label>
+                <label htmlFor="report_id" className='label font_weight_500'>신고자 아이디</label>
                 <input
                   id="report_id"
                   type="text"
                   {...register("report_id", { required: "신고 대상의 아이디를 입력해주세요" })}
                   placeholder="신고할 회원의 아이디"
+                  value={report_id}
                 />
                 {errors.report_id && <span className="error-message">{errors.report_id.message}</span>}
               </div>

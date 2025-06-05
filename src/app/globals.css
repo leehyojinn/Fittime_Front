@@ -2961,6 +2961,25 @@ table tr.selected {
   background: var(--primary-color-2);
   color: #000;
 }
+
+.centermypage-product-btn {
+    background-color: #4444;
+    color: var(--primary-color);
+    border: none;
+    border-radius: 1.3rem;
+    padding: 0.3rem 1rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.centermypage-product-btn:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
 @media (max-width: 768px) {
   .mypage-profile { flex-direction: column; gap: 1rem; }
   .mypage-profile-img { width: 90px; height: 90px; }
@@ -3385,4 +3404,36 @@ img {
   position: absolute;
   right: 50%;
   transform: translateX(350px);
+}
+
+.warning-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: rgb(145, 145, 145);
+    transition: color 0.2s;
+    margin-right: 15px;
+}
+
+
+.warning-button .material-symbols-outlined {
+    color: rgb(145, 145, 145);
+    font-variation-settings:
+            'FILL' 0,
+            'wght' 200,
+            'GRAD' 0,
+            'opsz' 25;
+}
+.material-symbols-outlined:hover {
+    color: rgb(221, 115, 115);
+}
+
+.material-symbols-outlined-text{
+    color: rgb(145, 145, 145);
+    font-size: 1.4rem;
+}
+
+.material-symbols-outlined-text:hover {
+    color: rgb(221, 115, 115);
 }

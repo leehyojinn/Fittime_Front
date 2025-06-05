@@ -41,9 +41,13 @@ const CenterDetail = () => {
 
   const router = useRouter();
 
-    const handleMoveReservation =()=>{
-        router.push(`/component/reservation?center_id=${centerInfo.center_id}&center_idx=${centerInfo.center_idx}`);
-    }
+  const handleMoveReservation =()=>{
+      router.push(`/component/reservation?center_id=${centerInfo.center_id}&center_idx=${centerInfo.center_idx}`);
+  }
+
+  const handleMoveComplaint = (r) => {
+      router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${sessionStorage.getItem('user_id')}`);
+  }
 
   const getCenterInfo = async() =>{
       const {data} = await axios.post('http://localhost/detail/profile',{"center_id":center_id,"user_level":'3'});
@@ -241,41 +245,48 @@ const CenterDetail = () => {
                             {
                                 paginatedReviews?.map(r => (
                                     <li key={r.review_idx} className="review-item" style={{flexDirection:'column'}}>
+
                                         {/* 첫 줄: 작성자 + 별점 + 날짜 */}
-                                        <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit'}}>
-                                            <span className="review-user">{r.user_id}</span>
-                                            <span className="review-rating"><FaStar/> {r.rating}</span>
-                                            <span className="review-date">{r.date}</span>
-                                        </div>
+                                            <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit'}}>
+                                                <span className="review-user">{r.user_id}</span>
+                                                <span className="review-rating"><FaStar/> {r.rating}</span>
+                                                <span className="review-date">{r.date}</span>
+                                            </div>
 
-                                        {/* 둘째 줄: 내용 */}
-                                        <div className="review-body" style={{textAlign:'left'}}>
-                                            <span className="review-content" style={{paddingLeft:'30px'}}>{r.content}</span>
+                                            {/* 둘째 줄: 내용 */}
+                                            <div className="review-body" style={{textAlign:'left'}}>
+                                                <span className="review-content" style={{paddingLeft:'30px'}}>{r.content}</span>
 
-                                            {/* 이미지 */}
-                                            {
-                                                r.file_idx && r.file_idx.length > 0 && (
-                                                    <div className="review-images" style={{textAlign:'left', paddingLeft:'27px'}}>
-                                                        {
-                                                            JSON.parse(r.file_idx).map((img, idx) => (
-                                                                <img
-                                                                    key={idx}
-                                                                    src={`http://localhost/reviewImg/${img}`}
-                                                                    alt="첨부"
-                                                                    style={{
-                                                                        width: 132,
-                                                                        height: 132,
-                                                                        objectFit: 'cover',
-                                                                        borderRadius: '1.4rem',
-                                                                        marginLeft: 4
-                                                                    }}
-                                                                />
-                                                            ))
-                                                        }
-                                                    </div>
-                                                )
-                                            }
-                                        </div>
+                                                {/* 이미지 */}
+                                                {
+                                                    r.file_idx && r.file_idx.length > 0 && (
+                                                        <div className="review-images" style={{textAlign:'left', paddingLeft:'27px'}}>
+                                                            {
+                                                                JSON.parse(r.file_idx).map((img, idx) => (
+                                                                    <img
+                                                                        key={idx}
+                                                                        src={`http://localhost/reviewImg/${img}`}
+                                                                        alt="첨부"
+                                                                        style={{
+                                                                            width: 132,
+                                                                            height: 132,
+                                                                            objectFit: 'cover',
+                                                                            borderRadius: '1.4rem',
+                                                                            marginLeft: 4
+                                                                        }}
+                                                                    />
+                                                                ))
+                                                            }
+                                                        </div>
+                                                    )
+                                                }
+                                            </div>
+                                        {sessionStorage.user_level == 3 && <div style={{display:'flex',justifyContent:'flex-end'}}>
+                                            <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
+                                                <span class="material-symbols-outlined">warning</span>
+                                                <span className='material-symbols-outlined-text'>신고하기</span>
+                                            </button>
+                                        </div>}
                                     </li>
                                 ))
                             }
