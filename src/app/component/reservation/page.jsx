@@ -65,6 +65,13 @@ const Reservation = () => {
 
   const [dateBookedCounts, setDateBookedCounts] = useState({});
 
+  const [paymentMethod, setPaymentMethod] = useState('direct');
+  const [showKakaoQR, setShowKakaoQR] = useState(false);
+  const [kakaoQRUrl, setKakaoQRUrl] = useState('');
+  const [kakaoTid, setKakaoTid] = useState('');
+  const [waitingKakao, setWaitingKakao] = useState(false);
+
+
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
   // 센터 정보 불러오기
@@ -283,8 +290,6 @@ const Reservation = () => {
     return selectedProduct.price - discountAmount;
   };
 
-  console.log(centers);
-
   // --- 렌더링 함수들 ---
   const renderCenterSelectionStep = () => (
     <div className="reservation-section">
@@ -454,6 +459,74 @@ const Reservation = () => {
     </div>
   );
 
+  const handleReservationPayment = async () => {
+    if (paymentMethod === 'direct') {
+      handleSubmitReservation();
+    } else if (paymentMethod === 'kakao') {
+      setIsSubmitting(true);
+  
+      // 1. 예약 파라미터를 결제 준비 전에 localStorage에 저장
+      const bookingParam = {
+        user_id: user_id,
+        center_id: selectedCenter.center_id,
+        product_idx: selectedProduct.product_idx,
+        trainer_id: selectedProduct.trainer_id,
+        class_idx: classInfo?.class_idx,
+        date: selectedDate.toISOString().slice(0, 10),
+        start_time: selectedTime?.time || null,
+        end_time: selectedTime?.endTime || null
+      };
+      window.localStorage.setItem("booking_param", JSON.stringify(bookingParam));
+  
+      try {
+        // 2. 결제 준비 API 호출 (tid, 결제창 URL 받기)
+        const res = await axios.post('http://localhost/kakaopay/ready', {
+          user_id: user_id,
+          product_idx: selectedProduct.product_idx,
+          item_name: selectedProduct.product_name,
+          total_amount: calculateFinalPrice(),
+        });
+        window.localStorage.setItem("kakao_tid", res.data.tid);
+        window.open(res.data.qr_url, '_blank', 'width=500,height=700');
+        setKakaoTid(res.data.tid);
+        setWaitingKakao(true);
+        setIsSubmitting(false);
+      } catch (e) {
+        setIsSubmitting(false);
+        alert('카카오페이 결제 준비 중 오류가 발생했습니다.');
+      }
+    }
+  };
+  
+  
+  useEffect(() => {
+    let interval;
+    if (waitingKakao && kakaoTid) {
+      interval = setInterval(async () => {
+        try {
+          const res = await axios.get(`http://localhost/kakaopay/status?tid=${kakaoTid}`);
+          if (res.data.status === '성공') {
+            setShowKakaoQR(false);
+            setWaitingKakao(false);
+            setStep(5); // 예약 완료 화면으로 이동만!
+          } else if (res.data.status === '실패' || res.data.status === '취소') {
+            setShowKakaoQR(false);
+            setWaitingKakao(false);
+            alert('카카오페이 결제 실패 또는 취소');
+          }
+        } catch (e) {}
+      }, 2000);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [waitingKakao, kakaoTid]);
+  
+  
+  useEffect(() => {
+    window.goToCompletionStep = () => setStep(5);
+    return () => { delete window.goToCompletionStep; };
+  }, []);
+  
+
   const renderConfirmationStep = () => (
     <div className="reservation-section">
       <h3 className='page-title'>예약 정보 확인</h3>
@@ -496,22 +569,30 @@ const Reservation = () => {
           <h4 className='page-title'>결제 수단 선택</h4>
           <div className="payment-options">
             <label className="payment-option">
-              <input type="radio" name="payment" value="direct" />
+              <input
+                type="radio"
+                name="payment"
+                value="direct"
+                checked={paymentMethod === 'direct'}
+                onChange={() => setPaymentMethod('direct')}
+              />
               <span className='label'>현장결제</span>
             </label>
             <label className="payment-option">
-              <input type="radio" name="payment" value="kakao" />
+              <input
+                type="radio"
+                name="payment"
+                value="kakao"
+                checked={paymentMethod === 'kakao'}
+                onChange={() => setPaymentMethod('kakao')}
+              />
               <span className='label'>카카오페이</span>
-            </label>
-            <label className="payment-option">
-              <input type="radio" name="payment" value="myProduct" />
-              <span className='label'>내 상품</span>
             </label>
           </div>
         </div>
         <button
           className="btn label white_color"
-          onClick={handleSubmitReservation}
+          onClick={handleReservationPayment}
           disabled={isSubmitting}
         >
           {isSubmitting ? '처리 중...' : '예약 및 결제하기'}
