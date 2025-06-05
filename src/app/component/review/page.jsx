@@ -75,7 +75,17 @@ const ReviewPage = () => {
                 console.log(review_idx);
                 setReview(data.map);
                 if(data.photos?.length) {
-                    setFiles(data.photos);
+                    //setFiles(data.photos);
+                    data.photos.map((photo)=>{
+                        axios.get(`http://localhost/reviewImg/${photo.file_idx}`,{
+                            responseType: "blob"
+                        })
+                        .then(({data})=>{
+                            const file = new File([data], `${photo.file_name}`, { type: data.type });
+                            console.log(file);
+                            setFiles(prev => [...prev,file]);
+                        })
+                    });
                 }
             })
     }, [review_idx]);
@@ -122,17 +132,32 @@ const ReviewPage = () => {
             openModal({svg: '❗', msg1: '각 이미지는 10MB 이하만 가능합니다.', showCancel: false});
             return;
         }
-        setReviews({
-            target_id: reviewTarget === 'trainer'
-                ? trainerId
-                : centerId,
-            review_id: Date.now(),
-            user_name: Date.now(),
-            rating: star,
-            content: reviewText,
-            images: files.map(f => URL.createObjectURL(f))
-        });
-        insertReview();
+
+        if(review_idx != null){
+            setReview({
+                target_id: reviewTarget === 'trainer'
+                    ? trainerId
+                    : centerId,
+                review_id: Date.now(),
+                user_name: Date.now(),
+                rating: star,
+                content: reviewText,
+                images: files.map(f => URL.createObjectURL(f))
+            });
+            updateReview();
+        } else {
+            setReviews({
+                target_id: reviewTarget === 'trainer'
+                    ? trainerId
+                    : centerId,
+                review_id: Date.now(),
+                user_name: Date.now(),
+                rating: star,
+                content: reviewText,
+                images: files.map(f => URL.createObjectURL(f))
+            });
+            insertReview();
+        }
     };
 
     // 별점 평균/참여인원
@@ -183,6 +208,37 @@ const ReviewPage = () => {
             fetchReviews();
         }
     }
+
+     const updateReview = async() => {
+         const formData = new FormData();
+         if (files.length > 0) {
+             files.forEach(file => {
+                 formData.append('files', file);
+             });
+         }
+         formData.append("rating", star);
+         formData.append("content", reviewText);
+         formData.append("review_idx", review_idx);
+
+         for (let pair of formData.entries()) {
+             console.log(pair[0] + ':', pair[1]);
+         }
+         const {data} = await axios.post('http://localhost/update/review', formData, {
+             headers: {
+                 'Content-Type': 'multipart/form-data'
+             }
+         });
+
+         console.log('서버 응답 전체:', data);
+
+         if (data.success) {
+             setReviewText('');
+             setStar(0);
+             setFiles([]);
+             setPage(1); // 페이지 초기화
+             fetchReviews();
+         }
+     }
 
     const handleReviewTargetChange = (target) => {
         try {
