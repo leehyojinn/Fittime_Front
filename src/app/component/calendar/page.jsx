@@ -44,6 +44,7 @@ export default function MyCalendar() {
   const [hoveredEventId, setHoveredEventId] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [view, setView] = useState('month');
+  const [userName, setUserName] = useState('');
 
   // 에러 상태
   const [errors, setErrors] = useState({});
@@ -54,9 +55,9 @@ export default function MyCalendar() {
   const { openModal } = useAlertModalStore();
 
   const STATUS_COLORS = {
-    '일정': '#2196f3', // 파랑
-    '휴무': '#e57373', // 빨강
-    '예약': '#ffd54f'  // 노랑
+    '일정': '#b9d394',
+    '휴무': '#ff8d8f',
+    '예약': '#98afba'
   };
 
     // 일정, 예약 스케줄 불러오기
@@ -86,9 +87,9 @@ export default function MyCalendar() {
 
         // 트레이너용 예약 일정 (1:1 또는 클래스)
         reservationRes.data.trainerList.forEach(item => {
+          console.log(item);
           const title =
-              `${item.product_name} (${item.start_time} ~ ${item.end_time}) ${item.user_name ? ` - ${item.user_name}` : ''}`;
-          console.log("타이틀:",`${item.product_name} (${item.start_time} ~ ${item.end_time})${item.user_name ? ` - ${item.user_name}` : ''}`);
+              `${item.product_name} (${item.start_time} ~ ${item.end_time})`;
           const today = new Date(item.date);
           const [sh, sm] = item.start_time.split(':');
           const [eh, em] = item.end_time.split(':');
@@ -100,8 +101,13 @@ export default function MyCalendar() {
             start: new Date(start),
             end: new Date(end),
             allDay: false,
-            status: '예약',
-            resource: {...item}
+            resource: {
+              product_name: item.title,
+              start_time: item.start_time,
+              end_time: item.end_time,
+              status: '예약',
+              user_name: item.user_name
+            }
           });
         });
 
@@ -127,12 +133,12 @@ export default function MyCalendar() {
             start,
             end,
             allDay: false,
-            status: '예약',
             resource: {
               product_name: item.title,
               start_time: item.start_time,
               end_time: item.end_time,
-              user_name: '', // 클래스에는 없으니 빈값
+              status: '예약',
+              user_name: item.user_name
             },
           });
         });
@@ -356,8 +362,7 @@ export default function MyCalendar() {
         <div style={{ whiteSpace: 'pre-line' }}>
           {product_name}
           {"\n"}
-          {start_time} ~ {end_time}
-          {user_name ? `\n- ${user_name}` : ''}
+          {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
         </div>
     );
   };
@@ -398,176 +403,192 @@ export default function MyCalendar() {
         />
         {/* 일정 등록 인풋 모달 */}
         {inputInfo.open && (
-          <div
-            ref={inputModalRef}
-            className="custom-modal flex column gap_10"
+            <div
+                className='modal-overlay'
             style={{
-              width: '800px',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%,-50%)',
-              position: 'fixed',
-              zIndex: 2000,
-              background: '#fff',
-              border: '1px solid #ccc',
-              padding: 35
+              width:'100vw',
+              height:'100vh',
+              zIndex:1999 /*모달보다 아래, 다른 요소보다 위*/
             }}
-            onClick={e => e.stopPropagation()}
-          >
-            <h4 className='middle_title2'>일정 등록</h4>
-            <label className='label'>일정 날짜</label>
-            <div className='label' style={{ marginBottom: 8 }}>
-              {inputInfo.start && inputInfo.end
-                ? format(inputInfo.start, 'yyyy-MM-dd') === format(inputInfo.end, 'yyyy-MM-dd')
-                  ? format(inputInfo.start, 'yyyy-MM-dd')
-                  : `${format(inputInfo.start, 'yyyy-MM-dd')} ~ ${format(inputInfo.end, 'yyyy-MM-dd')}`
-                : ''}
-            </div>
-            <label className='label'>제목</label>
-            <input
-              ref={inputRef}
-              type="text"
-              value={form.title}
-              onChange={e => {
-                setForm({ ...form, title: e.target.value });
-                setErrors({ ...errors, title: false });
-              }}
-              className={errors.title ? 'input-error' : ''}
-            />
-            <label className='label'>내용</label>
-            <input
-              type="text"
-              value={form.content}
-              onChange={e => setForm({ ...form, content: e.target.value })}
-            />
-            <div className='flex gap_10'>
-              <div className='flex column gap_10'>
-                <label className='label'>시작시간</label>
-                <input
-                  type="time"
-                  value={form.start_time}
-                  onChange={e => setForm({ ...form, start_time: e.target.value })}
-                />
-              </div>
-              <div className='flex column gap_10'>
-                <label className='label'>종료시간</label>
-                <input
-                  type="time"
-                  value={form.end_time}
-                  onChange={e => setForm({ ...form, end_time: e.target.value })}
-                />
-              </div>
-            </div>
-            <label className='label'>상태</label>
-            <select
-              className='label'
-              value={form.status}
-              onChange={e => setForm({ ...form, status: e.target.value })}
-            >
-              <option className='label' value="일정">일정</option>
-              <option className='label' value="휴무">휴무</option>
-              <option className='label' value="예약">예약</option>
-            </select>
-            <div className="modal-btns justify_con_end">
-              <button className='label' onClick={() => setInputInfo({ ...inputInfo, open: false })}>취소</button>
-              <button className='label' onClick={handleRegister}>등록</button>
-            </div>
-          </div>
-        )}
-        {/* 상세정보/수정 모달 */}
-        {detailInfo.open && detailInfo.event && (
-          <div
-            ref={detailModalRef}
-            className="custom-modal flex column gap_10"
-            style={{
-              width: '800px',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%,-50%)',
-              position: 'fixed',
-              zIndex: 2000,
-              background: '#fff',
-              border: '1px solid #ccc',
-              padding: 35
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            {editForm ? (
-              <div className='flex column gap_10'>
-                <h4 className='middle_title2'>일정 수정</h4>
-                <div className='flex column gap_10'>
-                  <label className='label'>제목</label>
-                  <input
-                    type="text"
-                    value={editForm.title}
-                    onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                    className={!editForm.title ? 'input-error' : ''}
-                    style={{ width: '100%' }}
-                  />
+            onClick={() => setInputInfo({...inputInfo, open: false})}> {/*바깥 누르면 닫히게*/}
+              <div
+                ref={inputModalRef}
+                className="custom-modal flex column gap_10"
+                style={{
+                  width: '800px',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%,-50%)',
+                  position: 'fixed',
+                  zIndex: 2000,
+                  background: '#fff',
+                  border: '1px solid #ccc',
+                  padding: 35
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <h4 className='middle_title2'>일정 등록</h4>
+                <label className='label'>일정 날짜</label>
+                <div className='label' style={{ marginBottom: 8 }}>
+                  {inputInfo.start && inputInfo.end
+                    ? format(inputInfo.start, 'yyyy-MM-dd') === format(inputInfo.end, 'yyyy-MM-dd')
+                      ? format(inputInfo.start, 'yyyy-MM-dd')
+                      : `${format(inputInfo.start, 'yyyy-MM-dd')} ~ ${format(inputInfo.end, 'yyyy-MM-dd')}`
+                    : ''}
                 </div>
-                <div className='flex column gap_10'>
-                  <label className='label'>내용</label>
-                  <input
-                    type="text"
-                    value={editForm.content}
-                    onChange={e => setEditForm({ ...editForm, content: e.target.value })}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-                <div className='flex align_center gap_10'>
+                <label className='label'>제목</label>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={form.title}
+                  onChange={e => {
+                    setForm({ ...form, title: e.target.value });
+                    setErrors({ ...errors, title: false });
+                  }}
+                  className={errors.title ? 'input-error' : ''}
+                />
+                <label className='label'>내용</label>
+                <input
+                  type="text"
+                  value={form.content}
+                  onChange={e => setForm({ ...form, content: e.target.value })}
+                />
+                <div className='flex gap_10'>
                   <div className='flex column gap_10'>
                     <label className='label'>시작시간</label>
                     <input
                       type="time"
-                      value={editForm.start_time}
-                      onChange={e => setEditForm({ ...editForm, start_time: e.target.value })}
+                      value={form.start_time}
+                      onChange={e => setForm({ ...form, start_time: e.target.value })}
                     />
                   </div>
                   <div className='flex column gap_10'>
                     <label className='label'>종료시간</label>
                     <input
                       type="time"
-                      value={editForm.end_time}
-                      onChange={e => setEditForm({ ...editForm, end_time: e.target.value })}
+                      value={form.end_time}
+                      onChange={e => setForm({ ...form, end_time: e.target.value })}
                     />
                   </div>
                 </div>
-                <div className='flex column gap_10'>
-                  <label className='label'>상태</label>
-                  <select
-                    value={editForm.status}
-                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
-                  >
-                    <option value="일정">일정</option>
-                    <option value="휴무">휴무</option>
-                    <option value="예약">예약</option>
-                  </select>
-                </div>
-                <div className='modal-btns justify_con_center'>
-                  <button className='label' onClick={() => setEditForm(null)} style={{ marginLeft: 10 }}>취소</button>
-                  <button className='label' onClick={saveEdit}>저장</button>
-                </div>
-              </div>
-            ) : (
-              <div className='flex column gap_10'>
-                <h4 className='middle_title2'>{detailInfo.event.title}</h4>
-                {/*<p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(addDays(detailInfo.event.end, +1), 'yyyy-MM-dd')*/}
-                {/*  ? format(detailInfo.event.start, 'yyyy-MM-dd')*/}
-                {/*  : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(addDays(detailInfo.event.end, -1), 'yyyy-MM-dd')}`}</p>*/}
-                <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(detailInfo.event.end, 'yyyy-MM-dd')
-                    ? format(detailInfo.event.start, 'yyyy-MM-dd')
-                    : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(detailInfo.event.end, 'yyyy-MM-dd')}`}</p>
-                <p className='label'>내용 : {detailInfo.event.resource.content}</p>
-                <p className='label'>시간 : {detailInfo.event.resource.start_time} ~ {detailInfo.event.resource.end_time}</p>
-                <p className='label'>{detailInfo.event.resource.status}</p>
-                <div className='flex justify_con_end align_center modal-btns'>
-                  <button className='label' onClick={startEdit}>수정</button>
-                  <button className='label' onClick={() => handleDelete(detailInfo.event)}>삭제</button>
-                  <button className='label' onClick={() => setDetailInfo({ open: false, event: null, x: 0, y: 0 })}>닫기</button>
+                <label className='label'>상태</label>
+                <select
+                  className='label'
+                  value={form.status}
+                  onChange={e => setForm({ ...form, status: e.target.value })}
+                >
+                  <option className='label' value="일정">일정</option>
+                  <option className='label' value="휴무">휴무</option>
+                  <option className='label' value="예약">예약</option>
+                </select>
+                <div className="modal-btns justify_con_end">
+                  <button className='label' onClick={() => setInputInfo({ ...inputInfo, open: false })}>취소</button>
+                  <button className='label' onClick={handleRegister}>등록</button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+        )}
+        {/* 상세정보/수정 모달 */}
+        {detailInfo.open && detailInfo.event && (
+            <div
+                className='modal-overlay'
+                style={{
+                  width:'100vw',
+                  height:'100vh',
+                  zIndex:1999
+                }}
+                onClick={() => setDetailInfo({...detailInfo, open: false})}>
+              <div
+                ref={detailModalRef}
+                className="custom-modal flex column gap_10"
+                style={{
+                  width: '800px',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%,-50%)',
+                  position: 'fixed',
+                  zIndex: 2000,
+                  background: '#fff',
+                  border: '1px solid #ccc',
+                  padding: 35
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                {editForm ? (
+                  <div className='flex column gap_10'>
+                    <h4 className='middle_title2'>일정 수정</h4>
+                    <div className='flex column gap_10'>
+                      <label className='label'>제목</label>
+                      <input
+                        type="text"
+                        value={editForm.title}
+                        onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                        className={!editForm.title ? 'input-error' : ''}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div className='flex column gap_10'>
+                      <label className='label'>내용</label>
+                      <input
+                        type="text"
+                        value={editForm.content}
+                        onChange={e => setEditForm({ ...editForm, content: e.target.value })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div className='flex align_center gap_10'>
+                      <div className='flex column gap_10'>
+                        <label className='label'>시작시간</label>
+                        <input
+                          type="time"
+                          value={editForm.start_time}
+                          onChange={e => setEditForm({ ...editForm, start_time: e.target.value })}
+                        />
+                      </div>
+                      <div className='flex column gap_10'>
+                        <label className='label'>종료시간</label>
+                        <input
+                          type="time"
+                          value={editForm.end_time}
+                          onChange={e => setEditForm({ ...editForm, end_time: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className='flex column gap_10'>
+                      <label className='label'>상태</label>
+                      <select
+                        value={editForm.status}
+                        onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                      >
+                        <option value="일정">일정</option>
+                        <option value="휴무">휴무</option>
+                        <option value="예약">예약</option>
+                      </select>
+                    </div>
+                    <div className='modal-btns justify_con_center'>
+                      <button className='label' onClick={() => setEditForm(null)} style={{ marginLeft: 10 }}>취소</button>
+                      <button className='label' onClick={saveEdit}>저장</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='flex column gap_10'>
+                    <h4 className='middle_title2'>{detailInfo.event.title}</h4>
+                    <p className='label'>날짜 : {format(detailInfo.event.start, 'yyyy-MM-dd') === format(detailInfo.event.end, 'yyyy-MM-dd')
+                      ? format(detailInfo.event.start, 'yyyy-MM-dd')
+                      : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(detailInfo.event.end, 'yyyy-MM-dd')}`}</p>
+                    <p className='label'>내용 : {detailInfo.event.resource.content}</p>
+                    <p className='label'>시간 : {detailInfo.event.resource.start_time?.substring(0, 5)} ~ {detailInfo.event.resource.end_time?.substring(0, 5)}</p>
+                    <p className='label'>회원명 : {detailInfo.event.resource.user_name}</p>
+                    <p className='label'>{detailInfo.event.resource.status}</p>
+                    <div className='flex justify_con_end align_center modal-btns'>
+                      <button className='label' onClick={startEdit}>수정</button>
+                      <button className='label' onClick={() => handleDelete(detailInfo.event)}>삭제</button>
+                      <button className='label' onClick={() => setDetailInfo({ open: false, event: null, x: 0, y: 0 })}>닫기</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
         )}
       </div>
       <Footer />

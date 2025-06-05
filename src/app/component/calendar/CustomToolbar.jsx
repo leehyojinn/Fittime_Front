@@ -20,9 +20,9 @@ const CustomToolbar = (props) => {
             <span className="rbc-toolbar-label flex_1">{label}</span>
             {/* 아래에 원하는 div 추가 */}
             <div className='width_fit flex column gap_3'>
-                <p className='bg_2196f3 white_color event_setting'>일정</p>
-                <p className='bg_e57373 white_color event_setting'>휴무</p>
-                <p className='bg_ffd54f white_color event_setting'>예약</p>
+                <p className='bg_b9d394 white_color event_setting'>일정</p>
+                <p className='bg_ff8d8f white_color event_setting'>휴무</p>
+                <p className='bg_98afba white_color event_setting'>예약</p>
             </div>
         </div>
     );
