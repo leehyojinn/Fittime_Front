@@ -281,7 +281,7 @@ const CenterDetail = () => {
                                                     )
                                                 }
                                             </div>
-                                        {sessionStorage.user_level == 3 && <div style={{display:'flex',justifyContent:'flex-end'}}>
+                                        {sessionStorage.user_level >= 3 && <div style={{display:'flex',justifyContent:'flex-end'}}>
                                             <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
                                                 <span class="material-symbols-outlined">warning</span>
                                                 <span className='material-symbols-outlined-text'>신고하기</span>

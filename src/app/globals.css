@@ -3416,7 +3416,6 @@ img {
     margin-right: 15px;
 }
 
-
 .warning-button .material-symbols-outlined {
     color: rgb(145, 145, 145);
     font-variation-settings:
@@ -3425,15 +3424,13 @@ img {
             'GRAD' 0,
             'opsz' 25;
 }
-.material-symbols-outlined:hover {
-    color: rgb(221, 115, 115);
-}
 
 .material-symbols-outlined-text{
     color: rgb(145, 145, 145);
     font-size: 1.4rem;
 }
 
-.material-symbols-outlined-text:hover {
+.warning-button:hover .material-symbols-outlined,
+.warning-button:hover .material-symbols-outlined-text {
     color: rgb(221, 115, 115);
 }
