@@ -471,7 +471,10 @@ const Reservation = () => {
         center_id: selectedCenter.center_id,
         product_idx: selectedProduct.product_idx,
         trainer_id: selectedProduct.trainer_id,
+        payment_price : calculateFinalPrice(),
         class_idx: classInfo?.class_idx,
+        count : selectedProduct.count - 1,
+        rest_period : selectedProduct.duration,
         date: selectedDate.toISOString().slice(0, 10),
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
