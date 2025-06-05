@@ -79,7 +79,7 @@ const Reservation = () => {
 
   // 센터 정보 불러오기
   useEffect(() => {
-    axios.post('http://localhost/reservation/center_info/realcenter')
+    axios.post(`http://localhost/reservation/center_info/${initialCenterId}`)
       .then(res => {
         setCenters(res.data.list || []);
         if (res.data.list && res.data.list.length > 0) {
@@ -335,47 +335,52 @@ const Reservation = () => {
   };
 
   // --- 렌더링 함수들 ---
-  const renderCenterSelectionStep = () => (
-    <div className="reservation-section">
-      <h3>운동 기관 선택</h3>
-      <div className="center-list">
-        {centers.map(center => (
-          <div
-            key={center.center_id}
-            className={`center-card ${selectedCenter?.center_id === center.center_id ? 'selected' : ''}`}
-            onClick={() => {
-              setSelectedCenter(center);
-              setSelectedProduct(null);
-              setSelectedTrainer(null);
-              setClassInfo(null);
-              setAvailableTimes([]);
-              setSelectedTime(null);
-              setStep(1);
-            }}
-          >
-            <div className="center-info">
-            {center.profile_image ? (
-              <img src={center.profile_image} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
-            ) : (
-              <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#ddd',marginBottom:10}} />
-            )}
-              <h4 className='page-title' style={{margin:0}}>{center.center_name}</h4>
-              <p className="center-address"><FaMapMarkerAlt /> {center.address}</p>
-              <p className="center-rating">
-                <FaStar />
-                <span style={{fontWeight: '600', fontSize: '18px', color:'#000'}}>
-                  {center.avg_rating !== null && center.avg_rating !== undefined
-                  ? Math.round(center.avg_rating * 10) / 10
-                  : '-'}
-                </span>
-                <span style={{color: 'rgb(136, 136, 136)', fontSize:'15px'}}> ({center.rating_count})</span>
-              </p>
+  const renderCenterSelectionStep = () => {
+    const onlyOneCenter = centers.filter(center => center.center_id === initialCenterId);
+  
+    return (
+      <div className="reservation-section">
+        <h3>운동 기관 선택</h3>
+        <div className="center-list">
+          {onlyOneCenter.map(center => (
+            <div
+              key={center.center_id}
+              className={`center-card ${selectedCenter?.center_id === center.center_id ? 'selected' : ''}`}
+              onClick={() => {
+                setSelectedCenter(center);
+                setSelectedProduct(null);
+                setSelectedTrainer(null);
+                setClassInfo(null);
+                setAvailableTimes([]);
+                setSelectedTime(null);
+                setStep(1);
+              }}
+            >
+              <div className="center-info">
+                {center.profile_image ? (
+                  <img src={center.profile_image} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
+                ) : (
+                  <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#ddd',marginBottom:10}} />
+                )}
+                <h4 className='page-title' style={{margin:0}}>{center.center_name}</h4>
+                <p className="center-address"><FaMapMarkerAlt /> {center.address}</p>
+                <p className="center-rating">
+                  <FaStar />
+                  <span style={{fontWeight: '600', fontSize: '18px', color:'#000'}}>
+                    {center.avg_rating !== null && center.avg_rating !== undefined
+                    ? Math.round(center.avg_rating * 10) / 10
+                    : '-'}
+                  </span>
+                  <span style={{color: 'rgb(136, 136, 136)', fontSize:'15px'}}> ({center.rating_count})</span>
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+  
 
   const filteredProducts = selectedCenter
     ? products.filter(product => product.center_id === selectedCenter.center_id)
@@ -388,9 +393,7 @@ const Reservation = () => {
       {/* 내가 구매한 상품 영역 */}
       <div className="my-product-section" style={{marginBottom: 24}}>
         <h3>내가 구매한 상품</h3>
-        {myProducts && myProducts.filter(prod =>
-            prod.count > 0 || prod.rest_period > 0 || prod.status === '결제'
-          ).length > 0 ? (
+        {filteredProducts.length > 0 ? (
           <div className="product-list">
             {myProducts
               .filter(prod => prod.count > 0 && prod.rest_period > 0 && prod.status === '결제')
