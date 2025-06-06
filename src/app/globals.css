@@ -3438,3 +3438,7 @@ img {
 .warning-button:hover .material-symbols-outlined-text {
     color: rgb(221, 115, 115);
 }
+
+.pointer {
+    cursor: pointer;
+}
