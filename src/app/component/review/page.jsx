@@ -66,29 +66,32 @@ const ReviewPage = () => {
     useEffect(() => {
             getTrainerInfo();
             getCenterInfo();
+            if(review_idx !== null){
+                updateFiles();
+            }
     }, []);
 
-    useEffect(() => {
+    const updateFiles = ()=>{
         axios.get(`http://localhost/get/review/${review_idx}`)
             .then(({data})=>{
-                console.log(data);
+                console.log('data : ',data);
                 console.log(review_idx);
                 setReview(data.map);
-                if(data.photos?.length) {
+                if(data.photos?.length>0) {
                     //setFiles(data.photos);
                     data.photos.map((photo)=>{
                         axios.get(`http://localhost/reviewImg/${photo.file_idx}`,{
                             responseType: "blob"
                         })
-                        .then(({data})=>{
-                            const file = new File([data], `${photo.file_name}`, { type: data.type });
-                            console.log(file);
-                            setFiles(prev => [...prev,file]);
-                        })
+                            .then(({data})=>{
+                                const file = new File([data], `${photo.file_name}`, { type: data.type });
+                                console.log(file);
+                                setFiles(prev => [...prev,file]);
+                            })
                     });
                 }
             })
-    }, [review_idx]);
+    }
 
     useEffect(() => {
         console.log('review',review);

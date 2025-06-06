@@ -1,8 +1,56 @@
+'use client'
 import Footer from '@/app/Footer';
 import Header from '@/app/Header';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
+import {useRouter, useSearchParams} from "next/navigation";
+import axios from "axios";
+import Link from "next/link";
 
 export default function BoardDetail() {
+
+    const searchParams = useSearchParams();
+    const board_idx = searchParams.get('board_idx');
+    const category = searchParams.get('category');
+    const router = useRouter();
+    const [board, setBoard] = useState({});
+    const [files, setFiles] = useState([]);
+
+    useEffect(() => {
+        getBoardDetail();
+    }, []);
+
+    const getBoardDetail = async () => {
+        const {data} = await axios.post(`http://localhost/detail/bbs/${board_idx}`);
+        console.log(data);
+        setBoard(data.dto);
+        setFiles(data.photos);
+    }
+
+    const getLink = () => {
+        switch (category) {
+            case '이벤트' :
+                return '/component/board/event';
+            case '건의사항' :
+                return '/component/board/suggestions';
+            case 'QnA' :
+                return '/component/board/qna';
+            default:
+                return '/component/board';
+        }
+    }
+
+    const updateBoard = () => {
+        router.push(`/component/board/boardwrite?category=${category}&board_idx=${board_idx}`);
+    }
+
+    const delBoard = async () => {
+        const {data} = await axios.post(`http://localhost/del/bbs/${board_idx}`);
+        console.log(data);
+        if(data.success){
+            router.push(getLink());
+        }
+    }
+
   // 예시 데이터 (실제 사용시 props나 fetch로 대체)
 const post = {
     title: '상세페이지 제목',
@@ -21,6 +69,8 @@ const post = {
     ]
 };
 
+
+
     return (
     <div>
         <Header/>
@@ -28,22 +78,25 @@ const post = {
 
             <div className="flex column gap_20">
             {/* 제목 */}
-            <h1 className="middle_title">{post.title}</h1>
+            <h1 className="middle_title">{board.title}</h1>
             {/* 작성자, 날짜, 조회수 */}
             <div className="flex gap_10">
-                <span className='label'>작성자: {post.author}</span>
-                <span className='label'>{post.date}</span>
+                <span className='label'>작성자: {board.user_id}</span>
+                <span className='label'>{board.reg_date}</span>
             </div>
             {/* 본문 */}
             <div style={{padding:20, border:'1px solid #ccc'}}>
 
                 <div className="content_text">
-                    {post.content}
+                    {board.content}
                 </div>
                 {/* 첨부파일 */}
-                {post.attachments.length > 0 && (
-                    <div className="flex column gap_10">
-                    <img src="/id1.png" alt="" style={{width:300,margin:'0 auto'}}/>
+                {files && files?.length > 0 && (
+                    <div className="flex gap_10">
+                        {files.map((file, idx) => (
+                            <img key={file.file_idx} src={`http://localhost/bbsImg/${file.file_idx}`} alt="" style={{width:300,margin:'0 auto'}}/>
+                        ))
+                        }
                     </div>
                 )}
             </div>
@@ -60,15 +113,22 @@ const post = {
             </div>
             {/* 버튼 */}
             <div className="flex justify-end gap_10">
-                <button className="btn label white_color">
-                목록
-                </button>
-                <button className="btn label white_color">
-                수정
-                </button>
-                <button className="btn label white_color">
-                삭제
-                </button>
+                <Link href={getLink()}>
+                    <button className="btn label white_color">
+                        목록
+                    </button>
+                </Link>
+                {sessionStorage.getItem('user_id') === board.user_id ?
+                    <>
+                    <button className="btn label white_color" onClick={updateBoard}>
+                        수정
+                    </button>
+                    <button className="btn label white_color" onClick={delBoard}>
+                    삭제
+                    </button>
+                    </>
+                : ''
+                }
             </div>
             </div>
         </div>

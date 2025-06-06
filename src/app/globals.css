@@ -344,6 +344,10 @@ table {
   justify-content: end;
 }
 
+.justify_con_between{
+    justify-content: space-between;
+}
+
 .justify_con_space_between{
     justify-content: space-between;
 }
