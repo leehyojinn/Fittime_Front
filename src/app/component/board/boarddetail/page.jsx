@@ -5,6 +5,7 @@ import React, {useEffect, useState} from 'react';
 import {useRouter, useSearchParams} from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
+import { useAuthStore } from '@/app/zustand/store';
 
 export default function BoardDetail() {
 
@@ -20,6 +21,13 @@ export default function BoardDetail() {
     const [replyState, setReplyState] = useState(false);
     const [commentIdx, setCommentIdx] = useState(null);
     const [replys, setReplys] = useState([]);
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
+    
 
     useEffect(() => {
         getBoardDetail();
@@ -159,26 +167,6 @@ export default function BoardDetail() {
             getReplys();
         }
     }
-
-  // 예시 데이터 (실제 사용시 props나 fetch로 대체)
-const post = {
-    title: '상세페이지 제목',
-    author: '홍길동',
-    date: '2025-05-14',
-    views: 123,
-    content: `이곳은 게시판 글 상세 내용입니다.`,
-    attachments: [
-        {
-            name: '첨부파일.pdf',
-            url: '#'
-        }, {
-            name: '이미지.png',
-            url: '#'
-        }
-    ]
-};
-
-
 
     return (
     <div>

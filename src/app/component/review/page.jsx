@@ -6,7 +6,7 @@ import Footer from "@/app/Footer";
 import {useRouter, useSearchParams} from "next/navigation";
 import axios from "axios";
 import KakaoMap from '../map/kakaomap';
-import {useAlertModalStore} from '@/app/zustand/store';
+import {useAlertModalStore, useAuthStore} from '@/app/zustand/store';
 import Link from "next/link";
 
 const ReviewPage = () => {
@@ -42,6 +42,13 @@ const ReviewPage = () => {
     const [centerInfo, setCenterInfo] = useState({});
 
     const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
+
 
     const handleMoveReservation =()=>{
         if(target === trainerId) {

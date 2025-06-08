@@ -7,6 +7,7 @@ import BoardWrite from './boardwrite/page'
 import Link from 'next/link'
 import axios from "axios";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store'
 
 export default function Event() {
 
@@ -17,6 +18,13 @@ export default function Event() {
     const [filter, setFilter] = useState(false);
     const [myTotalPage, setMyTotalPage] = useState(1);
     const router = useRouter();
+    
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
+    
 
     useEffect(() => {
         getboard();

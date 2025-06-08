@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import { FaStar, FaCalendarAlt, FaUser, FaEdit, FaPlus, FaTrash, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
-import {usePasswordStore} from "@/app/zustand/store";
+import {useAuthStore, usePasswordStore} from "@/app/zustand/store";
 import axios from "axios";
 import FindModal from "@/app/FindModal";
 import findModal from "@/app/FindModal";
@@ -69,6 +69,12 @@ const CenterMyPage = () => {
   const [reviews, setReviews] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [TrainerModalOpen, setTrainerModalOpen] = useState(false);
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { minLevel: 3 });
+    }, [checkAuthAndAlert, router]);
 
     // 대표이미지 변경
     const handleMainImageChange = e => {

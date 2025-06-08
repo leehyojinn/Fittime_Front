@@ -7,6 +7,7 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store';
 
 const NameSearch = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +16,12 @@ const NameSearch = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [page,setPage] = useState(1);
     const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
 
     const handleMoveTrainer = (id) =>{
         router.push(`/component/trainerdetail?trainer_id=${id}`);

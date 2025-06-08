@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { FaMapMarkerAlt, FaClock, FaCheckCircle, FaStar } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import { differenceInCalendarDays, isWithinInterval, parseISO } from 'date-fns';
+import { useAuthStore } from '@/app/zustand/store';
 
 const weekMap = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
 
@@ -76,6 +77,14 @@ const Reservation = () => {
   const [myProductLoading, setMyProductLoading] = useState(true);
 
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+      checkAuthAndAlert(router, null, { noGuest: true });
+  }, [checkAuthAndAlert, router]);
 
   // 센터 정보 불러오기
   useEffect(() => {
@@ -396,7 +405,7 @@ const Reservation = () => {
         {filteredProducts.length > 0 ? (
           <div className="product-list">
             {myProducts
-              .filter(prod => prod.count > 0 && prod.rest_period > 0 && prod.status === '결제')
+              .filter(prod => prod.count > 0 || prod.rest_period > 0 && prod.status === '결제')
               .map(product => (
                 <div
                   key={product.buy_idx}
@@ -405,7 +414,8 @@ const Reservation = () => {
                 >
                   <h4>{product.product_name}</h4>
                   <div className='flex column gap_10'>
-                    <p style={{fontSize:'1.3rem'}}>남은횟수: {product.count}, 남은기간: {product.rest_period}일</p>
+                    {product.count == null || product.count == undefined ? "" :  <p style={{fontSize:'1.3rem'}}>남은횟수: {product.count}</p>}
+                    {product.rest_period == null || product.rest_period == undefined ? "" :  <p style={{fontSize:'1.3rem'}}>남은기간: {product.rest_period}일</p>}
                     <p style={{fontSize:'1.3rem'}}>구매일: {product.reg_date?.split('T')[0]}</p>
                     <p style={{fontSize:'1.3rem'}}>결제수단: {product.payment_method}</p>
                   </div>

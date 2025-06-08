@@ -5,6 +5,7 @@ import Header from '../../Header'
 import Link from 'next/link'
 import axios from "axios";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store'
 
 export default function Notice() {
 
@@ -15,6 +16,12 @@ export default function Notice() {
     const [filter, setFilter] = useState(false);
     const [myTotalPage, setMyTotalPage] = useState(1);
     const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
 
     useEffect(() => {
         getboard();

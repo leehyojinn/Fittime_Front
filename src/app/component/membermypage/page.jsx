@@ -5,7 +5,7 @@ import { FaStar, FaCalendarAlt, FaTicketAlt, FaCoins, FaEdit, FaCamera } from 'r
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
-import {usePasswordStore} from "@/app/zustand/store";
+import {useAuthStore, usePasswordStore} from "@/app/zustand/store";
 import {useRouter} from "next/navigation";
 
 const mockUser = {
@@ -57,6 +57,12 @@ const MemberMyPage = () => {
   const [reservations, setReservations] = useState([]);
   const [reviews, setReviews] = useState([]);
   const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+    checkAuthAndAlert(router, null, { minLevel: 0 });
+  }, [checkAuthAndAlert, router]);
 
   // 프로필 이미지 변경 핸들러
   const handleImageChange = (e) => {

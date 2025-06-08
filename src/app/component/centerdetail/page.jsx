@@ -8,6 +8,7 @@ import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
 import axios from 'axios';
 import {useRouter, useSearchParams} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store';
 
 const centerSample = {
   center_idx: 1,
@@ -35,11 +36,16 @@ const CenterDetail = () => {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
 
-
   const searchParams = useSearchParams();
   const center_id = searchParams.get('center_id');
 
   const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+    checkAuthAndAlert(router, null, { noGuest: true });
+  }, [checkAuthAndAlert, router]);
 
   const handleMoveReservation =()=>{
       router.push(`/component/reservation?center_id=${centerInfo.center_id}&center_idx=${centerInfo.center_idx}`);

@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
 import BlackList from "@/app/BlackList";
+import { useRouter } from 'next/navigation';
 
 const BlacklistManagement = () => {
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
@@ -18,8 +19,15 @@ const BlacklistManagement = () => {
   const [loading, setLoading] = useState(false);
   const [openComplaint, setOpenComplaint] = useState(false);
   const [openBlackList, setOpenBlackList] = useState(false);
+  
 
   const {openModal} = useAlertModalStore();
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  checkAuthAndAlert(router, null, { minLevel: 3 });
 
   const getComplaints = async () => {
     try {

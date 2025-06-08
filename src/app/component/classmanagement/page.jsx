@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
+import { useRouter } from 'next/navigation';
 
 const ClassManagement = () => {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm();
@@ -19,6 +20,14 @@ const ClassManagement = () => {
   // user_id, exercise_level 안전하게 useEffect에서 읽기
   const [userId, setUserId] = useState('');
   const [exerciseLevel, setExerciseLevel] = useState('');
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+    checkAuthAndAlert(router, null, { minLevel: 3 });
+  }, [checkAuthAndAlert, router]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

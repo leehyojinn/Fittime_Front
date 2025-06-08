@@ -7,6 +7,7 @@ import {useRouter, useSearchParams} from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import {FaCamera} from "react-icons/fa";
+import { useAuthStore } from '@/app/zustand/store';
 
 export default function BoardWrite() {
   const [title, setTitle] = useState('');
@@ -18,6 +19,12 @@ export default function BoardWrite() {
   const category = searchParams.get('category');
   const board_idx = searchParams.get('board_idx');
   const router = useRouter();
+  
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
 
     useEffect(() => {
         if(board_idx != null){

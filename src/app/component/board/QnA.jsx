@@ -4,6 +4,7 @@ import Footer from '../../Footer'
 import Link from 'next/link'
 import axios from "axios";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store';
 
 export default function QnA() {
 
@@ -14,6 +15,13 @@ export default function QnA() {
     const [myTotalPage, setMyTotalPage] = useState(1);
     const [filter, setFilter] = useState(false);
     const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
+
 
     useEffect(() => {
         getboard();

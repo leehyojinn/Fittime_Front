@@ -12,10 +12,11 @@ import getDay from 'date-fns/getDay';
 import addDays from 'date-fns/addDays';
 import ko from 'date-fns/locale/ko';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
 import CustomToolbar from './CustomToolbar';
 import * as endDate from "date-fns";
+import { useRouter } from 'next/navigation';
 
 const locales = {
   'ko': ko,
@@ -31,6 +32,7 @@ const localizer = dateFnsLocalizer({
 const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
 export default function MyCalendar() {
+  
   const [events, setEvents] = useState([]);
   const [inputInfo, setInputInfo] = useState({ open: false, start: null, end: null, x: 0, y: 0 });
   const [form, setForm] = useState({
@@ -45,6 +47,14 @@ export default function MyCalendar() {
   const [editForm, setEditForm] = useState(null);
   const [view, setView] = useState('month');
   const [userName, setUserName] = useState('');
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+    checkAuthAndAlert(router, null, { noGuest: true });
+  }, [checkAuthAndAlert, router]);
 
   // 에러 상태
   const [errors, setErrors] = useState({});
@@ -189,7 +199,6 @@ export default function MyCalendar() {
   
       setEvents(combinedEvents);
     } catch (err) {
-      console.log(err);
       openModal({
         svg: '❗',
         msg1: '오류',

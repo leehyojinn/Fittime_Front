@@ -8,6 +8,7 @@ import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
 import {useRouter, useSearchParams} from "next/navigation";
 import axios from "axios";
+import { useAuthStore } from '@/app/zustand/store';
 
 const trainerSample = {
   user_id: 'trainer1',
@@ -41,6 +42,12 @@ const TrainerDetail = () => {
 
   const searchParams = useSearchParams();
   const trainer_id = searchParams.get('trainer_id');
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
 
   const getTrainerInfo = async() =>{
       const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainer_id,"user_level":'2'});

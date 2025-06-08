@@ -4,10 +4,11 @@ import React, {useEffect, useRef, useState} from 'react';
 import 'chartjs-adapter-date-fns';
 import Footer from '../../Footer';
 import Header from '../../Header';
-import {useAlertModalStore, useDashboardStore} from "@/app/zustand/store";
+import {useAlertModalStore, useAuthStore, useDashboardStore} from "@/app/zustand/store";
 import {CircularProgress, Box, Typography} from "@mui/material";
 import {Chart, registerables} from "chart.js";
 import '../../globals.css';
+import { useRouter } from 'next/navigation';
 
 Chart.register(...registerables); // Chart.js 등록
 
@@ -27,6 +28,14 @@ const Dashboard = () => {
     const ratingChartRef = useRef(null);
 
     const [isClient, setIsClient] = useState(false);
+
+    const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { minLevel: 3 });
+    }, [checkAuthAndAlert, router]);
 
     useEffect(() => {
         setIsClient(true);

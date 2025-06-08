@@ -6,7 +6,8 @@ import Image from 'next/image';
 import axios from 'axios';
 import Header from '../../Header';
 import Footer from '../../Footer';
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store';
 
 const ComplaintForm = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -19,6 +20,14 @@ const ComplaintForm = () => {
   const review_idx = searchParams.get('review_idx');
   const report_id = searchParams.get('report_id');
   const target_id = searchParams.get('target_id');
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+    checkAuthAndAlert(router, null, { minLevel: 3 });
+  }, [checkAuthAndAlert, router]);
 
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
