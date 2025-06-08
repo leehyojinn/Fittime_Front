@@ -98,13 +98,16 @@ const Reservation = () => {
   }, []);
 
   useEffect(() => {
-    if (!user_id) return;
+    if (!user_id || !initialCenterId) return;
     setMyProductLoading(true);
-    axios.post(`http://localhost/reservation/myproudct_list/${user_id}`)
+    axios.post('http://localhost/reservation/myproduct_list', {
+        user_id : user_id,
+        center_id : initialCenterId
+      })
       .then(res => setMyProducts(res.data.list || []))
       .catch(() => setMyProducts([]))
       .finally(() => setMyProductLoading(false));
-  }, [user_id]);
+  }, [user_id, initialCenterId]);
 
   // 센터/트레이너 자동 선택
   useEffect(() => {
