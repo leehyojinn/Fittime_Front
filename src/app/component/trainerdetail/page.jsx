@@ -8,6 +8,7 @@ import Link from 'next/link';
 import KakaoMap from '../map/kakaomap';
 import {useRouter, useSearchParams} from "next/navigation";
 import axios from "axios";
+import { useAuthStore } from '@/app/zustand/store';
 
 const trainerSample = {
   user_id: 'trainer1',
@@ -42,6 +43,12 @@ const TrainerDetail = () => {
   const searchParams = useSearchParams();
   const trainer_id = searchParams.get('trainer_id');
 
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
+
   const getTrainerInfo = async() =>{
       const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainer_id,"user_level":'2'});
       console.log(data);
@@ -61,6 +68,9 @@ const TrainerDetail = () => {
       router.push(`/component/reservation?trainer_id=${trainer_id}&trainer_idx=${trainerInfo.trainer_idx}&center_id=${trainerInfo.center_id}&center_idx=${trainerInfo.center_idx}`);
     }
 
+  const handleMoveComplaint = (r) => {
+      router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${sessionStorage.getItem('user_id')}`);
+  }
 
     // 리뷰 목록 가져오기
 
@@ -263,6 +273,12 @@ const TrainerDetail = () => {
                                                 )
                                             }
                                         </div>
+                                        {sessionStorage.user_level >= 2 && <div style={{display:'flex',justifyContent:'flex-end'}}>
+                                            <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
+                                                <span class="material-symbols-outlined">warning</span>
+                                                <span className='material-symbols-outlined-text'>신고하기</span>
+                                            </button>
+                                        </div>}
                                     </li>
                                 ))
                             }

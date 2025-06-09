@@ -19,6 +19,14 @@ const TagManagement = () => {
 
   const {openModal} = useAlertModalStore();
 
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+      checkAuthAndAlert(router, null, { minLevel: 4 });
+  }, [checkAuthAndAlert, router]);
+
   // 태그 목록 불러오기
   const fetchTags = async (category = selectedCategory) => {
     setLoading(true);

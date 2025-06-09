@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import { FaStar, FaCalendarAlt, FaUser, FaEdit, FaPlus, FaTrash, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
-import {usePasswordStore} from "@/app/zustand/store";
+import {useAuthStore, usePasswordStore} from "@/app/zustand/store";
 import axios from "axios";
 import FindModal from "@/app/FindModal";
 import findModal from "@/app/FindModal";
@@ -69,6 +69,12 @@ const CenterMyPage = () => {
   const [reviews, setReviews] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [TrainerModalOpen, setTrainerModalOpen] = useState(false);
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { minLevel: 3 });
+    }, [checkAuthAndAlert, router]);
 
     // 대표이미지 변경
     const handleMainImageChange = e => {
@@ -415,7 +421,7 @@ const CenterMyPage = () => {
                         <td>
                         <button className="mypage-small-btn mr_10" onClick={handleMoveProduct}><FaEdit />수정</button>
                         {p.status === "1" ?
-                            <button className="mypage-small-btn" style={{background:'#4444', color: 'black'}} onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />비활성화</button>
+                            <button className="centermypage-product-btn" style={{background:'#4444', color: 'black'}} onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />비활성화</button>
                         :
                             <button className="mypage-small-btn" onClick={()=>handleProductStaus(p.product_idx)}><FaTrash />활성화</button>
                         }

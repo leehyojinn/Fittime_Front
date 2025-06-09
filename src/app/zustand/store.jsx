@@ -90,3 +90,102 @@ export const useDashboardStore = create((set) => ({
         }
     },
 }));
+
+
+const levelMessages = {
+  0: "블랙리스트 입니다. 접근이 제한됩니다.",
+  1: "일반 회원 권한입니다.",
+  2: "트레이너 권한입니다.",
+  3: "센터 관리자 권한입니다.",
+  4: "최고 관리자 권한입니다.",
+};
+
+export const useAuthStore = create((set, get) => ({
+  // 인증 및 권한 체크
+  isAuthenticated: (options = {}) => {
+    const user_id = sessionStorage.getItem("user_id");
+    const token = sessionStorage.getItem("token");
+    const user_level = Number(sessionStorage.getItem("user_level"));
+    if (!user_id || !token) return false;
+
+    // 게스트(0)만 차단, 일반회원(1) 이상 허용
+    if (options.noGuest && user_level === 0) return false;
+
+    // 특정 레벨만 허용 (기존 방식)
+    if (options.requiredLevel !== undefined && user_level !== options.requiredLevel) return false;
+
+    // 특정 레벨 이상 허용
+    if (options.minLevel !== undefined && user_level < options.minLevel) return false;
+
+    return true;
+  },
+
+  // 인증 및 권한 체크 + AlertModal + 리다이렉트
+  checkAuthAndAlert: (router, customMsg, options = {}) => {
+    const user_id = sessionStorage.getItem("user_id");
+    const token = sessionStorage.getItem("token");
+    const user_level = Number(sessionStorage.getItem("user_level"));
+
+    // 인증 체크
+    if (!user_id || !token) {
+      useAlertModalStore.getState().openModal({
+        svg: "❗",
+        msg1: "로그인 필요",
+        msg2: customMsg || "로그인 정보가 없습니다.\n다시 로그인 해주세요.",
+        showCancel: false,
+        onConfirm: () => {
+          router.replace("/component/login");
+        },
+      });
+      return false;
+    }
+
+    // 게스트(0)만 차단
+    if (options.noGuest && user_level === 0) {
+      useAlertModalStore.getState().openModal({
+        svg: "⛔",
+        msg1: "권한 부족",
+        msg2: levelMessages[user_level] || "블랙리스트는 접근할 수 없습니다.",
+        showCancel: false,
+        onConfirm: () => {
+          router.replace("/");
+        },
+      });
+      return false;
+    }
+
+    // 특정 레벨만 허용
+    if (options.requiredLevel !== undefined && user_level !== options.requiredLevel) {
+      useAlertModalStore.getState().openModal({
+        svg: "⛔",
+        msg1: "권한 부족",
+        msg2: levelMessages[user_level] || "해당 페이지에 접근할 권한이 없습니다.",
+        showCancel: false,
+        onConfirm: () => {
+          router.replace("/");
+        },
+      });
+      return false;
+    }
+
+    // 특정 레벨 이상 허용
+    if (options.minLevel !== undefined && user_level < options.minLevel) {
+      useAlertModalStore.getState().openModal({
+        svg: "⛔",
+        msg1: "권한 부족",
+        msg2: levelMessages[user_level] || "해당 페이지에 접근할 권한이 없습니다.",
+        showCancel: false,
+        onConfirm: () => {
+          router.replace("/");
+        },
+      });
+      return false;
+    }
+
+    return true;
+  },
+
+  getUserLevel: () => {
+    return Number(sessionStorage.getItem("user_level"));
+  },
+}));

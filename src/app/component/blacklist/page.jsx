@@ -5,8 +5,10 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
+import BlackList from "@/app/BlackList";
+import { useRouter } from 'next/navigation';
 
 const BlacklistManagement = () => {
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
@@ -15,12 +17,22 @@ const BlacklistManagement = () => {
   const [filteredStatus, setFilteredStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [openComplaint, setOpenComplaint] = useState(false);
+  const [openBlackList, setOpenBlackList] = useState(false);
+  
 
   const {openModal} = useAlertModalStore();
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  checkAuthAndAlert(router, null, { minLevel: 3 });
 
   const getComplaints = async () => {
     try {
       const { data } = await axios.post('http://localhost/blacklist_list');
+      console.log(data);
       // 콘솔로 실제 응답 구조 확인
       // 배열만 반환되면
       if (Array.isArray(data)) setComplaints(data);
@@ -41,6 +53,7 @@ const BlacklistManagement = () => {
 
   // 상세보기 클릭시 상세 정보 세팅
   const handleViewDetails = (complaint) => {
+    setOpenComplaint(true);
     setSelectedComplaint(complaint);
     // 폼에 현재 상태/처리내용 세팅
     setValue('status', complaint.status || '미확인');
@@ -54,9 +67,10 @@ const BlacklistManagement = () => {
     try {
       // 상태/처리내용 업데이트
       const res = await axios.post(
-        `http://localhost/blacklist_status/${selectedComplaint.report_id}`,
-        { status: data.status, process_history: data.process_history }
+        `http://localhost/blacklist_status/${selectedComplaint.report_idx}`,
+        { status: data.status, process_history: data.process_history, admin_id: sessionStorage.getItem('user_id') }
       );
+      console.log(data.process_history);
       if (res.data && res.data.success) {
         openModal({
           svg: '✔',
@@ -107,7 +121,7 @@ const BlacklistManagement = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `http://localhost/blacklist_level/${selectedComplaint.report_id}`
+        `http://localhost/blacklist_level/${selectedComplaint.report_id}`,{report_idx:selectedComplaint.report_idx}
       );
       if (res.data && res.data.success) {
         openModal({
@@ -147,6 +161,11 @@ const BlacklistManagement = () => {
     if (isNaN(date)) return '-';
     return `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
   };
+
+  // blackList 닫기
+  const CloseBlackList = () =>{
+    setOpenBlackList(false);
+  }
 
   return (
     <div>
@@ -197,14 +216,14 @@ const BlacklistManagement = () => {
               <tbody>
                 {complaints
                   .filter(c => filteredStatus === 'all' || c.status === filteredStatus)
-                  .filter(c => c.report_id?.includes(searchTerm) || c.admin_id?.includes(searchTerm))
+                  .filter(c => c.report_id?.includes(searchTerm) || c.target_id?.includes(searchTerm))
                   .map((complaint) => (
                   <tr key={complaint.report_idx}>
                     <td className='label font_weight_400'>{complaint.report_idx}</td>
+                    <td className='label font_weight_400'>{complaint.target_id}</td>
                     <td className='label font_weight_400'>{complaint.report_id}</td>
-                    <td className='label font_weight_400'>{complaint.admin_id}</td>
                     <td className='label font_weight_400'>
-                      <span className={`status ${complaint.status}`}>
+                      <span className={`status ${complaint.status}`} style={{fontSize:'13px'}}>
                         {complaint.status}
                       </span>
                     </td>
@@ -218,13 +237,13 @@ const BlacklistManagement = () => {
               </tbody>
             </table>
           </div>
-          {selectedComplaint && (
+          {openComplaint && selectedComplaint && (
             <div className="complaint-details" style={{ marginTop: 32, border: '1px solid #eee', borderRadius: 8, padding: 20 }}>
               <h3 className='middle_title2'>신고 상세</h3>
               <div className="details-container">
                 <div className="detail-item"><label className='label'>신고번호 : </label> <span className='label text_left'>{selectedComplaint.report_idx}</span></div>
-                <div className="detail-item"><label className='label'>신고대상:</label> <span className='label text_left'>{selectedComplaint.report_id}</span></div>
-                <div className="detail-item"><label className='label'>신고자:</label> <span className='label text_left'>{selectedComplaint.admin_id}</span></div>
+                <div className="detail-item"><label className='label'>신고대상:</label> <span className='label text_left'>{selectedComplaint.target_id}</span></div>
+                <div className="detail-item"><label className='label'>신고자:</label> <span className='label text_left'>{selectedComplaint.report_id}</span></div>
                 <div className="detail-item"><label className='label'>신고내용:</label> <p className='label text_left'>{selectedComplaint.report_text}</p></div>
                 <div className="detail-item"><label className='label'>접수일시:</label> <span className='label text_left'>{formatDate(selectedComplaint.submitted_at || selectedComplaint.reg_date)}</span></div>
                 {/* 이미지 노출 */}
@@ -241,7 +260,16 @@ const BlacklistManagement = () => {
                     ))}
                   </div>
                 )}
+
                 <form onSubmit={handleSubmit(handleProcessComplaint)}>
+                  <div className="detail-item" style={{fontSize:'15px', fontWeight:'bold',display:'block'}}>처리 history</div>
+                  <div className="detail-item">
+                    <textarea
+                      {...register("process_history")}
+                      defaultValue={selectedComplaint?.process_history || ''}
+                      style={{lineHeight:1.3}}>
+                    </textarea>
+                  </div>
                   <div className="form-group">
                     <label htmlFor="status" className='middle_title2 mb_20'>처리 상태</label>
                     <select 
@@ -269,12 +297,21 @@ const BlacklistManagement = () => {
                   </div>
                 </form>
               </div>
+              <div style={{display:'flex',justifyContent:'flex-end'}}>
+                <button className="btn label white_color" onClick={()=>setOpenComplaint(false)}>
+                  닫기
+                </button>
+              </div>
             </div>
           )}
+          <div style={{display:'flex',justifyContent:'flex-end', marginTop:'10px'}}>
+            <button className="btn label white_color" onClick={()=>setOpenBlackList(true)}>블랙리스트</button>
+          </div>
         </div>
       </div>
       <Footer/>
       <AlertModal/>
+      <BlackList open={openBlackList} onClose={CloseBlackList}/>
     </div>
   );
 };

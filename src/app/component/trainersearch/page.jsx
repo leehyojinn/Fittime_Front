@@ -7,6 +7,7 @@ import Footer from '../../Footer';
 import Header from '../../Header';
 import axios from "axios";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store';
 
 const TrainerSearch = () => {
   // 상태 관리
@@ -26,6 +27,12 @@ const TrainerSearch = () => {
   const [neighborhoodOptions, setNeighborhoodOptions] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+      checkAuthAndAlert(router, null, { noGuest: true });
+  }, [checkAuthAndAlert, router]);
 
     const handleMoveTrainer = (id) =>{
         router.push(`/component/trainerdetail?trainer_id=${id}`)

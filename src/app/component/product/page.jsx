@@ -6,13 +6,22 @@ import Footer from '../../Footer';
 import Header from '../../Header';
 import axios from 'axios';
 import AlertModal from '../alertmodal/page';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
+import { useRouter } from 'next/navigation';
 
 const ProductManagement = () => {
   const [exerciseLevel, setExerciseLevel] = useState('');
   const [isReady, setIsReady] = useState(false);
 
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+      checkAuthAndAlert(router, null, { minLevel: 3 });
+  }, [checkAuthAndAlert, router]);
 
   const { register, handleSubmit, formState: { errors }, reset, setFocus, watch } = useForm({
     defaultValues: {

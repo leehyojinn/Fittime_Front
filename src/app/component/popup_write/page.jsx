@@ -5,7 +5,8 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
 import AlertModal from '../alertmodal/page';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
+import { useRouter } from 'next/navigation';
 
 // 필수값 목록 및 라벨
 const REQUIRED_FIELDS = [
@@ -148,6 +149,14 @@ export default function PopupTable() {
   const [editingPopup, setEditingPopup] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+  useEffect(() => {
+      checkAuthAndAlert(router, null, { minLevel: 4 });
+  }, [checkAuthAndAlert, router]);
 
   // 필수값 에러 상태
   const [errors, setErrors] = useState({});

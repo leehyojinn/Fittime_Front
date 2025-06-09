@@ -128,7 +128,8 @@ export default function Introduce() {
                             <img
                                 src={selectedMember.image}
                                 alt={selectedMember.name}
-                                className="modal-image"/>
+                                className="modal-image width_fit"
+                            />
                             <h2 className='middle_title'>{selectedMember.name}</h2>
                             <h3 className='label'>{selectedMember.position}</h3>
                             <div className="detail-box">

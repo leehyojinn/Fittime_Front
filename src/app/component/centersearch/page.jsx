@@ -7,6 +7,7 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from "axios";
 import {useRouter} from "next/navigation";
+import { useAuthStore } from '@/app/zustand/store';
 
 const CenterSearch = () => {
   // 상태 관리
@@ -30,6 +31,12 @@ const CenterSearch = () => {
     const handleMoveCenter = (id) =>{
         router.push(`/component/centerdetail?center_id=${id}`)
     }
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { noGuest: true });
+    }, [checkAuthAndAlert, router]);
 
     useEffect(() => {
         getCity();

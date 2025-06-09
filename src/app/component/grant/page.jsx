@@ -6,7 +6,8 @@ import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
 import AlertModal from '../alertmodal/page';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
+import { useRouter } from 'next/navigation';
 
 const Grant = () => {
   const { register, formState: { errors }, reset } = useForm();
@@ -17,6 +18,14 @@ const Grant = () => {
   const [processingUserId, setProcessingUserId] = useState(null);
 
   const openModal = useAlertModalStore((state) => state.openModal);
+
+  const router = useRouter();
+
+  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { minLevel: 4 });
+    }, [checkAuthAndAlert, router]);
 
   // 권한명 매핑
   const LEVEL_LABELS = ['블랙리스트', '일반 회원', '트레이너', '센터 관리자', '사이트 관리자'];

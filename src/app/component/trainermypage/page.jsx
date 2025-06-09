@@ -4,9 +4,10 @@ import React, {useEffect, useState} from 'react';
 import { FaStar, FaCalendarAlt, FaUser, FaEdit, FaCamera, FaPlus } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
-import {usePasswordStore} from "@/app/zustand/store";
+import {useAuthStore, usePasswordStore} from "@/app/zustand/store";
 import axios from "axios";
 import TagModal from "@/app/TagModal";
+import { useRouter } from 'next/navigation';
 
 const trainerSample = {
     user_id: 'trainer1',
@@ -50,6 +51,14 @@ const TrainerMyPage = () => {
     const [reviews, setReviews] = useState([]);
     const [schedules, setSchedules] = useState([]);
     const [tagModalOpen, setTagModalOpen] = useState(false);
+
+    const router = useRouter();
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    useEffect(() => {
+        checkAuthAndAlert(router, null, { minLevel: 2 });
+    }, [checkAuthAndAlert, router]);
 
     const handleMainImageChange = e => {
         if (e.target.files[0]) {
