@@ -110,9 +110,11 @@ const Header = () => {
               {userLevel == 3 ? <Link href="/component/centermypage">
                 <p className='content_text white_color'>마이페이지</p>
               </Link> : ''}
-              {userLevel >= 4 ? <Link href="/component/membermypage">
-                <p className='content_text white_color'>마이페이지</p>
-              </Link> : ''}
+              {userLevel >= 4 ?
+              //     <Link href="/component/membermypage">
+              //   <p className='content_text white_color'>마이페이지</p>
+              // </Link>
+                 '' : ''}
 
             </>
           ) : (
