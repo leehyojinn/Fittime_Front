@@ -18,7 +18,7 @@ const Sidebar = () => {
     ];
     const centerLinks = [
         { label: '상품 등록', href: '/component/product'},
-        { label: '신고하기', href: '/component/complaint'},
+        // { label: '신고하기', href: '/component/complaint'},
         { label: '클래스 등록', href: '/component/classmanagement'},
         { label: '통계', href: '/component/dashboard'}
     ];

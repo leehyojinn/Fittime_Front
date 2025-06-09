@@ -116,8 +116,8 @@ export default function BoardDetail() {
     const changeUpdateComment = (comment) => {
         setReplyState(() => {
             setUpdate_idx(prev => {
-                setText(prev === comment.idx ? '' : comment.content);
-                return (prev === comment.idx ? null : comment.idx);
+                setText(prev === comment.comment_idx ? '' : comment.content);
+                return (prev === comment.comment_idx ? null : comment.comment_idx);
             });
             return false;
         })

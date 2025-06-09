@@ -445,7 +445,7 @@ const CenterMyPage = () => {
                         <td>{r.user_phone}</td>
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
-                        <td>{r.start_time}~{r.end_time}</td>
+                        <td>{r.start_time.substring(0,5)} ~ {r.end_time.substring(0,5)}</td>
                         <td>{r.trainer_name}</td>
                         <td>{r.status}</td>
                     </tr>
