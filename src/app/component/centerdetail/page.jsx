@@ -57,7 +57,6 @@ const CenterDetail = () => {
 
   const getCenterInfo = async() =>{
       const {data} = await axios.post('http://localhost/detail/profile',{"center_id":center_id,"user_level":'3'});
-      console.log(data);
       setCenterInfo(data);
   }
 
@@ -171,7 +170,7 @@ const CenterDetail = () => {
                             {
                                 showMap && (
                                     <div>
-                                        <KakaoMap address={centerInfo.center_address}/>
+                                        <KakaoMap address={`${centerInfo.address}`}/>
                                     </div>
                                 )
                             }
