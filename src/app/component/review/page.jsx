@@ -132,6 +132,8 @@ const ReviewPage = () => {
         setFiles(newFiles);
     };
 
+    console.log(centerInfo);
+
     // 리뷰 등록
     const handleReviewSubmit = async(e) => {
         e.preventDefault();
@@ -489,7 +491,7 @@ const ReviewPage = () => {
                             {
                                 showMap && (
                                     <div>
-                                        <KakaoMap address={trainerInfo.center_address}/>
+                                        <KakaoMap address={centerInfo.address}/>
                                     </div>
                                 )
                             }
