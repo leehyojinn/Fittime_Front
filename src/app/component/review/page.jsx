@@ -172,47 +172,58 @@ const ReviewPage = () => {
                 2
             )
             : '-';
-    const insertReview = async () => {
-        const formData = new FormData();
-        if (files.length > 0) {
-            files.forEach(file => {
-                formData.append('files', file);
-            });
-        }
-        formData.append("user_id", sessionStorage.getItem('user_id'));
-        formData.append("rating", star);
-        formData.append("content", reviewText);
-        formData.append("target_id", (
-            reviewTarget === 'trainer'
-                ? trainerId
-                : centerId
-        ));
-        formData.append("target", reviewTarget);
-        formData.append("reservation_idx", reservationIdx);
-
-        console.log('reviewTarget:', reviewTarget);
-        console.log('trainerId:', trainerId);
-        console.log('centerId:', centerId);
-
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ':', pair[1]);
-        }
-        const {data} = await axios.post('http://localhost/insert/review', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-
-        console.log('서버 응답 전체:', data);
-
-        if (data.success) {
-            setReviewText('');
-            setStar(0);
-            setFiles([]);
-            setPage(1);
-            fetchReviews();
-        }
-    }
+            const insertReview = async () => {
+                const formData = new FormData();
+                if (files.length > 0) {
+                    files.forEach(file => {
+                        formData.append('files', file);
+                    });
+                }
+                formData.append("user_id", sessionStorage.getItem('user_id'));
+                formData.append("rating", star);
+                formData.append("content", reviewText);
+                formData.append("target_id", (
+                    reviewTarget === 'trainer'
+                        ? trainerId
+                        : centerId
+                ));
+                formData.append("target", reviewTarget);
+                formData.append("reservation_idx", reservationIdx);
+            
+                try {
+                    const { data } = await axios.post('http://localhost/insert/review', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+            
+                    console.log('서버 응답 전체:', data);
+            
+                    if (data.success) {
+                        setReviewText('');
+                        setStar(0);
+                        setFiles([]);
+                        setPage(1);
+                        fetchReviews();
+                    } else {
+                        openModal({
+                            svg: '⚠️',
+                            msg1: '리뷰는 중복으로 작성 할 수 없습니다.',
+                            msg2: '마이페이지에서 리뷰 수정 또는 삭제를 시도하여 주십시오.',
+                            showCancel: false
+                        });
+                    }
+                } catch (error) {
+                    console.error('리뷰 등록 오류:', error);
+        
+                    openModal({
+                        svg: '⚠️',
+                        msg1: '리뷰 등록 중 오류가 발생했습니다.',
+                        showCancel: false
+                    });
+                }
+            };
+            
 
      const updateReview = async() => {
          const formData = new FormData();
@@ -240,7 +251,6 @@ const ReviewPage = () => {
              setReviewText('');
              setStar(0);
              setFiles([]);
-             setPage(1); 
              fetchReviews();
          }
      }
