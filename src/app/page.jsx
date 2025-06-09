@@ -9,6 +9,8 @@ import KakaoMap from './component/map/kakaomap';
 import {FaStar} from 'react-icons/fa';
 import axios from 'axios';
 import {useRouter} from 'next/navigation';
+import { useAlertModalStore } from './zustand/store';
+import AlertModal from './component/alertmodal/page';
 
 const BOARD_CATEGORIES = ['공지사항', '이벤트', 'QnA'];
 
@@ -26,10 +28,22 @@ const MainPage = () => {
     const [isAuthed, setIsAuthed] = useState(true);
     const router = useRouter();
 
+    const { openModal } = useAlertModalStore();
+    const user_level = typeof window !== "undefined" ? sessionStorage.getItem("user_level") : "";
+
     useEffect(() => {
         const user_id = sessionStorage.getItem('user_id');
         const token = sessionStorage.getItem('token');
         setIsAuthed(!!user_id && !!token);
+        if(user_level == 0){
+            openModal({
+                svg: '❗',
+                msg1: '블랙리스트',
+                msg2: '해당 아이디는 블랙리스트 입니다. \n 이의신청을 원할시 자사 메일로 이의신청이 가능합니다.',
+                showCancel: false
+            });
+            return;
+        }    
     }, []);
 
     const center_list = async () => {
@@ -410,7 +424,7 @@ const MainPage = () => {
                     </div>
                 </div>
             </div>
-
+            <AlertModal />
             <Footer/>
         </div>
     );
