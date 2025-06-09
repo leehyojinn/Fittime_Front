@@ -1438,8 +1438,9 @@ table tr.selected {
 .class-list-section {
   background-color: #fff;
   border-radius: var(--border-radius);
-  padding: 1.5rem;
+  padding: 1.2rem;
   box-shadow: var(--shadow);
+  font-size: 1.2rem;
 }
 
 .class-form-section {
@@ -3243,6 +3244,10 @@ img {
   color: inherit !important;
 }
 
+.rbc-button-link:hover{
+  color: #fff !important;
+}
+
 .rbc-row-segment :hover {
   background-color: var(--primary-color) !important;
   border: none !important;
@@ -3881,19 +3886,23 @@ img {
 .rbc-overlay {
     background-color: white;
     border: 1px solid #ccc;
+    width: 50px !important;
     border-radius: 8px;
     padding: 10px;
     max-height: 300px;
     overflow-y: auto;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 9999;
+    left: 50% !important;
+    transform: translateX(-50%);
 }
 
 /* 날짜 헤더 스타일 */
 .rbc-overlay-header {
     font-weight: bold;
     margin-bottom: 8px;
-    font-size: 1rem;
+    font-size: 1.8rem;
+    padding: 10px 0 !important;
     color: #222;
 }
 

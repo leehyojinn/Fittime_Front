@@ -287,7 +287,7 @@ const ClassManagement = () => {
               <h3 className='middle_title2 mb_20'>클래스 목록</h3>
               <table className="classes-table">
                 <thead>
-                  <tr>
+                  <tr style={{fontSize: '1.25rem'}}>
                     <th>상품명</th>
                     <th>요일</th>
                     <th>시작 시간</th>
