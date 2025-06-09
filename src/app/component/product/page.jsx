@@ -538,17 +538,17 @@ const ProductManagement = () => {
                   {errors.service_level && <span className="error-message">{errors.service_level.message}</span>}
                 </div>
                 {renderLevelSpecificFields()}
-                <div className="form-group">
-                  <label htmlFor="validity_period" className='label font_weight_500'>유효 기간 (일)</label>
-                  <input
-                    id="validity_period"
-                    type="number"
-                    {...register("validity_period", { required: "유효 기간을 입력해주세요", min: 1 })}
-                    disabled={selectedProduct && !isEditing}
-                    style={errors.validity_period ? { border: '2px solid red' } : {}}
-                  />
-                  {errors.validity_period && <span className="error-message">{errors.validity_period.message}</span>}
-                </div>
+                {/*<div className="form-group">*/}
+                {/*  <label htmlFor="validity_period" className='label font_weight_500'>유효 기간 (일)</label>*/}
+                {/*  <input*/}
+                {/*    id="validity_period"*/}
+                {/*    type="number"*/}
+                {/*    {...register("validity_period", { required: "유효 기간을 입력해주세요", min: 1 })}*/}
+                {/*    disabled={selectedProduct && !isEditing}*/}
+                {/*    style={errors.validity_period ? { border: '2px solid red' } : {}}*/}
+                {/*  />*/}
+                {/*  {errors.validity_period && <span className="error-message">{errors.validity_period.message}</span>}*/}
+                {/*</div>*/}
                 <div className="form-buttons">
                   {!selectedProduct && (
                     <button type="submit" className="btn label white_color margin_0_auto">상품 등록</button>
