@@ -21,6 +21,8 @@ export default function Event() {
     
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
+    const user_level = typeof window !== "undefined" ? sessionStorage.getItem("user_level") : "";
+
     useEffect(() => {
         checkAuthAndAlert(router, null, { noGuest: true });
     }, [checkAuthAndAlert, router]);
@@ -69,7 +71,7 @@ export default function Event() {
             <div className='wrap padding_120_0'>
                 <div className='flex justify_con_between'>
                     <div className='btn label white_color' style={{width:'auto'}} onClick={()=>setFilter((prev)=>!prev)}>{filter ? '전체 글 보기':'내 글만 보기'}</div>
-                    <div className='btn label white_color' style={{width:'auto'}} onClick={MoveBoardWrite}>글쓰기</div>
+                    {user_level > 2 ? <div className='btn label white_color' style={{width:'auto'}} onClick={MoveBoardWrite}>글쓰기</div> : ''}
                 </div>
                 <div className='mt_20'>
                     <div className='flex justify_con_space_between gap_10 board_css'>
