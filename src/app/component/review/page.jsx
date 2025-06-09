@@ -124,7 +124,7 @@ const ReviewPage = () => {
     const handleStarHover = (value) => setHoverStar(value);
     const handleStarOut = () => setHoverStar(0);
 
-    // 파일 업로드
+    // 파일 업로드  
     const handleFileChange = (e) => {
         const newFiles = Array
             .from(e.target.files)
@@ -413,10 +413,11 @@ const ReviewPage = () => {
                             <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>센터 소개</h4>
                             <p style={{fontSize:'1.45rem',marginBottom:'10px',color:'gray'}}>운영시간 : {centerInfo.operation_hours}</p>
                             <p style={{fontSize:'1.5rem'}}>{centerInfo.introduction}</p>
-
+                                        
                         </div>
                         <div>
                             <div>
+
                                 <button
                                     className='cancel-button'
                                     onClick={handleToggleMap}
@@ -468,19 +469,18 @@ const ReviewPage = () => {
                         </div>
                         <div className="trainer-center-info">
                             <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>소속 센터</h4>
-                            <div className="center-brief">
-                                <span className="center-name">{trainerInfo.center_name}</span>
-                                <span className="center-address" style={{fontSize:'1.4rem', color:''}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
-                                <span className="center-contact" style={{fontSize:'1.3rem'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <button
-                                className='cancel-button'
+                            <div className="center-brief" style={{ borderWidth: '1px', background: '#dbdbdb'}}>
+                                <span className="center-name" style={{color:'#222'}}>{trainerInfo.center_name}</span>
+                                <span className="center-address" style={{fontSize:'1.4rem', color:'#7E92BF'}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
+                                <span className="center-contact" style={{fontSize:'1.3rem', color:'#7E92BF'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
+                                <button
+                                className='review-submit-btn-n'
                                 onClick={handleToggleMap}
                                 style={{
-                                    marginBottom: '1rem'
-
+                                    marginLeft: 'auto',
+                                    marginBottom: '1rem',
+                                    padding: '1.3rem 3rem',
+                                    background: 'rgb(75 80 85)'
                                 }}>
                                 {
                                     showMap
@@ -488,6 +488,10 @@ const ReviewPage = () => {
                                         : '위치 보기'
                                 }
                             </button>
+                            </div>
+                        </div>
+                        <div>
+
                             {
                                 showMap && (
                                     <div>
@@ -531,7 +535,7 @@ const ReviewPage = () => {
                                 }}>
 
                                 <button
-                                    onClick={handReviewForm} style={{ backgroundColor: '#e4e4e5' ,fontSize:'1.5rem'}}
+                                    onClick={handReviewForm} style={{ backgroundColor: '#CED4E0' ,padding:'1rem', fontSize:'1.8rem' ,color:'#8B9DCC'}}
                                     className={`review-toggle-small-btn ${showReviewForm
                                         ? 'active'
                                         : ''}`}>
@@ -557,7 +561,7 @@ const ReviewPage = () => {
                             <div>
 
                                 {/* 리뷰 작성 인풋 */}
-                                <div className="trainer-review-write" style={{ backgroundColor: '#e4e4e5'}} >
+                                <div className="trainer-review-write" style={{ padding:'2rem 6rem 2rem 3rem', backgroundColor: '#e4e4e5'}} >
                                     <form onSubmit={handleReviewSubmit}>
                                         <div className="star-input">
                                             {
@@ -579,7 +583,8 @@ const ReviewPage = () => {
                                                             onClick={() => handleStarClick(i)}
                                                             style={{
                                                                 cursor: 'pointer',
-                                                                fontSize: '3rem'
+                                                                fontSize: '3rem',
+                                                                marginTop: '1rem'
                                                             }}/> {/* 0.5점 지원 */}
                                                         <FaStar
                                                             className="star half"
@@ -593,7 +598,8 @@ const ReviewPage = () => {
                                                                 position: 'absolute',
                                                                 left: 0,
                                                                 zIndex: 1,
-                                                                clipPath: 'inset(0 50% 0 0)'
+                                                                clipPath: 'inset(0 50% 0 0)',
+                                                                marginTop: '1rem'
                                                             }}
                                                             onMouseEnter={() => handleStarHover(i - 0.5)}
                                                             onMouseLeave={handleStarOut}
@@ -601,13 +607,13 @@ const ReviewPage = () => {
                                                     </span>
                                                 ))
                                             }
-                                            <span className="review-star-score">{
+                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem'}}>{
                                                     star > 0
                                                         ? star
                                                         : ''
                                                 }</span>
                                         </div>
-                                        <textarea style={{fontSize:'1.7rem'}}
+                                        <textarea style={{margin:'1rem',fontSize:'1.7rem', border: '1px solid #ffffff'}}
                                             className="review-textarea"
                                             placeholder="센터 또는 트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
                                             minLength={15}
@@ -635,7 +641,7 @@ const ReviewPage = () => {
                                             </div>
                                             <button
                                                 type="submit"
-                                                className="review-submit-btn" style={{ backgroundColor: '#a0acc0', fontSize:'2rem', padding:'12px 14px', borderRadius: '50%', marginRight:'10px' }}
+                                                className="review-submit-btn" style={{ backgroundColor: '#a0acc0', fontSize:'2rem', padding:'12px 14px', borderRadius: '50%' }}
                                                 onClick={handleReviewSubmit}>✔</button>
                                         </div>
                                     </form>
@@ -662,7 +668,7 @@ const ReviewPage = () => {
 
                                 {/* 둘째 줄: 내용 */}
                                 <div className="review-body" style={{textAlign:'left', margin:'2rem'}}>
-                                <span className="review-content" style={{margin:'2rem 4rem ',padding:'3rem',fontSize:'1.7rem', color:'#222'}}>{r.content}</span>
+                                <span className="review-content" style={{margin:'2rem 1rem ',padding:'3rem',fontSize:'1.5rem', color:'#222'}}>{r.content}</span>
                                 
                                 {/* 이미지 */}
                                 {
@@ -680,7 +686,8 @@ const ReviewPage = () => {
                                                 objectFit: 'cover',
                                                 borderRadius: '1.4rem',
                                                 marginLeft: 4,
-                                                color: ''
+                                                color: '',
+                                                border: '1px solid #7e8eb8'
                                             }}
                                             />
                                         ))
@@ -702,7 +709,9 @@ const ReviewPage = () => {
                                         <button
                                             type="button"
                                             className="review-submit-btn-n"
-                                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}>
+                                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                            style={{fontSize:'1.5rem', padding:'1.3rem 3rem'}}
+                                            >
                                             이전 페이지
                                         </button>
                                     </div>
@@ -715,7 +724,7 @@ const ReviewPage = () => {
                             <button
                                 className="review-submit-btn-n"
                                 onClick={() => setPage(prev => prev + 1)}
-                                
+                                style={{fontSize:'1.5rem', padding:'1.3rem 3rem'}}
                             > 다음 페이지
                             </button>
                             )

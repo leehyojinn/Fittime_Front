@@ -3421,13 +3421,13 @@ img {
 }
 
 .review-review-item {
-  margin: 14px;
-  font-size: 0.7rem;
+  margin: 10px;
+  font-size: 0.5rem;
   background-color: #e4e4e5;
   border-radius: 20px;
   box-shadow: var(--shadow);
   padding: 3rem;
-  margin: 14px;
+  margin: 10px;
   display: flex;
   gap: 3rem;
   transition: all 0.25s ease;
@@ -3442,14 +3442,14 @@ img {
 }
 .review-review-item > .inner {
   background-color: #fff;
-  border-radius: 14px;
-  padding: 1rem;
+  border-radius: 8px;
+  padding: 0.8rem;
   flex: 1;
 }
 
 .review-review-item:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
   border: 1px solid #e4e4e5;
 }
 .warning-button {
