@@ -101,7 +101,7 @@ const TrainerMyPage = () => {
                 console.log(data);
                 setTrainer(data);
                 setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
-                setSubImages(data.photos.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
+                setSubImages(data.photos?.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
                 //console.log(profileImage);
             })
     }
@@ -265,7 +265,7 @@ const TrainerMyPage = () => {
                     <tr><th>회원</th><th>연락처</th><th>상품</th><th>날짜</th><th>시간</th><th>상태</th></tr>
                 </thead>
                 <tbody>
-                    {reservation.map(r=>(
+                    {reservation && reservation.map(r=>(
                     <tr key={r.reservation_idx}>
                         <td>{r.user_name}</td>
                         <td>{r.user_phone}</td>
@@ -285,7 +285,7 @@ const TrainerMyPage = () => {
                     <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th></tr>
                 </thead>
                 <tbody>
-                    {reviews.map(r=>(
+                    {reviews && reviews.map(r=>(
                     <tr key={r.review_id}>
                         <td>{r.user_name}</td>
                         <td>{r.rating}</td>
@@ -303,7 +303,7 @@ const TrainerMyPage = () => {
                     <tr><th>일정명</th><th>시작</th><th>종료</th><th>구분</th></tr>
                 </thead>
                 <tbody>
-                    {schedules.map(s=>(
+                    {schedules && schedules.map(s=>(
                     <tr key={s.schedule_idx}>
                         <td>{s.title}</td>
                         <td>{s.start_time}</td>

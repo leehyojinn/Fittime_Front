@@ -343,7 +343,7 @@ const Reservation = () => {
   const calculateFinalPrice = () => {
     if (!selectedProduct) return 0;
     const discountAmount = selectedProduct.price * (selectedProduct.discount_rate / 100);
-    return selectedProduct.price - discountAmount;
+    return Math.floor((selectedProduct.price - discountAmount)/100)*100;
   };
 
   // --- 렌더링 함수들 ---
@@ -452,11 +452,11 @@ const Reservation = () => {
                     <span className="original-price">{product.price.toLocaleString()}원</span>
                     <span className="discount-rate">{product.discount_rate}% 할인</span>
                     <span className="final-price">
-                      {(product.price * (1 - product.discount_rate / 100)).toLocaleString()}원
+                      {(Math.floor((product.price * (1 - product.discount_rate / 100))/100)*100).toLocaleString()}원
                     </span>
                   </>
                 ) : (
-                  <span className="final-price">{product.price.toLocaleString()}원</span>
+                  <span className="final-price">{(Math.floor(product.price/100)*100).toLocaleString()}원</span>
                 )}
               </p>
               {product.max_people > 0 && (

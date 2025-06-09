@@ -166,8 +166,8 @@ const CenterMyPage = () => {
     }
 
     // Trainer detail page 이동
-    const handleMoveTrainerDetail = (idx) =>{
-        router.push(`/component/trainerdetail?trainer_idx=${idx}`);
+    const handleMoveTrainerDetail = (id) =>{
+        router.push(`/component/trainerdetail?trainer_id=${id}`);
     }
 
     useEffect(() => {
@@ -394,7 +394,7 @@ const CenterMyPage = () => {
                         <td>{t.phone}</td>
                         <td>{t.rating}</td>
                         <td>
-                        <button className="mypage-small-btn" onClick={()=>handleMoveTrainerDetail(t.trainer_idx)}>보기</button>
+                        <button className="mypage-small-btn" onClick={()=>handleMoveTrainerDetail(t.trainer_id)}>보기</button>
                         </td>
                         <td>
                         {/*<button className="mypage-small-btn mr_10"><FaEdit />수정</button>*/}
@@ -445,7 +445,8 @@ const CenterMyPage = () => {
                         <td>{r.user_phone}</td>
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
-                        <td>{r.start_time.substring(0,5)} ~ {r.end_time.substring(0,5)}</td>
+                        <td>{r.start_time != null && r.end_time != null ?
+                            `${r.start_time.substring(0,5)} ~ ${r.end_time.substring(0,5)}` : ''}</td>
                         <td>{r.trainer_name}</td>
                         <td>{r.status}</td>
                     </tr>
