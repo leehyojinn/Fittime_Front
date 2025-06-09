@@ -93,10 +93,10 @@ export default function MyCalendar() {
           resource: { ...item }
         });
       });
-  
+
       // 회원용 예약 일정
       (userRes.data.userList || []).forEach(item => {
-        const title = `${item.center_name} (${item.start_time} ~ ${item.end_time})`;
+        const title = item.start_time == null || item.end_time == null ? `${item.center_name} (00:00 ~ 00:00)` : `${item.center_name} (${item.start_time} ~ ${item.end_time})`;
         const today = new Date(item.reservation_date);
         const [sh, sm] = (item.start_time || '').split(':');
         const [eh, em] = (item.end_time || '').split(':');
@@ -110,8 +110,8 @@ export default function MyCalendar() {
           allDay: false,
           resource: {
             product_name: item.title,
-            start_time: item.start_time,
-            end_time: item.end_time,
+            start_time: item.start_time == null ? '00:00' : item.start_time,
+            end_time: item.end_time == null ? '00:00' : item.end_time,
             status: '회원예약',
             center_name: item.center_name
           }
@@ -344,8 +344,8 @@ export default function MyCalendar() {
     setEditForm({
       title: detailInfo.event.title,
       content: detailInfo.event.resource.content,
-      start_time: detailInfo.event.resource.start_time,
-      end_time: detailInfo.event.resource.end_time,
+      start_time: detailInfo.event.resource.start_time == null ? '00:00' : detailInfo.event.resource.start_time,
+      end_time: detailInfo.event.resource.end_time == null ? '00:00' : detailInfo.event.resource.end_time,
       status: detailInfo.event.resource.status
     });
   };
@@ -371,7 +371,7 @@ export default function MyCalendar() {
     if (status === '회원예약') {
       return (
           <div style={{whiteSpace: 'pre-line'}}>
-            {center_name} {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
+            {start_time == null ? `${center_name} 00:00 ~ 00:00` : `${center_name} ${start_time?.substring(0, 5)} ~ ${end_time?.substring(0, 5)}`}
           </div>
       );
     }
@@ -379,7 +379,7 @@ export default function MyCalendar() {
     if (status === '트레이너예약') {
       return (
           <div style={{whiteSpace: 'pre-line'}}>
-            {product_name} {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
+            {start_time == null ? `${product_name} 00:00 ~ 00:00` : `${product_name} ${start_time?.substring(0, 5)} ~ ${end_time?.substring(0, 5)}`}
           </div>
       );
     }
@@ -466,7 +466,7 @@ export default function MyCalendar() {
                   }}
                   className={errors.title ? 'input-error' : ''}
                 />
-                <label className='label'>내용</label>
+                <label className='label' style={{wordBreak: "break-word"}}>내용</label>
                 <input
                   type="text"
                   value={form.content}
@@ -596,7 +596,9 @@ export default function MyCalendar() {
                       : `${format(detailInfo.event.start, 'yyyy-MM-dd')} ~ ${format(detailInfo.event.end, 'yyyy-MM-dd')}`}</p>
                     <p className='label'>내용 : {detailInfo.event.resource.content}</p>
                     {detailInfo.event.resource.start_time !== null && detailInfo.event.resource.end_time !== null && (
-                        <p className='label'>시간 : {detailInfo.event.resource.start_time?.substring(0, 5)} ~ {detailInfo.event.resource.end_time?.substring(0, 5)}</p>
+                        <p className='label'>
+                          {detailInfo.event.resource.start_time == null ? `시간 :  00:00 ~ 00:00` : `시간 :  ${detailInfo.event.resource.start_time?.substring(0, 5)} ~ ${detailInfo.event.resource.end_time?.substring(0, 5)}`}
+                        </p>
                     )}
                     <p className='label'>
                       {detailInfo.event.resource.user_name ? `회원명 : ${detailInfo.event.resource.user_name}`
