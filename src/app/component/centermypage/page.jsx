@@ -76,6 +76,10 @@ const CenterMyPage = () => {
         checkAuthAndAlert(router, null, { minLevel: 3 });
     }, [checkAuthAndAlert, router]);
 
+    const handleMoveComplaint = (r) => {
+        router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${sessionStorage.getItem('user_id')}`);
+    }
+
     // 대표이미지 변경
     const handleMainImageChange = e => {
     if (e.target.files[0]) {
@@ -292,6 +296,7 @@ const CenterMyPage = () => {
             });
             // console.log('data',data);
             await getCenter();
+            sessionStorage.setItem('exercise_level',center.exercise_level);
         }
     }
 
@@ -385,7 +390,7 @@ const CenterMyPage = () => {
                     <tr><th>이름</th><th>연락처</th><th>별점</th><th>프로필</th><th>관리</th></tr>
                 </thead>
                 <tbody>
-                    {trainers?.map(t=>(
+                    {trainers&&trainers?.map(t=>(
                     <tr key={t.trainer_id}>
                         <td>
                         <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
@@ -413,7 +418,7 @@ const CenterMyPage = () => {
                     <tr><th>상품명</th><th>가격</th><th>할인율</th><th>관리</th></tr>
                 </thead>
                 <tbody>
-                    {products?.map(p=>(
+                    {products && products?.map(p=>(
                     <tr key={p.product_idx}>
                         <td>{p.product_name}</td>
                         <td>{p.price.toLocaleString()}원</td>
@@ -439,7 +444,7 @@ const CenterMyPage = () => {
                     <tr><th>회원명</th><th>연락처</th><th>상품</th><th>날짜</th><th>시간</th><th>트레이너</th><th>상태</th></tr>
                 </thead>
                 <tbody>
-                    {reservations?.map(r=>(
+                    {reservations && reservations?.map(r=>(
                     <tr key={r.reservation_idx}>
                         <td>{r.user_name}</td>
                         <td>{r.user_phone}</td>
@@ -458,15 +463,22 @@ const CenterMyPage = () => {
                 <h4 className='label text_left font_weight_500'><FaStar /> 받은 리뷰</h4>
                 <table className="mypage-table">
                 <thead>
-                    <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th></tr>
+                    <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th><th>신고</th></tr>
                 </thead>
                 <tbody>
-                    {reviews.map(r=>(
+                    {reviews && reviews.map(r=>(
                     <tr key={r.review_id}>
                         <td>{r.user_name}</td>
                         <td>{r.rating}</td>
                         <td>{r.content}</td>
                         <td>{r.reg_date.substring(0,10)}</td>
+                        <td>
+                        {sessionStorage.user_level >= 2 && <div style={{display:'flex',justifyContent:'center'}}>
+                            <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
+                                <span class="material-symbols-outlined">warning</span>
+                                <span className='material-symbols-outlined-text'>신고하기</span>
+                            </button>
+                        </div>}</td>
                     </tr>
                     ))}
                 </tbody>
@@ -479,7 +491,7 @@ const CenterMyPage = () => {
                     <tr><th>일정명</th><th>시작</th><th>종료</th><th>구분</th></tr>
                 </thead>
                 <tbody>
-                    {schedules?.map(s=>(
+                    {schedules && schedules?.map(s=>(
                     <tr key={s.schedule_idx}>
                         <td>{s.title}</td>
                         <td>{s.start_date} {s.start_time}</td>

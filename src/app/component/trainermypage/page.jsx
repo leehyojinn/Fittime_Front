@@ -60,6 +60,10 @@ const TrainerMyPage = () => {
         checkAuthAndAlert(router, null, { minLevel: 2 });
     }, [checkAuthAndAlert, router]);
 
+    const handleMoveComplaint = (r) => {
+        router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${sessionStorage.getItem('user_id')}`);
+    }
+
     const handleMainImageChange = e => {
         if (e.target.files[0]) {
             // console.log(e.target.files[0]);
@@ -282,7 +286,7 @@ const TrainerMyPage = () => {
                 <h4 className='label text_left font_weight_500'><FaStar /> 받은 리뷰</h4>
                 <table className="mypage-table">
                 <thead>
-                    <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th></tr>
+                    <tr><th>회원</th><th>별점</th><th>내용</th><th>작성일</th><th>신고</th></tr>
                 </thead>
                 <tbody>
                     {reviews && reviews.map(r=>(
@@ -291,6 +295,12 @@ const TrainerMyPage = () => {
                         <td>{r.rating}</td>
                         <td>{r.content}</td>
                         <td>{r.reg_date.substring(0,10)}</td>
+                        <td>{sessionStorage.user_level >= 2 && <div style={{display:'flex',justifyContent:'center'}}>
+                            <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
+                                <span class="material-symbols-outlined">warning</span>
+                                <span className='material-symbols-outlined-text'>신고하기</span>
+                            </button>
+                        </div>}</td>
                     </tr>
                     ))}
                 </tbody>
