@@ -369,11 +369,7 @@ const Reservation = () => {
               }}
             >
               <div className="center-info">
-                {center.profile_image ? (
-                  <img src={center.profile_image} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
-                ) : (
-                  <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#ddd',marginBottom:10}} />
-                )}
+                <img src={`http://localhost/profileImg/profile/${center.center_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
                 <h4 className='page-title' style={{margin:0}}>{center.center_name}</h4>
                 <p className="center-address"><FaMapMarkerAlt /> {center.address}</p>
                 <p className="center-rating">
@@ -476,11 +472,7 @@ const Reservation = () => {
       {selectedProduct && selectedProduct.trainer_id && productTrainerInfo && (
         <div className="trainer-info-box" style={{marginTop: '16px', padding: '16px', border: '1px solid #eee', borderRadius: '8px', background: '#fafafa'}}>
           <div className="flex column align_center justify_con_center gap_20">
-            {productTrainerInfo.profile_image ? (
-              <img src={productTrainerInfo.profile_image} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
-            ) : (
-              <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#ddd'}} />
-            )}
+            <img src={`http://localhost/profileImg/profile/${productTrainerInfo.trainer_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
             <div className='flex column gap_3'>
               <h4 className='page-title mb_0'>{productTrainerInfo.name || productTrainerInfo.trainer_id}</h4>
               <p className='label'>{productTrainerInfo.career}</p>
