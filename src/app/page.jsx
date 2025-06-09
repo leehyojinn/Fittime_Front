@@ -184,7 +184,8 @@ const MainPage = () => {
                                             style={{
                                                 background:`url('http://localhost/profileImg/profile/${center.center_id}') center center/cover no-repeat`,
                                                 width:'100%',
-                                                aspectRatio:'1/1'
+                                                aspectRatio:'1/1',
+                                                borderRadius :'10px'
                                             }}/>
                                         <div className='flex column gap_10 mt_20'>
                                             <p
@@ -280,7 +281,8 @@ const MainPage = () => {
                                                 style={{
                                                     background:`url('http://localhost/profileImg/profile/${trainer.trainer_id}') center center/cover no-repeat`,
                                                     width:'100%',
-                                                    aspectRatio:'1/1'
+                                                    aspectRatio:'1/1',
+                                                    borderRadius :'10px'
                                                 }}/>
                                             <div className='flex column gap_10 mt_20'>
                                                 <p
