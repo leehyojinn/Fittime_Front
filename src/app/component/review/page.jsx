@@ -10,9 +10,6 @@ import {useAlertModalStore} from '@/app/zustand/store';
 import Link from "next/link";
 
 const ReviewPage = () => {
-
-    // 해야하는거 :/ 리뷰 리스트 / 삭제도...
-
     const [showMap, setShowMap] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -94,7 +91,7 @@ const ReviewPage = () => {
         console.log('review',review);
         console.log('files',files);
         setTarget(review.target_id);
-        setReviewText(review.content);
+        setReviewText(review.content || '');
         setStar(review.rating);
         setShowReviewForm(true);
         setReviewTarget(review.target_id===review.center_id?'center':'trainer');
@@ -116,9 +113,7 @@ const ReviewPage = () => {
     // 리뷰 등록
     const handleReviewSubmit = (e) => {
         e.preventDefault();
-        // if (star < 0.5)     return alert('별점을 입력해주세요.'); if (reviewText.trim().length
-        // < 15)     return alert('리뷰를 15자 이상 입력해주세요.'); if (files.some(f => f.size > 10
-        // * 1024 * 1024))     return alert('각 이미지는 10MB 이하만 가능합니다.');
+
         if (star < 0.5) {
             openModal({svg: '★', msg1: '별점을 입력해주세요.', showCancel: false});
             return;
@@ -204,7 +199,7 @@ const ReviewPage = () => {
             setReviewText('');
             setStar(0);
             setFiles([]);
-            setPage(1); // 페이지 초기화
+            setPage(1);
             fetchReviews();
         }
     }
@@ -235,7 +230,7 @@ const ReviewPage = () => {
              setReviewText('');
              setStar(0);
              setFiles([]);
-             setPage(1); // 페이지 초기화
+             setPage(1); 
              fetchReviews();
          }
      }
@@ -306,36 +301,6 @@ const ReviewPage = () => {
             return;
         }
         setShowReviewForm(prev => !prev);
-    };
-
-    const centerSample = {
-        center_idx: 1,
-        center_name: '헬스월드 강남점',
-        address: '서울 강남구 역삼동 123-45',
-        contact: '02-1234-5678',
-        image: '/center1.jpg',
-        intro: '이거 독재자 이준혁씨가 불러올거라던데여',
-        tags: [
-            '24시간', '샤워시설', '주차가능'
-        ],
-        rating: 4.7,
-        reviews: [
-            {
-                review_id: 1,
-                user_name: '회원A',
-                rating: 5,
-                content: 'db 및 백 독재 지렸따',
-                date: '2025-05-01',
-                images: []
-            }, {
-                review_id: 2,
-                user_name: '회원B',
-                rating: 4.5,
-                content: '독재하는 사람도 연애를 하는데 .... ',
-                date: '2025-05-02',
-                images: []
-            }
-        ]
     };
 
     const reviewsPerPage = 10;
@@ -460,7 +425,7 @@ const ReviewPage = () => {
                             <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>소속 센터</h4>
                             <div className="center-brief">
                                 <span className="center-name">{trainerInfo.center_name}</span>
-                                <span className="center-address" style={{fontSize:'1.4rem'}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
+                                <span className="center-address" style={{fontSize:'1.4rem', color:''}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
                                 <span className="center-contact" style={{fontSize:'1.3rem'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
                             </div>
                         </div>
@@ -493,7 +458,7 @@ const ReviewPage = () => {
                         <div>
 
                             <select
-                                className="review-toggle-select"
+                                className="review-toggle-select" 
                                 value={reviewTarget}
                                 onChange={(e) => handleReviewTargetChange(e.target.value)}>
                                 <option value="">센터 / 트레이너</option>
@@ -521,7 +486,7 @@ const ReviewPage = () => {
                                 }}>
 
                                 <button
-                                    onClick={handReviewForm} style={{ backgroundColor: '#cadbe3'}}
+                                    onClick={handReviewForm} style={{ backgroundColor: '#e4e4e5' ,fontSize:'1.5rem'}}
                                     className={`review-toggle-small-btn ${showReviewForm
                                         ? 'active'
                                         : ''}`}>
@@ -547,7 +512,7 @@ const ReviewPage = () => {
                             <div>
 
                                 {/* 리뷰 작성 인풋 */}
-                                <div className="trainer-review-write" style={{ backgroundColor: '#d7e4ea'}} >
+                                <div className="trainer-review-write" style={{ backgroundColor: '#e4e4e5'}} >
                                     <form onSubmit={handleReviewSubmit}>
                                         <div className="star-input">
                                             {
@@ -562,24 +527,24 @@ const ReviewPage = () => {
                                                             className="star"
                                                             color={(
                                                                 (hoverStar || star) >= i)
-                                                                ? '#444444'
+                                                                ? '#8897aa'
                                                                 : '#C0C6CC'}
                                                             onMouseEnter={() => handleStarHover(i)}
                                                             onMouseLeave={handleStarOut}
                                                             onClick={() => handleStarClick(i)}
                                                             style={{
                                                                 cursor: 'pointer',
-                                                                fontSize: '2rem'
+                                                                fontSize: '3rem'
                                                             }}/> {/* 0.5점 지원 */}
                                                         <FaStar
                                                             className="star half"
                                                             color={(
                                                                 (hoverStar || star) >= i - 0.5) && ((hoverStar || star) < i)
-                                                                ? '#444444'
+                                                                ? '#8897aa'
                                                                 : 'transparent'}
                                                             style={{
                                                                 cursor: 'pointer',
-                                                                fontSize: '2rem',
+                                                                fontSize: '3rem',
                                                                 position: 'absolute',
                                                                 left: 0,
                                                                 zIndex: 1,
@@ -591,13 +556,13 @@ const ReviewPage = () => {
                                                     </span>
                                                 ))
                                             }
-                                            <span className="star-score">{
+                                            <span className="review-star-score">{
                                                     star > 0
                                                         ? star
                                                         : ''
                                                 }</span>
                                         </div>
-                                        <textarea
+                                        <textarea style={{fontSize:'1.7rem'}}
                                             className="review-textarea"
                                             placeholder="센터 또는 트레이너에 대한 솔직한 후기를 남겨주세요. (15자 이상)"
                                             minLength={15}
@@ -605,7 +570,7 @@ const ReviewPage = () => {
                                             onChange={e => setReviewText(e.target.value)}
                                             required="required"/>
                                         <div className="review-file-input">
-                                            <label htmlFor="trainer-review-upload" className="file-label"  style={{ backgroundColor: '#9BB5BC'}}>
+                                            <label htmlFor="trainer-review-upload" className="file-label"  style={{ backgroundColor: '#a0acc0', fontSize:'2rem', padding:'12px 14px', marginLeft:'10px' }}>
                                                 <FaCamera/>
                                                 <input
                                                     id="trainer-review-upload"
@@ -625,7 +590,7 @@ const ReviewPage = () => {
                                             </div>
                                             <button
                                                 type="submit"
-                                                className="review-submit-btn"
+                                                className="review-submit-btn" style={{ backgroundColor: '#a0acc0', fontSize:'2rem', padding:'12px 14px', borderRadius: '50%', marginRight:'10px' }}
                                                 onClick={handleReviewSubmit}>✔</button>
                                         </div>
                                     </form>
@@ -637,22 +602,22 @@ const ReviewPage = () => {
                     {/* 리뷰 리스트 */}
                     <div className='wrap padding_120_0'>
 
-                        <div className="trainer-reviews">
-                            <h4>리뷰</h4>
+                        <div className="trainer-reviews" >
+
                             <ul>
                             {
                             paginatedReviews?.map(r => (
-                            <li key={r.review_idx} className="review-item" style={{flexDirection:'column'}}>
+                            <li key={r.review_idx} className="review-review-item" style={{flexDirection:'column', color: '#7fa6a6', fontSize:'1.5rem', margin:'1.5rem', padding:'1.4rem'}}>
                                 {/* 첫 줄: 작성자 + 별점 + 날짜 */}
-                                <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit'}}>
+                                <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit' ,color: '#7e8eb8', fontSize:'1.7rem'}}>
                                 <span className="review-user">{r.user_id}</span>
-                                <span className="review-rating"><FaStar/> {r.rating}</span>
+                                <span className="review-rating" style={{color:'#7e8eb8'}}><FaStar/> {r.rating}</span>
                                 <span className="review-date">{r.date}</span>
                                 </div>
 
                                 {/* 둘째 줄: 내용 */}
-                                <div className="review-body" style={{textAlign:'left'}}>
-                                <span className="review-content" style={{paddingLeft:'30px'}}>{r.content}</span>
+                                <div className="review-body" style={{textAlign:'left', margin:'2rem'}}>
+                                <span className="review-content" style={{margin:'2rem 4rem ',padding:'3rem',fontSize:'1.7rem', color:'#222'}}>{r.content}</span>
                                 
                                 {/* 이미지 */}
                                 {
@@ -669,7 +634,8 @@ const ReviewPage = () => {
                                                 height: 132,
                                                 objectFit: 'cover',
                                                 borderRadius: '1.4rem',
-                                                marginLeft: 4
+                                                marginLeft: 4,
+                                                color: ''
                                             }}
                                             />
                                         ))

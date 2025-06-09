@@ -3348,10 +3348,10 @@ img {
   vertical-align: top;
   width: 400px;
   background: #dee2e6;
-  color: #000000;
+  color: #657692;
   border-radius: 0.5rem;
   border-radius: 15px;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -3362,27 +3362,63 @@ img {
   margin: 30px;
 }
 
-.review-toggle-select option {
-  font-size: 1.5rem; 
+.review-toggle-select {
+  background: #a0acc0;
+  color: #fff;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .review-toggle-select:hover {
-  background-color:  #444;
-  color: #fff;
-}
-
-.review-toggle-select {
-  background: #444;
+  background-color: #657692;
   color: #fff;
 }
 
 .review-toggle-select.selected {
-  background-color: #444;
+  background-color: #657692;
   color: #fff;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+.review-toggle-select option {
+  font-size: 1.5rem; 
+}
+
 
 .overlay_btn {
   position: absolute;
   right: 50%;
   transform: translateX(350px);
+}
+
+.review-review-item {
+  margin: 14px;
+  font-size: 0.7rem;
+  background-color: #e4e4e5;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 3rem;
+  margin: 14px;
+  display: flex;
+  gap: 3rem;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.review-star-score {
+  margin-left: 0.8rem;
+  font-weight: 500;
+  color: #7e8eb8;
+  font-size: 1.4rem;
+}
+.review-review-item > .inner {
+  background-color: #fff;
+  border-radius: 14px;
+  padding: 1rem;
+  flex: 1;
+}
+
+.review-review-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e4e4e5;
 }
