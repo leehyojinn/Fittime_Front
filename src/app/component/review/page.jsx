@@ -107,6 +107,18 @@ const ReviewPage = () => {
         setReviewTarget(review.target_id===review.center_id?'center':'trainer');
     }, [review]);
 
+    useEffect(()=>{
+        const startIndex = (page - 1) * reviewsPerPage;
+        const endIndex = startIndex + reviewsPerPage;
+        const filteredList = reviews.list
+        ?.length
+            ? reviews.list
+            : [];
+        const paginatedReviews = filteredList
+        ?.slice(startIndex, endIndex);
+        console.log(paginatedReviews);
+    },[reviews]);
+
     // 별점 클릭/호버
     const handleStarClick = (value) => setStar(value);
     const handleStarHover = (value) => setHoverStar(value);
@@ -121,7 +133,7 @@ const ReviewPage = () => {
     };
 
     // 리뷰 등록
-    const handleReviewSubmit = (e) => {
+    const handleReviewSubmit = async(e) => {
         e.preventDefault();
 
         if (star < 0.5) {
@@ -161,7 +173,7 @@ const ReviewPage = () => {
                 content: reviewText,
                 images: files.map(f => URL.createObjectURL(f))
             });
-            insertReview();
+            await insertReview();
         }
     };
 
@@ -205,7 +217,13 @@ const ReviewPage = () => {
                         setFiles([]);
                         setPage(1);
                         fetchReviews();
+
                     } else {
+                        setReviewText('');
+                        setStar(0);
+                        setFiles([]);
+                        setPage(1);
+                        fetchReviews();
                         openModal({
                             svg: '⚠️',
                             msg1: '리뷰는 중복으로 작성 할 수 없습니다.',
@@ -222,6 +240,7 @@ const ReviewPage = () => {
                         showCancel: false
                     });
                 }
+                
             };
             
 
@@ -296,9 +315,12 @@ const ReviewPage = () => {
         );
         console.log(data);
         const allReviews = data.list || [];
-        const relatedReviews = allReviews.filter(
-            (review) => String(review.target_id) === target
-        );
+            const relatedReviews = allReviews.filter(
+                (review) => (typeof target === 'undefined'? String(review.target_id) === centerId : String(review.target_id) === target)
+            );
+        console.log(centerId);
+        console.log(target);
+        console.log(relatedReviews);
         setReviews({data, list: relatedReviews});
         console.log(relatedReviews.length);
         setTotalPage(relatedReviews.length / 10) ;
@@ -328,6 +350,7 @@ const ReviewPage = () => {
     const endIndex = startIndex + reviewsPerPage;
     const paginatedReviews = filteredList
         ?.slice(startIndex, endIndex);
+    
 
     return (
         <div>
@@ -426,7 +449,7 @@ const ReviewPage = () => {
                             <div className="trainer-header-info">
 
                                 <div className="trainer-tags">
-                                    {/*{trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"  style={{fontSize:'1.5rem'}}><FaTag />{tag}</span>)}*/}
+                                
                                     {trainerInfo.tags?.map(tag => <span key={tag} className="trainer-tag"  style={{fontSize:'1.5rem'}}>{tag}</span>)}
                                 </div>
                                 <div className="trainer-type"  style={{fontSize:'1.5rem'}}>{trainerInfo.exercise}</div>
