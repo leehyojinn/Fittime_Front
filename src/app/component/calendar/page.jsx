@@ -392,7 +392,7 @@ export default function MyCalendar() {
       <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
         <p className='title'>스케줄 관리</p>
       </div>
-      <div className='wrap padding_120_0' style={{ position: 'relative', height: '80vh', overflow: 'visible' }}>
+      <div className='wrap padding_120_0' style={{ position: 'relative', height:'100%', overflow: 'visible' }}>
         <Calendar
           localizer={localizer}
           events={events}
