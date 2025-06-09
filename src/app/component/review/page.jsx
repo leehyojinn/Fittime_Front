@@ -432,7 +432,7 @@ const ReviewPage = () => {
                                 {
                                     showMap && (
                                         <div>
-                                            <KakaoMap address={centerInfo.center_address}/>
+                                            <KakaoMap address={centerInfo.address}/>
                                         </div>
                                     )
                                 }
