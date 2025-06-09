@@ -46,7 +46,6 @@ export default function MyCalendar() {
   const [hoveredEventId, setHoveredEventId] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [view, setView] = useState('month');
-  const [userName, setUserName] = useState('');
 
   const router = useRouter();
 
@@ -75,13 +74,11 @@ export default function MyCalendar() {
     try {
       const trainer_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
   
-      const [eventRes, userRes, reservationRes, dayoffRes, userClassRes, classScheduleRes] = await Promise.all([
+      const [eventRes, userRes, reservationRes, dayoffRes] = await Promise.all([
         axios.post(`http://localhost/schedule_list/${user_id}`), // 개인 일정
-        axios.post(`http://localhost/user_reservation_schedule/${user_id}`), // 회원용 예약 일정
-        axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`), // 트레이너용 예약 일정
+        axios.post(`http://localhost/user_reservation_schedule/${user_id}`, {}), // 회원용 예약 일정
+        axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`, {}), // 트레이너용 예약 일정
         axios.post(`http://localhost/center_dayoff/${trainer_id}`), // 트레이너 휴무
-        axios.post('http://localhost/get_user_class_schedule', { user_id: user_id }), // 회원용 클래스 요일
-        axios.post('http://localhost/get_class_schedule', { trainer_id: user_id }), // 트레이너용 클래스 요일
       ]);
       const combinedEvents = [];
 
@@ -100,7 +97,7 @@ export default function MyCalendar() {
       // 회원용 예약 일정
       (userRes.data.userList || []).forEach(item => {
         const title = `${item.center_name} (${item.start_time} ~ ${item.end_time})`;
-        const today = new Date(item.date);
+        const today = new Date(item.reservation_date);
         const [sh, sm] = (item.start_time || '').split(':');
         const [eh, em] = (item.end_time || '').split(':');
         const start = sh && sm ? new Date(today.setHours(+sh, +sm, 0, 0)) : new Date(today);
@@ -108,8 +105,8 @@ export default function MyCalendar() {
   
         combinedEvents.push({
           title,
-          start: new Date(start),
-          end: new Date(end),
+          start: today,
+          end: today,
           allDay: false,
           resource: {
             product_name: item.title,
@@ -124,7 +121,7 @@ export default function MyCalendar() {
       // 트레이너용 예약 일정
       (reservationRes.data.trainerList || []).forEach(item => {
         const title = `${item.product_name} (${item.start_time} ~ ${item.end_time})`;
-        const today = new Date(item.date);
+        const today = new Date(item.reservation_date);
         const [sh, sm] = (item.start_time || '').split(':');
         const [eh, em] = (item.end_time || '').split(':');
         const start = sh && sm ? new Date(today.setHours(+sh, +sm, 0, 0)) : new Date(today);
@@ -132,8 +129,8 @@ export default function MyCalendar() {
   
         combinedEvents.push({
           title,
-          start: new Date(start),
-          end: new Date(end),
+          start,
+          end,
           allDay: false,
           resource: {
             product_name: item.product_name,
@@ -157,46 +154,7 @@ export default function MyCalendar() {
           resource: { ...item },
         });
       });
-  
-      // 회원용 클래스 요일
-      (userClassRes.data.scheduleList || []).forEach(item => {
-        const start = new Date(`${item.date}T${item.start_time}`);
-        const end = new Date(`${item.date}T${item.end_time}`);
-        combinedEvents.push({
-          title: `[예약] ${item.title}`,
-          start,
-          end,
-          allDay: false,
-          resource: {
-            product_name: item.title,
-            start_time: item.start_time,
-            end_time: item.end_time,
-            status: '회원예약',
-            center_name: item.center_name
-          },
-        });
-      });
-  
-      // 트레이너용 클래스 요일
-      (classScheduleRes.data.scheduleList || []).forEach(item => {
-        const start = new Date(`${item.date}T${item.start_time}`);
-        const end = new Date(`${item.date}T${item.end_time}`);
-        combinedEvents.push({
-          title: `[클래스] ${item.title}`,
-          start,
-          end,
-          allDay: false,
-          resource: {
-            product_name: item.title,
-            start_time: item.start_time,
-            end_time: item.end_time,
-            status: '트레이너예약',
-            user_name: item.user_name,
-            center_name: item.center_name
-          },
-        });
-      });
-  
+
       setEvents(combinedEvents);
     } catch (err) {
       openModal({
@@ -207,7 +165,6 @@ export default function MyCalendar() {
       });
     }
   }, [user_id]);
-  
 
     useEffect(() => {
       fetchEvents();
@@ -403,20 +360,18 @@ export default function MyCalendar() {
   const CustomEvent = ({event}) => {
     const {product_name, start_time, end_time, center_name, status} = event.resource || {};
 
-    if (!product_name || !start_time || !end_time) {
+    /*if (!product_name || !start_time || !end_time) {
       return (
           <div style={{whiteSpace: 'pre-line'}}>
             {event.title}
           </div>
       );
-    }
+    }*/
 
     if (status === '회원예약') {
       return (
           <div style={{whiteSpace: 'pre-line'}}>
-            {center_name}
-            {"\n"}
-            {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
+            {center_name} {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
           </div>
       );
     }
@@ -424,9 +379,7 @@ export default function MyCalendar() {
     if (status === '트레이너예약') {
       return (
           <div style={{whiteSpace: 'pre-line'}}>
-            {product_name}
-            {"\n"}
-            {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
+            {product_name} {start_time?.substring(0, 5)} ~ {end_time?.substring(0, 5)}
           </div>
       );
     }
@@ -439,7 +392,7 @@ export default function MyCalendar() {
       <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
         <p className='title'>스케줄 관리</p>
       </div>
-      <div className='wrap padding_120_0' style={{ position: 'relative' }}>
+      <div className='wrap padding_120_0' style={{ position: 'relative', height: '80vh', overflow: 'visible' }}>
         <Calendar
           localizer={localizer}
           events={events}
