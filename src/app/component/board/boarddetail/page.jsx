@@ -1,14 +1,13 @@
 'use client'
 import Footer from '@/app/Footer';
 import Header from '@/app/Header';
-import React, {useEffect, useState} from 'react';
-import {useRouter, useSearchParams} from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
 import { useAuthStore } from '@/app/zustand/store';
 
 export default function BoardDetail() {
-
     const searchParams = useSearchParams();
     const board_idx = searchParams.get('board_idx');
     const category = searchParams.get('category');
@@ -27,7 +26,6 @@ export default function BoardDetail() {
     useEffect(() => {
         checkAuthAndAlert(router, null, { noGuest: true });
     }, [checkAuthAndAlert, router]);
-    
 
     useEffect(() => {
         getBoardDetail();
@@ -36,25 +34,23 @@ export default function BoardDetail() {
     }, []);
 
     const getBoardDetail = async () => {
-        const {data} = await axios.post(`http://localhost/detail/bbs/${board_idx}`);
-        console.log(data);
+        const { data } = await axios.post(`http://localhost/detail/bbs/${board_idx}`);
         setBoard(data.dto);
         setFiles(data.photos);
     }
 
     const getComment = async () => {
-        const {data} = await axios.post(`http://localhost/list/comment/${board_idx}`);
-        console.log(data);
+        const { data } = await axios.post(`http://localhost/list/comment/${board_idx}`);
         setComments(data.comments);
     }
 
     const getLink = () => {
         switch (category) {
-            case '이벤트' :
+            case '이벤트':
                 return '/component/board/event';
-            case '건의사항' :
+            case '건의사항':
                 return '/component/board/suggestions';
-            case 'QnA' :
+            case 'QnA':
                 return '/component/board/qna';
             default:
                 return '/component/board';
@@ -66,29 +62,26 @@ export default function BoardDetail() {
     }
 
     const delBoard = async () => {
-        const {data} = await axios.post(`http://localhost/del/bbs/${board_idx}`);
-        console.log(data);
-        if(data.success){
+        const { data } = await axios.post(`http://localhost/del/bbs/${board_idx}`);
+        if (data.success) {
             router.push(getLink());
         }
     }
 
-    const writeComment = async () =>{
-        if(update_idx != null){
-            const {data} = await axios.post('http://localhost/update/comment',{content:text, comment_idx:update_idx});
-            console.log('수정 : ',data);
+    const writeComment = async () => {
+        if (update_idx != null) {
+            const { data } = await axios.post('http://localhost/update/comment', { content: text, comment_idx: update_idx });
             if (data.success) {
                 setUpdate_idx(null);
                 setText('');
                 getComment();
             }
-        }else {
-            const {data} = await axios.post('http://localhost/write/comment', {
+        } else {
+            const { data } = await axios.post('http://localhost/write/comment', {
                 user_id: sessionStorage.getItem('user_id'),
                 content: text,
                 board_idx: board_idx
             });
-            console.log('등록 : ',data);
             if (data.success) {
                 setText('');
                 getComment();
@@ -96,10 +89,9 @@ export default function BoardDetail() {
         }
     }
 
-    const writeReply = async () =>{
-        if(update_idx != null){
-            const {data} = await axios.post('http://localhost/update/reply',{content: text, reply_idx:update_idx});
-            console.log('수정 : ',data);
+    const writeReply = async () => {
+        if (update_idx != null) {
+            const { data } = await axios.post('http://localhost/update/reply', { content: text, reply_idx: update_idx });
             if (data.success) {
                 setUpdate_idx(null);
                 setReplyState(false);
@@ -107,51 +99,46 @@ export default function BoardDetail() {
                 getReplys();
             }
         } else {
-            const {data} = await axios.post('http://localhost/write/reply', {content: text, comment_idx:commentIdx, user_id: sessionStorage.getItem('user_id')});
-            console.log('등록 : ',data);
+            const { data } = await axios.post('http://localhost/write/reply', { content: text, comment_idx: commentIdx, user_id: sessionStorage.getItem('user_id') });
             if (data.success) {
                 setText('');
                 setReplyState(false);
                 getReplys();
             }
         }
-
     }
 
     const getReplys = async () => {
-        const {data} = await axios.post(`http://localhost/list/reply/${board_idx}`);
-        console.log(data);
+        const { data } = await axios.post(`http://localhost/list/reply/${board_idx}`);
         setReplys(data.reply);
     }
 
-    const changeUpdateComment = (comment) =>{
-        setReplyState(()=>{
+    const changeUpdateComment = (comment) => {
+        setReplyState(() => {
             setUpdate_idx(prev => {
                 setText(prev === comment.comment_idx ? '' : comment.content);
                 return (prev === comment.comment_idx ? null : comment.comment_idx);
             });
             return false;
         })
-
     }
 
-    const delComment = async (idx) =>{
-        const {data} = await axios.post(`http://localhost/del/comment/${idx}`);
-        console.log(data);
-        if(data.success){
+    const delComment = async (idx) => {
+        const { data } = await axios.post(`http://localhost/del/comment/${idx}`);
+        if (data.success) {
             getComment();
         }
     }
 
-    const changeReply = async (comment_idx) =>{
-        setReplyState((prev)=>{
+    const changeReply = async (comment_idx) => {
+        setReplyState((prev) => {
             setCommentIdx(comment_idx);
-            return!prev
+            return !prev
         })
     }
 
     const changeUpdateReply = (reply) => {
-        setReplyState((prev)=>{
+        setReplyState((prev) => {
             setUpdate_idx((prev) => {
                 setText(prev === reply.reply_idx ? '' : reply.content);
                 return (prev === reply.reply_idx ? null : reply.reply_idx);
@@ -160,83 +147,121 @@ export default function BoardDetail() {
         })
     }
 
-    const delReply = async(reply_idx) =>{
-        const {data} = await axios.post(`http://localhost/del/reply/${reply_idx}`);
-        console.log(data);
-        if(data.success){
+    const delReply = async (reply_idx) => {
+        const { data } = await axios.post(`http://localhost/del/reply/${reply_idx}`);
+        if (data.success) {
             getReplys();
         }
     }
 
     return (
-    <div>
-        <Header/>
-        <div className='wrap padding_120_0'>
-
-            <div className="flex column gap_20">
-            {/* 제목 */}
-            <h1 className="middle_title">{board.title}</h1>
-            {/* 작성자, 날짜, 조회수 */}
-            <div className="flex gap_10">
-                <span className='label'>작성자: {board.user_id}</span>
-                <span className='label'>{board.reg_date}</span>
+        <div className="board-detail-bg">
+            <Header />
+            <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
+                <p className='title'>게시글 상세보기</p>
             </div>
-            {/* 본문 */}
-            <div style={{padding:20, border:'1px solid #ccc'}}>
+            <div className="board-detail-wrap">
+                <section className="board-detail-card">
+                    <h1 className="board-detail-title">
+                        <p className='mb_20'>제목</p>
+                        {board.title}
+                    </h1>
+                    <div className="board-detail-meta justify_con_space_between">
+                        <span>작성자: {board.user_id}</span>
+                        <span>{board.reg_date}</span>
+                    </div>
+                    <div className="board-detail-content">
+                        <div className="board-detail-text">
+                            <p className='mb_20'>내용</p>
+                                {board.content}
+                        </div>
+                        {files && files.length > 0 && (
+                            <div className="board-detail-files justify_con_center">
+                                {files.map((file) => (
+                                    <img
+                                        key={file.file_idx}
+                                        src={`http://localhost/bbsImg/${file.file_idx}`}
+                                        alt="첨부 이미지"
+                                        className="board-detail-image"
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
 
-                <div className="content_text">
-                    {board.content}
-                </div>
-                {/* 첨부파일 */}
-                {files && files?.length > 0 && (
-                    <div className="flex gap_10">
-                        {files.map((file, idx) => (
-                            <img key={file.file_idx} src={`http://localhost/bbsImg/${file.file_idx}`} alt="" style={{width:300,margin:'0 auto'}}/>
-                        ))
+                <section className="board-detail-comments">
+                    <h2 className="board-detail-comment-title">댓글</h2>
+                    <ul className="board-detail-comment-list">
+                        {comments && comments.length > 0 && comments.map((comment) => (
+                            <li className="board-detail-comment-item" key={comment.comment_idx}>
+                                <div className="board-detail-comment-main">
+                                    <span className="board-detail-comment-content">{comment.content}</span>
+                                    <span className="board-detail-comment-user">{comment.user_id}</span>
+                                    <span className="board-detail-comment-date">{comment.reg_date?.substring(0, 10)}</span>
+                                    {board.user_id === sessionStorage.getItem('user_id') &&
+                                        <span className="board-detail-comment-action" onClick={() => changeReply(comment.comment_idx)}>대댓글</span>
+                                    }
+                                    {comment.user_id === sessionStorage.getItem('user_id') &&
+                                        <>
+                                            <span className="board-detail-comment-action" onClick={() => changeUpdateComment(comment)}>{update_idx === comment.comment_idx ? '취소' : '수정'}</span>
+                                            <span className="board-detail-comment-action" onClick={() => delComment(comment.comment_idx)}>삭제</span>
+                                        </>
+                                    }
+                                </div>
+                                <ul className="board-detail-reply-list">
+                                    {replys.filter(reply => reply.comment_idx === comment.comment_idx).map(reply => (
+                                        <li className="board-detail-reply-item" key={reply.reply_idx}>
+                                            <span className="board-detail-reply-content">ㄴ {reply.content}</span>
+                                            <span className="board-detail-reply-user">{reply.user_id}</span>
+                                            <span className="board-detail-reply-date">{reply.reg_date?.substring(2, 10)}</span>
+                                            {reply.user_id === sessionStorage.getItem('user_id') &&
+                                                <>
+                                                    <span className="board-detail-comment-action" onClick={() => changeUpdateReply(reply)}>{update_idx === reply.reply_idx ? '취소' : '수정'}</span>
+                                                    <span className="board-detail-comment-action" onClick={() => delReply(reply.reply_idx)}>삭제</span>
+                                                </>
+                                            }
+                                        </li>
+                                    ))}
+                                </ul>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="board-detail-comment-form-label">{replyState ? '대댓글' : '댓글'}</div>
+                    <div className="board-detail-comment-form">
+                        <textarea
+                            className="board-detail-comment-input"
+                            style={{height:90,resize:'none',fontSize:'1.5rem'}}
+                            value={text}
+                            onChange={e => setText(e.target.value)}
+                            placeholder="댓글을 입력하세요"
+                        />
+                        {replyState ?
+                            <button className='btn white_color label' onClick={writeReply}>{update_idx !== null ? '수정' : '등록'}</button> :
+                            <button className='btn white_color label' onClick={writeComment}>{update_idx !== null ? '수정' : '등록'}</button>
                         }
                     </div>
-                )}
+                </section>
+
+                <div className="flex justify-end gap_10 board-detail-action-row">
+                    <Link href={getLink()}>
+                        <button className="btn label white_color">
+                            목록
+                        </button>
+                    </Link>
+                    {sessionStorage.getItem('user_id') === board.user_id &&
+                        <>
+                            <button className="btn label white_color" onClick={updateBoard}>
+                                수정
+                            </button>
+                            <button className="btn label white_color" onClick={delBoard}>
+                                삭제
+                            </button>
+                        </>
+                    }
+                </div>
             </div>
-            <div className='flex column text-left gap_10'>
-                {comments && comments?.length > 0 && comments?.map((comment, index) => (<>
-                    <p className='flex justify_con_space_between gap_20' key={comment.comment_idx}>{comment.content}
-                        <span className='ml_auto'>{comment.user_id}</span> <span>{comment.reg_date.substring(0,10)}</span>{board.user_id === sessionStorage.getItem('user_id') ? <span className="pointer" onClick={()=>changeReply(comment.comment_idx)}>대댓글</span>:''}{comment.user_id === sessionStorage.getItem('user_id') ? <><span className="pointer" onClick={()=>changeUpdateComment(comment)}>{update_idx===comment.comment_idx ? '취소':'수정'}</span><span className="pointer" onClick={()=>delComment(comment.comment_idx)}>삭제</span></>:''}</p>
-                    {replys.filter(reply=>reply.comment_idx === comment.comment_idx)?.map(reply => (
-                        <p className='flex justify_con_space_between gap_20'>ㄴ {reply.content} <span className='ml_auto'>{reply.user_id}</span> <span>{reply.reg_date.substring(2,10)}</span>{reply.user_id === sessionStorage.getItem('user_id') ? <><span className="pointer" onClick={()=>changeUpdateReply(reply)}>{update_idx===reply.reply_idx ? '취소':'수정'}</span><span className="pointer" onClick={()=>delReply(reply.reply_idx)}>삭제</span></> : '' }</p>
-                    ))}
-                    </>
-                ))}
-            </div>
-                <div style={{fontSize:'15px', fontWeight:'bold'}}> {replyState ? '대댓글' : '댓글' }</div>
-            <div className='flex gap_10'>
-                <textarea name="" id="" style={{height:200}} value={text} onChange={e=>setText(e.target.value)}></textarea>
-                {replyState ?
-                    <button className='btn white_color label' onClick={writeReply}>{update_idx !== null ? '수정' : '등록'}</button> :
-                    <button className='btn white_color label' onClick={writeComment}>{update_idx !== null ? '수정' : '등록'}</button>
-                }
-            </div>
-            {/* 버튼 */}
-            <div className="flex justify-end gap_10">
-                <Link href={getLink()}>
-                    <button className="btn label white_color">
-                        목록
-                    </button>
-                </Link>
-                {sessionStorage.getItem('user_id') === board.user_id ?
-                    <>
-                    <button className="btn label white_color" onClick={updateBoard}>
-                        수정
-                    </button>
-                    <button className="btn label white_color" onClick={delBoard}>
-                    삭제
-                    </button>
-                    </>
-                : ''
-                }
-            </div>
-            </div>
+            <Footer />
         </div>
-        <Footer/>
-    </div>
     );
 }

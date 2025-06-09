@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import axios from 'axios';
-import { useAlertModalStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
+import { useRouter } from 'next/navigation';
 
 const TAG_API = 'http://localhost/';
 

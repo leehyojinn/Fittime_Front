@@ -72,7 +72,7 @@ export default function Notice() {
                     <div className='flex justify_con_space_between gap_10 board_css'>
                         <p className='content_text width_200 text_left'>번호</p>
                         <p className='content_text flex_1'>제목</p>
-                        <p className='content_text width_200'>아이디</p>
+                        <p className='content_text width_200 text_left'>아이디</p>
                         <p className='content_text width_200 text_right'>날짜</p>
                     </div>
                     {/* 확인용 데이터 링크걸기*/}
@@ -87,7 +87,7 @@ export default function Notice() {
                         ))
                     )}
                 </div>
-                <div style={{display:'flex'}}>
+                <div style={{display:'flex', marginTop:"20px"}}>
                     <div className="pagination-buttons-fixed">
                         {
                             page > 1 && (
