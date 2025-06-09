@@ -182,11 +182,9 @@ const MainPage = () => {
                                         onClick={() => handleMoveCenter(center.center_id)}>
                                         <div
                                             style={{
-                                                background: center.profile_image
-                                                    ? `url('http://localhost/center_profile_img/${center.profile_image}') center/cover no-repeat`
-                                                    : "url(./center.jpg) no-repeat",
-                                                aspectRatio: '1/1',
-                                                borderRadius: 12
+                                                background:`url('http://localhost/profileImg/profile/${center.center_id}') center center/cover no-repeat`,
+                                                width:'100%',
+                                                aspectRatio:'1/1'
                                             }}/>
                                         <div className='flex column gap_10 mt_20'>
                                             <p
@@ -280,11 +278,9 @@ const MainPage = () => {
                                             onClick={() => handleMoveTrainer(trainer.trainer_id)}>
                                             <div
                                                 style={{
-                                                    background: trainer.profile_image
-                                                        ? `url('http://localhost/center_profile_img/${trainer.profile_image}') center/cover no-repeat`
-                                                        : "url(./member.png) no-repeat center/cover",
-                                                    aspectRatio: '1/1',
-                                                    borderRadius: 12
+                                                    background:`url('http://localhost/profileImg/profile/${trainer.trainer_id}') center center/cover no-repeat`,
+                                                    width:'100%',
+                                                    aspectRatio:'1/1'
                                                 }}/>
                                             <div className='flex column gap_10 mt_20'>
                                                 <p

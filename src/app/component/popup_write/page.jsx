@@ -284,6 +284,8 @@ export default function PopupTable() {
     formData.append('use_toggle', editingPopup.use_toggle);
     if (editingPopup.popup_image) {
       formData.append('popup_image', editingPopup.popup_image);
+    } else if (isEdit && editingPopup.file_name) {
+      formData.append('file_name', editingPopup.file_name);
     }
     try {
       if (isEdit) {

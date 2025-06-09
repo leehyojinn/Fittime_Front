@@ -545,7 +545,6 @@ export default function MyCalendar() {
                 >
                   <option className='label' value="일정">일정</option>
                   <option className='label' value="휴무">휴무</option>
-                  <option className='label' value="예약">예약</option>
                 </select>
                 <div className="modal-btns justify_con_end">
                   <button className='label' onClick={() => setInputInfo({ ...inputInfo, open: false })}>취소</button>

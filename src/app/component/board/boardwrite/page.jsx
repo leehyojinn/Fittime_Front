@@ -2,228 +2,208 @@
 
 import Footer from '@/app/Footer';
 import Header from '@/app/Header';
-import React, { useState, useEffect } from 'react';
-import {useRouter, useSearchParams} from "next/navigation";
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
-import {FaCamera} from "react-icons/fa";
+import { FaCamera } from "react-icons/fa";
 import { useAuthStore } from '@/app/zustand/store';
 
 export default function BoardWrite() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [files, setFiles] = useState([]);
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [files, setFiles] = useState([]);
+    const [previewUrls, setPreviewUrls] = useState([]);
 
-  const searchParams = useSearchParams();
-  const category = searchParams.get('category');
-  const board_idx = searchParams.get('board_idx');
-  const router = useRouter();
-  
-  const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+    const searchParams = useSearchParams();
+    const category = searchParams.get('category');
+    const board_idx = searchParams.get('board_idx');
+    const router = useRouter();
+
+    const fileInputRef = useRef(null);
+
+    const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
     useEffect(() => {
         checkAuthAndAlert(router, null, { noGuest: true });
     }, [checkAuthAndAlert, router]);
 
     useEffect(() => {
-        if(board_idx != null){
-            console.log(board_idx);
+        if (board_idx != null) {
             getBoardDetail();
         }
     }, [board_idx]);
 
-    const getBoardDetail =  () => {
-        axios.post(`http://localhost/detail/bbs/${board_idx}`)
-            .then(({data}) => {
-                console.log(data);
+    const getBoardDetail = () => {
+        axios
+            .post(`http://localhost/detail/bbs/${board_idx}`)
+            .then(({ data }) => {
                 setTitle(data.dto.title);
                 setContent(data.dto.content);
-                if(data.photos?.length>0) {
-                    data.photos.map((photo)=>{
-                        axios.get(`http://localhost/bbsImg/${photo.file_idx}`,{
-                            responseType: "blob"
-                        })
-                            .then(({data})=>{
-                                const file = new File([data], `${photo.file_name}`, { type: data.type });
-                                console.log(file);
-                                setFiles(prev => [...prev,file]);
-                            })
+                if (data.photos?.length > 0) {
+                    setFiles([]);
+                    setPreviewUrls([]);
+                    data.photos.forEach((photo) => {
+                        axios
+                            .get(`http://localhost/bbsImg/${photo.file_idx}`, { responseType: "blob" })
+                            .then(({ data: blob }) => {
+                                const file = new File([blob], `${photo.file_name}`, { type: blob.type });
+                                setFiles(prev => [...prev, file]);
+                                setPreviewUrls(prev => [
+                                    ...prev,
+                                    URL.createObjectURL(blob)
+                                ]);
+                            });
                     });
                 }
             })
-
-
     }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-      const formData = new FormData();
-      if (files.length > 0) {
-          files.forEach(file => {
-              formData.append('files', file);
-          });
-      }
-      formData.append('title', title);
-      formData.append('content', content);
-    if(board_idx != null){
-        formData.append('board_idx', board_idx);
-        const {data} = await axios.post('http://localhost/update/bbs', formData,
-            {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        if (files.length > 0) {
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+        }
+        formData.append('title', title);
+        formData.append('content', content);
+        if (board_idx != null) {
+            formData.append('board_idx', board_idx);
+            const { data } = await axios.post('http://localhost/update/bbs', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-        console.log('수정 : ',data);
-        if(data.success) {
-            router.push(`/component/board/boarddetail?category=${category}&board_idx=` + board_idx);
-        }
-    }else {
-        formData.append('user_id', sessionStorage.getItem('user_id'));
-        formData.append('category', category);
-        const {data} = await axios.post('http://localhost/write/bbs', formData,
-            {
+            if (data.success) {
+                router.push(
+                    `/component/board/boarddetail?category=${category}&board_idx=` + board_idx
+                );
+            }
+        } else {
+            formData.append('user_id', sessionStorage.getItem('user_id'));
+            formData.append('category', category);
+            const { data } = await axios.post('http://localhost/write/bbs', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-        console.log('등록 : ',data);
-        if (data.success){
-            router.push(`/component/board/boarddetail?category=${category}&board_idx=`+data.board_idx);
+            if (data.success) {
+                router.push(
+                    `/component/board/boarddetail?category=${category}&board_idx=` + data.board_idx
+                );
+            }
         }
-    }
-    // console.log('제목:', title);
-    // console.log('내용(HTML):', content); // HTML 형식 콘텐츠 확인 가능
-    // setSubmitted(true);
-    // setTitle('');
-    // setContent('');
-    // setFiles([]);
-  };
-
-
-
-  // 취소 링크 주소
-  const getLink = () => {
-      switch (category) {
-          case '이벤트' :
-              return '/component/board/event';
-          case '건의사항' :
-              return '/component/board/suggestions';
-          case 'QnA' :
-              return '/component/board/qna';
-          default:
-              return '/component/board';
-      }
-  }
-
-  // 파일 업로드
-    const handleFileChange = (e) => {
-        const newFiles = Array
-            .from(e.target.files)
-            .slice(0, 5);
-        setFiles(newFiles);
+        // setSubmitted(true); setTitle(''); setContent(''); setFiles([]);
     };
 
-  return (
-    <div>
-      <Header/>
-      <div className='wrap padding_120_0'>
-        <div>
-          <h2 style={{ fontSize: 28, marginBottom: 30 }}>게시글 작성</h2>
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 16 }}>제목</label>
-              <input
-                type="text"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: 16,
-                  border: '1px solid #ddd',
-                  borderRadius: 6
-                }}
-                placeholder="제목을 입력하세요"
-              />
-            </div>
+    const getLink = () => {
+        switch (category) {
+            case '이벤트':
+                return '/component/board/event';
+            case '건의사항':
+                return '/component/board/suggestions';
+            case 'QnA':
+                return '/component/board/qna';
+            default:
+                return '/component/board';
+        }
+    }
 
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 16 }}>내용</label>
-              <textarea onChange={e=> setContent(e.target.value)} value={content}></textarea>
-            </div>
+    // 파일 업로드
+    const handleFileChange = (e) => {
+        const newFiles = Array.from(e.target.files).slice(0, 5);
+        setFiles(newFiles);
+        const urls = newFiles.map(file => URL.createObjectURL(file));
+        setPreviewUrls(urls);
+    };
 
-            <div>
-              <input type="file"
-                     name=""
-                     id=""
-                     accept="image/jpeg,image/png"
-                     multiple
-                     onChange={handleFileChange}
-                     style={{padding:'10px 20px',height:60,boxSizing:'border-box',border:'none'}}/>
-            </div>
-              <div className="review-file-preview">
-                  {
-                      files
-                          ?.map((file, i) => (<span key={i} className="file-name">{file instanceof File? file.name : file}</span>))
-                  }
-              </div>
+    // 파일 삭제
+    const handleRemoveFile = (idx) => {
+        setFiles(prev => prev.filter((_, i) => i !== idx));
+        setPreviewUrls(prev => prev.filter((_, i) => i !== idx));
+    };
 
-            <button
-              type="submit"
-              style={{
-                background: '#007bff',
-                color: '#fff',
-                padding: '12px 30px',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 16,
-                cursor: 'pointer',
-                float: 'right'
-              }}
-            >
-              등록하기
-            </button>
-            <Link href={getLink()}>
-                <button
-                  type="button"
-                  style={{
-                    background: '#007bff',
-                    color: '#fff',
-                    padding: '12px 30px',
-                    border: 'none',
-                    borderRadius: 6,
-                    fontSize: 16,
-                    cursor: 'pointer',
-                    float: 'right',
-                    marginRight:5
-                  }}
-                >
-                  취소
-                </button>
-            </Link>
-          </form>
-          {submitted && (
-            <div style={{ 
-              marginTop: 24, 
-              padding: 16,
-              background: '#f0f9ff',
-              borderRadius: 6,
-              color: '#0369a1'
-            }}>
-              게시글이 성공적으로 등록되었습니다!
+    return (
+        <div className="board-write-bg">
+            <Header />
+            <div className='flex justify_con_center padding_120_0 bg_primary_color_2'>
+                <p className='title'>게시글 {board_idx ? '수정' : '작성'}</p>
             </div>
-          )}
+            <div className="board-write-wrap">
+                <h2 className="board-write-title">
+                    게시글 {board_idx ? '수정' : '작성'}
+                </h2>
+                <form className="board-write-form" onSubmit={handleSubmit} autoComplete="off">
+                    <div className="board-write-form-group">
+                        <label htmlFor="board-title" className="board-write-label">제목</label>
+                        <input
+                            id="board-title"
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            required
+                            className="board-write-input"
+                            placeholder="제목을 입력하세요"
+                        />
+                    </div>
+                    <div className="board-write-form-group">
+                        <label htmlFor="board-content" className="board-write-label">내용</label>
+                        <textarea
+                            id="board-content"
+                            value={content}
+                            onChange={e => setContent(e.target.value)}
+                            required
+                            className="board-write-textarea"
+                            placeholder="내용을 입력하세요"
+                        />
+                    </div>
+                    <div className="board-write-form-group">
+                        <label className="board-write-label">이미지 첨부</label>
+                        <div className="board-write-file-row">
+                            <button
+                                type="button"
+                                className="board-write-file-btn"
+                                onClick={() => fileInputRef.current.click()}
+                            >
+                                <FaCamera /> 파일 선택
+                            </button>
+                            <input
+                                type="file"
+                                accept="image/jpeg,image/png"
+                                multiple
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleFileChange}
+                            />
+                        </div>
+                        <div className="board-write-file-preview">
+                            {previewUrls.map((url, i) => (
+                                <div className="board-write-file-thumb" key={i}>
+                                    <img src={url} alt={`첨부 이미지 ${i + 1}`} />
+                                    <button type="button" className="board-write-file-remove" onClick={() => handleRemoveFile(i)}>×</button>
+                                </div>
+                            ))}
+                            {files.length === 0 && (
+                                <div className="board-write-file-empty">첨부된 이미지가 없습니다.</div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="board-write-action-row">
+                        <Link href={getLink()}>
+                            <button type="button" className='btn white_color label'>
+                                취소
+                            </button>
+                        </Link>
+                        <button type="submit" className='btn white_color label'>
+                            {board_idx ? '수정하기' : '등록하기'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <Footer />
         </div>
-      </div>
-      <Footer/>
-
-      {/* SunEditor CSS 추가 */}
-      <link 
-        href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" 
-        rel="stylesheet"
-      />
-    </div>
-  );
+    );
 }

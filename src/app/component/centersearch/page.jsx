@@ -206,7 +206,7 @@ const CenterSearch = () => {
             <div className="search-panel">
                 <div className="location-selector">
                 <div className="select-group">
-                    <label>시/도</label>
+                    <label className='label'>시/도</label>
                     <select 
                     value={location.city}
                     onChange={(e) => setLocation({ ...location, city: e.target.value, district: '', neighborhood: '' })}
@@ -219,7 +219,7 @@ const CenterSearch = () => {
                 </div>
                 
                 <div className="select-group">
-                    <label>구/군</label>
+                    <label className='label'>구/군</label>
                     <select 
                     value={location.district}
                     onChange={(e) => setLocation({ ...location, district: e.target.value, neighborhood: '' })}
@@ -233,7 +233,7 @@ const CenterSearch = () => {
                 </div>
                 
                 <div className="select-group">
-                    <label>동/읍/면</label>
+                    <label className='label'>동/읍/면</label>
                     <select 
                     value={location.neighborhood}
                     onChange={(e) => setLocation({ ...location, neighborhood: e.target.value })}
@@ -248,7 +248,7 @@ const CenterSearch = () => {
                 </div>
                 
                 <div className="exercise-selector">
-                <label>운동 종목</label>
+                <label className='middle_title2'>운동 종목</label>
                 <div className="exercise-options">
                     {exerciseOptions?.map((exercise) => (
                     <button 
@@ -274,34 +274,37 @@ const CenterSearch = () => {
                     <FaFilter /> 필터
                 </button>
                 
-                 <button
+                {/* <button
                     className={`map-button ${showMap ? 'active' : ''}`}
                     onClick={() => setShowMap(!showMap)}
                 >
                     <FaMapMarkedAlt /> {showMap ? '목록 보기' : '지도 보기'}
-                </button>
+                </button> */}
                 </div>
             </div>
             
             {isFilterOpen && (
                 <div className="filter-panel">
                 <div className="filter-section">
-                    <h3>최소 별점</h3>
-                    <div className="rating-slider">
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max="5" 
-                        step="0.5" 
-                        value={filters.minRating}
-                        onChange={(e) => handleFilterChange('minRating', parseFloat(e.target.value))}
-                    />
-                    <span>{filters.minRating} 이상</span>
+                    <h3 className='page-title mb_10'>최소 별점</h3>
+                    <div className="rating-slider justify_con_center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                            key={star}
+                            className="star-icon"
+                            size={26}
+                            color={filters.minRating >= star ? "#F2C265" : "#d3d3d3"}
+                            style={{ cursor: "pointer", marginRight: 2 }}
+                            onClick={() => handleFilterChange('minRating', star)}
+                            aria-label={`${star}점 이상`}
+                        />
+                        ))}
+                        <span className="min-rating-label">{filters.minRating} 이상</span>
                     </div>
                 </div>
                 
                 <div className="filter-section">
-                    <h3>태그</h3>
+                    <h3 className='page-title mb_10'>태그</h3>
                     <div className="tag-options">
                     {availableTags.map((tag) => (
                         <label key={tag.tag_idx} className="tag-checkbox">
@@ -316,7 +319,7 @@ const CenterSearch = () => {
                     </div>
                 </div>
                 
-                <div className="filter-section">
+                {/* <div className="filter-section">
                     <h3>정렬</h3>
                     <div className="radio-group">
                     <label>
@@ -342,7 +345,7 @@ const CenterSearch = () => {
                         가격 낮은 순
                     </label>
                     </div>
-                </div>
+                </div> */}
                 </div>
             )}
             

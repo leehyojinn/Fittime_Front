@@ -39,6 +39,7 @@ const Popup = () => {
             });
             setVisiblePopups(newVisiblePopups);
         }
+        
     }, [popupData]);
 
     // 드래그 관련 함수
@@ -123,6 +124,17 @@ const Popup = () => {
                 const imageUrl = popup.file_name.startsWith('http')
                     ? popup.file_name
                     : IMAGE_BASE_URL + popup.file_name;
+
+                const now = new Date();
+                const startDate = popup.start_date ? new Date(popup.start_date) : null;
+                const endDate = popup.end_date ? new Date(popup.end_date) : null;
+
+                if (
+                    (startDate && now < startDate) ||
+                    (endDate && now > endDate)
+                ) {
+                    return null;
+                }
 
                 // 위치 및 크기
                 const left = positions[popup.popup_idx]?.x ?? getInitialLeft(popup.popup_idx) + '%';

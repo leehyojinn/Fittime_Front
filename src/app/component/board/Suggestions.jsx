@@ -86,7 +86,7 @@ export default function Suggestions() {
                         ))
                     )}
                 </div>
-                <div style={{display:'flex'}}>
+                <div style={{display:'flex', marginTop:"20px"}}>
                     <div className="pagination-buttons-fixed">
                         {
                             page > 1 && (
