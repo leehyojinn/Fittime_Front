@@ -298,7 +298,7 @@ const TrainerMyPage = () => {
                         <td>{sessionStorage.user_level >= 2 && <div style={{display:'flex',justifyContent:'center'}}>
                             <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
                                 <span class="material-symbols-outlined">warning</span>
-                                <span className='material-symbols-outlined-text'>신고하기</span>
+                                <span className='material-symbols-outlined-text' style={{fontSize:'1.2rem'}}>신고하기</span>
                             </button>
                         </div>}</td>
                     </tr>
