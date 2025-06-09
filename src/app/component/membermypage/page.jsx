@@ -261,12 +261,14 @@ const MemberMyPage = () => {
                     <td>{r.content}</td>
                     <td>{r.reg_date.substring(0,10)}</td>
                     <td style={{textAlign:'center'}}>
+                      <div style={{display:'flex', justifyContent:'center'}}>
                       <button className="mypage-small-btn white_color label" style={{ marginRight:'5px'}} onClick={()=>handleUpdateReview(r.review_idx)}>
                         수정
                       </button>
                       <button className="mypage-small-btn white_color label" style={{letterSpacing:'inherit'}} onClick={()=>handleDeleteReview(r.review_idx)}>
                         삭제
                       </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
