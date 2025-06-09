@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Image from 'next/image';
 import { FaStar, FaMapMarkerAlt, FaUser, FaBuilding, FaSearch } from 'react-icons/fa';
 import Header from '../../Header';
@@ -191,7 +191,7 @@ const NameSearch = () => {
                 <div className="loading-indicator">검색 중...</div>
             ) : (
                 <div className="search-results-container">
-                {searchResults.trainers.length === 0 && searchResults.centers.length === 0 ? (
+                {(searchType==='trainer'&&searchResults.trainers.length === 0)||(searchType==='center'&&searchResults.centers.length) === 0 ? (
                     <div className="no-results">
                     {searchTerm ? '검색 결과가 없습니다. 다른 키워드로 검색해 보세요.' : '트레이너 또는 센터 이름을 검색해 보세요.'}
                     </div>
@@ -263,6 +263,7 @@ const NameSearch = () => {
                         </h3>
                         
                         <div className="center-results">
+
                             {searchResults.centers.map((center) => (
                                 <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_id)}>
                                     <div className={"center-image"} style={{width:"fit-content"}}>
@@ -317,6 +318,11 @@ const NameSearch = () => {
                                 <div className="result-section" style={{width:'50%'}}>
                                     <div className="center-results" >
                                         <div className="search-title" style={{fontSize:'1.5rem'}}>센터</div>
+                                        {searchResults.centers.length === 0 ? (
+                                        <div className="no-results">
+                                            {searchTerm ? '검색 결과가 없습니다. 다른 키워드로 검색해 보세요.' : '트레이너 또는 센터 이름을 검색해 보세요.'}
+                                        </div>) :
+                                            <>
                                         {searchResults.centers.map((center) => (
                                             <div key={center.center_idx} className="center-card" onClick={()=>handleMoveCenter(center.center_id)}>
                                                 <div className="center-image" style={{width:"fit-content"}}>
@@ -361,11 +367,17 @@ const NameSearch = () => {
                                                 </div>
                                             </div>
                                         ))}
+                                            </>}
                                     </div>
                                 </div>
                                 <div className="result-section" style={{width:'50%'}}>
                                     <div className="center-results">
                                         <div className="search-title" style={{fontSize:'1.5rem'}}>트레이너</div>
+                                        {searchResults.trainers.length === 0 ? (
+                                                <div className="no-results">
+                                                    {searchTerm ? '검색 결과가 없습니다. 다른 키워드로 검색해 보세요.' : '트레이너 또는 센터 이름을 검색해 보세요.'}
+                                                </div>) :
+                                            <>
                                         {searchResults.trainers.map((trainer) => (
                                             <div key={trainer.user_id} className="center-card" style={{height:'178px'}} onClick={()=>handleMoveTrainer(trainer.user_id)}>
                                                     <div className="center-image"  style={{width:"fit-content"}}>
@@ -414,6 +426,7 @@ const NameSearch = () => {
                                                     </div>
                                                 </div>
                                         ))}
+                                            </>}
                                     </div>
                                 </div>
                             </div>

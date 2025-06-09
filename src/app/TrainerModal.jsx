@@ -60,7 +60,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                     padding: '40px 30px',
                     minWidth: '320px',
                     position: 'relative',
-                    width: '350px'
+                    width: '400px'
                 }}
             >
                 <button
@@ -102,7 +102,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                                         <table className="mypage-table">
                                             {trainers?.length>0 &&(
                                             <thead>
-                                            <tr><th>이름</th><th>프로필</th><th>관리</th></tr>
+                                            <tr><th>아이디</th><th>이름</th><th>프로필</th><th>관리</th></tr>
                                             </thead>
                                                 )}
                                             <tbody>
@@ -110,6 +110,9 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                                                 <tr key={t.trainer_id}>
                                                     <td>
                                                         <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
+                                                        {t.trainer_id}
+                                                    </td>
+                                                    <td>
                                                         {t.name}
                                                     </td>
                                                     <td style={{textAlign:'center'}}>
