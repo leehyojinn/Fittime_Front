@@ -341,7 +341,7 @@ const Reservation = () => {
         user_id: user_id,
         buy_idx: selectedProduct.buy_idx, // 내상품 PK
         product_idx: selectedProduct.product_idx,
-        date: selectedDate.toISOString().slice(0, 10),
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null,
         trainer_id: selectedProduct.trainer_id,
@@ -371,7 +371,7 @@ const Reservation = () => {
         product_idx: selectedProduct.product_idx,
         trainer_id: selectedProduct.trainer_id,
         class_idx: selectedClass?.class_idx,
-        date: selectedDate.toISOString().slice(0, 10),
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
       };
@@ -666,7 +666,7 @@ const Reservation = () => {
         class_idx: selectedClass?.class_idx,
         count: selectedProduct.count - 1,
         rest_period: selectedProduct.duration,
-        date: selectedDate.toISOString().slice(0, 10),
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
       };
