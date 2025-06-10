@@ -3958,3 +3958,11 @@ img {
     overflow: visible !important;
     height: 100%;
 }
+
+.trainer-info-box {
+    background-color: #fafafa;
+}
+
+.trainer-info-box.selected {
+    background: #e3e6e6;
+}

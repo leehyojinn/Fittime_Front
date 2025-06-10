@@ -55,6 +55,8 @@ const Reservation = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedClass_idx, setSelectedClass_idx] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
 
   // 예약 인원 체크 상태
   const [timeSlotCounts, setTimeSlotCounts] = useState({}); // 시간별 예약 인원
@@ -64,6 +66,7 @@ const Reservation = () => {
   const [resultMsg, setResultMsg] = useState('');
   const [disabledDates, setDisabledDates] = useState([]);
   const [productTrainerInfo, setProductTrainerInfo] = useState(null);
+
 
   const [dateBookedCounts, setDateBookedCounts] = useState({});
 
@@ -172,40 +175,86 @@ const Reservation = () => {
         trainer_id: product.trainer_id,
         product_idx: product.product_idx
       }).then(res => {
-        const cls = (res.data.list || []).find(c => !c.delete);
+        const cls = (res.data.list || []).filter(c => !c.delete);
         setClassInfo(cls || null);
-        const trainer = trainers.find(t => t.trainer_id === product.trainer_id);
+        console.log(cls);
+        const cls_trainer_id = [...new Set(res.data.list.filter(c=> !c.delete)?.map(c=>c.trainer_id))];
+        const trainer = cls_trainer_id.map(id=>{
+          return trainers.find(t => t.trainer_id === id);
+        }) ;
         setProductTrainerInfo(trainer || null);
       });
     } else {
       setClassInfo(null);
+      if(!product.duration) {
+        setProductTrainerInfo(trainers);
+      }
     }
   };
+
+  useEffect(() => {
+    if(selectedClass_idx){
+      setSelectedClass(classInfo.find(c=>c.class_idx === selectedClass_idx));
+    }
+  }, [selectedClass_idx]);
+
+  useEffect(() => {
+    if(productTrainerInfo) {
+      axios.post('http://localhost/reservation/class_info', {
+        center_id: selectedProduct.center_id,
+        trainer_id: selectedProduct.trainer_id,
+        product_idx: selectedProduct.product_idx
+      }).then(res => {
+        const cls = (res.data.list || []).filter(c => !c.delete).filter(c => c.trainer_id === selectedTrainer.trainer_id);
+        setClassInfo(cls || null);
+        if(cls.length===0){
+          const arr = selectedCenter.operation_hours.split('-');
+          const slots = getHourSlots(arr[0],arr[1]);
+          setAvailableTimes(slots);
+        }
+      })
+    }
+  }, [selectedTrainer])
 
   // 날짜 변경 시 시간 슬롯 생성 및 예약 인원 체크
   useEffect(() => {
     if (!selectedProduct) return;
     // 시간 있는 상품(클래스)
-    if (classInfo && classInfo.start_time && classInfo.end_time) {
+    if (classInfo && classInfo.length>0) {
       const day = selectedDate.getDay();
-      const weekArr = classInfo.week.split(',').map(w => weekMap[w.trim()]);
-      if (!weekArr.includes(day)) {
-        setAvailableTimes([]);
-        setTimeSlotCounts({});
-        return;
-      }
-      const slots = getHourSlots(classInfo.start_time, classInfo.end_time);
-      setAvailableTimes(slots);
-
-      // 시간별 예약 인원 조회
-      axios.post('http://localhost/reservation/booked_count', {
-        class_idx: classInfo.class_idx,
-        date: selectedDate.toISOString().slice(0, 10),
-        times: slots.map(slot => ({ start_time: slot.time, end_time: slot.endTime }))
-      }).then(res => {
-        // { "15:00:00-16:00:00": 2, ... }
-        setTimeSlotCounts(res.data.counts || {});
+      const filteredclassInfo = classInfo.filter(cls=>{
+        if(!cls.start_time || !cls.end_time) return false;
+        const weekArr = cls.week.split(',').map(w => weekMap[w.trim()]);
+        //console.log(weekArr);
+        if (!weekArr.includes(day)) {
+          setAvailableTimes([]);
+          setTimeSlotCounts({});
+          return false;
+        }
+        return weekArr.includes(day);
       });
+      console.log('filteredclassInfo',filteredclassInfo);
+      //const slots = filteredclassInfo.map(info=>getHourSlots(info.start_time, info.end_time,info.class_idx)).flat();
+      const slots = filteredclassInfo.map(info => ({
+        time: info.start_time,
+        endTime: info.end_time,
+        class_idx: info.class_idx
+      }))
+      console.log(slots);
+      setAvailableTimes(slots);
+      // 시간별 예약 인원 조회
+      filteredclassInfo.forEach(c=>{
+        axios.post('http://localhost/reservation/booked_count', {
+          class_idx: c.class_idx,
+          date: selectedDate.toISOString().slice(0, 10),
+          times: slots.map(slot => ({ start_time: slot.time, end_time: slot.endTime }))
+        }).then(res => {
+          setTimeSlotCounts((prev)=>({
+            ...prev,
+            [c.class_idx]:res.data.counts || {}
+          }));
+        })
+      })
     } else {
       // 시간 없는 상품: 날짜별 예약 인원 조회
       axios.post('http://localhost/reservation/booked_count_date', {
@@ -220,9 +269,12 @@ const Reservation = () => {
   // 캘린더에서 week에 포함된 요일만 선택 가능(시간 없는 상품은 모두 가능)
   const tileDisabled = useCallback(({ date, view }) => {
     if (view !== 'month') return false;
-    if (classInfo) {
-      const weekArr = classInfo.week.split(',').map(w => weekMap[w.trim()]);
-      if (!weekArr.includes(date.getDay())) return true;
+    if (classInfo && classInfo.length>0) {
+      const boolean = classInfo.every(c=> {
+        const weekArr = c.week.split(',').map(w => weekMap[w.trim()]);
+        return !weekArr.includes(date.getDay());
+      })
+      if (boolean) return true;
     }
     // 시간 없는 상품: 날짜별 예약 인원이 max_people 이상이면 비활성화
     if (!classInfo && selectedProduct) {
@@ -289,15 +341,16 @@ const Reservation = () => {
         user_id: user_id,
         buy_idx: selectedProduct.buy_idx, // 내상품 PK
         product_idx: selectedProduct.product_idx,
-        date: selectedDate.toISOString().slice(0, 10),
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null,
         trainer_id: selectedProduct.trainer_id,
-        class_idx: classInfo?.class_idx,
+        class_idx: selectedClass?.class_idx,
         center_id: selectedCenter.center_id,
       };
       axios.post('http://localhost/booking', param)
         .then(res => {
+          console.log('param',param);
           setIsSubmitting(false);
           if (res.data.success) {
             setResultMsg('예약이 완료되었습니다!');
@@ -317,13 +370,14 @@ const Reservation = () => {
         center_id: selectedCenter.center_id,
         product_idx: selectedProduct.product_idx,
         trainer_id: selectedProduct.trainer_id,
-        class_idx: classInfo?.class_idx,
-        date: selectedDate.toISOString().slice(0, 10),
+        class_idx: selectedClass?.class_idx,
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
       };
       axios.post('http://localhost/booking', param)
         .then(res => {
+          console.log('param',param);
           setIsSubmitting(false);
           if (res.data.success) {
             setResultMsg('예약이 완료되었습니다!');
@@ -469,21 +523,22 @@ const Reservation = () => {
       </div>
   
       {/* 트레이너 정보 노출 */}
-      {selectedProduct && selectedProduct.trainer_id && productTrainerInfo && (
-        <div className="trainer-info-box" style={{marginTop: '16px', padding: '16px', border: '1px solid #eee', borderRadius: '8px', background: '#fafafa'}}>
+      {selectedProduct && productTrainerInfo && productTrainerInfo.map(info=>(
+        <div key={info.trainer_id} className={`trainer-info-box ${selectedTrainer && selectedTrainer.trainer_id === info.trainer_id ? 'selected' : ''}`} style={{marginTop: '16px', padding: '16px', border: '1px solid #eee', borderRadius: '8px',cursor:'pointer'}}
+             onClick={()=>setSelectedTrainer(info)}>
           <div className="flex column align_center justify_con_center gap_20">
-            <img src={`http://localhost/profileImg/profile/${productTrainerInfo.trainer_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
+            <img src={`http://localhost/profileImg/profile/${info.trainer_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
             <div className='flex column gap_3'>
-              <h4 className='page-title mb_0'>{productTrainerInfo.name || productTrainerInfo.trainer_id}</h4>
-              <p className='label'>{productTrainerInfo.career}</p>
+              <h4 className='page-title mb_0'>{info.name || info.trainer_id}</h4>
+              <p className='label'>{info.career}</p>
               <p className='label flex align_center justify_con_center gap_3'>
-                <FaStar color='rgb(255, 193, 7)'/> {productTrainerInfo.avg_rating ? productTrainerInfo.avg_rating.toFixed(1) : '-'}
-                {' '}({productTrainerInfo.rating_count || 0}건)
+                <FaStar color='rgb(255, 193, 7)'/> {info.avg_rating ? info.avg_rating.toFixed(1) : '-'}
+                {' '}({info.rating_count || 0}건)
               </p>
             </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
   
@@ -492,14 +547,14 @@ const Reservation = () => {
     <div className="reservation-section">
 
       <div className="date-selection">
-        {classInfo && (
+        {/*{classInfo && (*/}
+        {/*  <div className='label mb_10'>*/}
+        {/*    <strong>클래스 시간 : </strong> {classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})*/}
+        {/*  </div>*/}
+        {/*)}*/}
+        {selectedTrainer && (
           <div className='label mb_10'>
-            <strong>클래스 시간 : </strong> {classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})
-          </div>
-        )}
-        {productTrainerInfo && (
-          <div className='label mb_10'>
-            <strong>트레이너 : </strong> {productTrainerInfo.name || productTrainerInfo.trainer_id}
+            <strong>트레이너 : </strong> {selectedTrainer.name || selectedTrainer.trainer_id}
           </div>
         )}
         <h3>날짜 선택</h3>
@@ -538,7 +593,10 @@ const Reservation = () => {
                     cursor: isFull ? 'not-allowed' : 'pointer'
                   }}
                   disabled={isFull}
-                  onClick={() => !isFull && setSelectedTime(slot)}
+                  onClick={() => {
+                    !isFull && setSelectedTime(slot);
+                    setSelectedClass_idx(slot.class_idx);
+                  }}
                 >
                   <FaClock /> {slot.time} - {slot.endTime}
                   {isFull && <span style={{color:'#d00',marginLeft:4}}>(마감)</span>}
@@ -547,6 +605,40 @@ const Reservation = () => {
             })}
           </div>
         </div>
+      )}
+      {!classInfo && availableTimes.length > 0 && (
+          <div className="time-selection" style={{marginTop: '16px'}}>
+            <h3>시간 선택</h3>
+            <div className="time-slots">
+              {availableTimes.map((slot, idx) => {
+                const key = `${slot.time}-${slot.endTime}`;
+                const booked = timeSlotCounts[key] || 0;
+                const isFull = booked >= (selectedProduct?.max_people || 0);
+                return (
+                    <button
+                        key={idx}
+                        className={`time-slot ${selectedTime === slot ? 'selected' : ''}`}
+                        style={{
+                          background: selectedTime === slot ? '#27262a' : isFull ? '#ccc' : '#eee',
+                          color: isFull ? '#999' : selectedTime === slot ? '#fff' : '#222',
+                          padding: '13px 16px',
+                          borderRadius: 4,
+                          border: 'none',
+                          marginRight: 8,
+                          cursor: isFull ? 'not-allowed' : 'pointer'
+                        }}
+                        disabled={isFull}
+                        onClick={() => {
+                          !isFull && setSelectedTime(slot);
+                        }}
+                    >
+                      <FaClock /> {slot.time} - {slot.endTime}
+                      {isFull && <span style={{color:'#d00',marginLeft:4}}>(마감)</span>}
+                    </button>
+                );
+              })}
+            </div>
+          </div>
       )}
       {/* 시간 없는 상품은 시간 선택 UI 없음 */}
     </div>
@@ -571,10 +663,10 @@ const Reservation = () => {
         product_idx: selectedProduct.product_idx,
         trainer_id: selectedProduct.trainer_id,
         payment_price: calculateFinalPrice(),
-        class_idx: classInfo?.class_idx,
+        class_idx: selectedClass?.class_idx,
         count: selectedProduct.count - 1,
         rest_period: selectedProduct.duration,
-        date: selectedDate.toISOString().slice(0, 10),
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
       };
@@ -641,16 +733,16 @@ const Reservation = () => {
           <span className="label">상품 : </span>
           <span className="value label text_left">{selectedProduct.product_name}</span>
         </div>
-        {productTrainerInfo && (
+        {selectedTrainer && (
           <div className="detail-item">
             <span className="label">트레이너 : </span>
-            <span className="value label text_left">{productTrainerInfo.name || productTrainerInfo.trainer_id}</span>
+            <span className="value label text_left">{selectedTrainer.name || selectedTrainer.trainer_id}</span>
           </div>
         )}
-        {classInfo && (
+        {selectedClass && (
           <div className="detail-item">
             <span className="label">클래스 시간 : </span>
-            <span className="value label text_left">{classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})</span>
+            <span className="value label text_left">{selectedClass.start_time} ~ {selectedClass.end_time} ({selectedClass.week})</span>
           </div>
         )}
         <div className="detail-item">
@@ -734,16 +826,16 @@ const Reservation = () => {
             <span className="label">상품:</span>
             <span className="value label">{selectedProduct.product_name}</span>
           </div>
-          {classInfo && (
+          {selectedClass && (
             <div className="detail-item">
               <span className="label">클래스 시간:</span>
-              <span className="value label">{classInfo.start_time} ~ {classInfo.end_time} ({classInfo.week})</span>
+              <span className="value label">{selectedClass.start_time} ~ {selectedClass.end_time} ({selectedClass.week})</span>
             </div>
           )}
-          {productTrainerInfo && (
+          {selectedTrainer && (
             <div className="detail-item">
               <span className="label">트레이너:</span>
-              <span className="value label">{productTrainerInfo.name || productTrainerInfo.trainer_id}</span>
+              <span className="value label">{selectedTrainer.name || selectedTrainer.trainer_id}</span>
             </div>
           )}
           <div className="detail-item">
@@ -796,7 +888,7 @@ const Reservation = () => {
     if (step === 2) return !!selectedProduct;
     if (step === 3) {
       // 시간 있는 상품: 날짜+시간, 시간 없는 상품: 날짜만
-      if (classInfo && classInfo.start_time && classInfo.end_time) return !!selectedDate && !!selectedTime;
+      if (classInfo) return !!selectedDate && !!selectedTime;
       return !!selectedDate;
     }
     return false;

@@ -298,7 +298,7 @@ const JoinPage = () => {
                     <div className='flex column gap_10 align_center justify_con_center'>
                         <p className='content_text width_500 text_left'>연락처</p>
                         <input
-                            type="number"
+                            type="text"
                             name="phone"
                             className="width_500"
                             placeholder="숫자만 입력해주세요"
