@@ -580,7 +580,7 @@ export default function MyCalendar() {
                       >
                         <option value="일정">일정</option>
                         <option value="휴무">휴무</option>
-                        <option value="예약">예약</option>
+                        {/* <option value="예약">예약</option> */}
                       </select>
                     </div>
                     <div className='modal-btns justify_con_center'>
@@ -609,9 +609,14 @@ export default function MyCalendar() {
                             <p className='label'>{detailInfo.event.resource.status}</p>
                           )}
                     <div className='flex justify_con_end align_center modal-btns'>
-                      <button className='label' onClick={startEdit}>수정</button>
-                      <button className='label' onClick={() => handleDelete(detailInfo.event)}>삭제</button>
-                      <button className='label' onClick={() => setDetailInfo({ open: false, event: null, x: 0, y: 0 })}>닫기</button>
+                      {detailInfo.event.resource.status == '회원예약' || detailInfo.event.resource.status == '예약' ? <button className='label' onClick={() => setDetailInfo({ open: false, event: null, x: 0, y: 0 })}>닫기</button> : 
+                        <>
+                          <button className='label' onClick={startEdit}>수정</button>
+                          <button className='label' onClick={() => handleDelete(detailInfo.event)}>삭제</button>
+                          <button className='label' onClick={() => setDetailInfo({ open: false, event: null, x: 0, y: 0 })}>닫기</button>
+                        </>
+                      }
+                      
                     </div>
                   </div>
                 )}
