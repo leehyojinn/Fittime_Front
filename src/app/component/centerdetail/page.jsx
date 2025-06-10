@@ -137,7 +137,7 @@ const CenterDetail = () => {
                                     }}>({reviews.length}명)</span>
                             </div>
                             <div className="center-contact" style={{fontSize:'1.3rem'}}>
-                                <FaMapMarkerAlt/> {centerInfo.address}
+                                <FaMapMarkerAlt/> {centerInfo.center_address}
                                 <span className="center-contact-phone" ><FaPhoneAlt/> {centerInfo.phone}</span>
                             </div>
                         </div>
