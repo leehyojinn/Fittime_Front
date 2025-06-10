@@ -26,7 +26,7 @@ const ComplaintForm = () => {
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
   useEffect(() => {
-    checkAuthAndAlert(router, null, { minLevel: 3 });
+    checkAuthAndAlert(router, null, { minLevel: 2 });
   }, [checkAuthAndAlert, router]);
 
   const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";

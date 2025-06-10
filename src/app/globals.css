@@ -2952,6 +2952,9 @@ table tr.selected {
   color: #fff;
   font-weight: 600;
 }
+.mypage-table td:nth-child(5) {
+    width: 11%;
+}
 .mypage-add-btn, .mypage-small-btn {
   background: var(--primary-color);
   color: #fff;
