@@ -137,7 +137,7 @@ const Grant = () => {
       const endpoint = isRevertToAdmin ? 'grant' : 'revoke';
       const { data } = await axios.post(`http://localhost/${endpoint}/${selectedItem.user_id}`);
       if (data.success) {
-        if (history.length === 0 || history[0].user_id !== selectedItem.user_id) {
+        if (history.length === 0 || history[0].user_id === selectedItem.user_id) {
           setHistory([
             {
               user_id: selectedItem.user_id,
@@ -281,8 +281,7 @@ const Grant = () => {
                       <button
                         className="btn white_color label"
                         disabled={processingUserId === item.user_id}
-                        onClick={() => handleRevertClick(item)}
-                      >
+                        onClick={() => handleRevertClick(item)}>
                         {processingUserId === item.user_id ? '처리 중...' : '되돌리기'}
                       </button>
                     </td>
