@@ -24,9 +24,9 @@ const Sidebar = () => {
     ];
 
     const centerLinks_2 = [
-        { label: '대시보드', href: '/component/dashboard'},
+        { label: '통계', href: '/component/dashboard'},
         { label: '상품 등록', href: '/component/product'},
-        { label: '신고하기', href: '/component/complaint'},
+        // { label: '신고하기', href: '/component/complaint'},
     ];
 
     useEffect(() => {
@@ -37,10 +37,10 @@ const Sidebar = () => {
             if (userLevel > '3') {
                 setLinks(adminLinks);
             } else if (userLevel === '3') {
-                if(exercise_level === '1'){
-                    setLinks(centerLinks_2);
-                }else{
+                if(exercise_level === '2'){
                     setLinks(centerLinks);
+                }else{
+                    setLinks(centerLinks_2);
                 }
             }
         }
