@@ -2952,16 +2952,16 @@ table tr.selected {
 .mypage-table th {
   background-color: #212529;
   color: #ffffff;
-  padding: 1rem 1.2rem;
-  font-size: 1.1rem;
+  padding: 1rem 5rem;
+  font-size: 1.3rem;
   font-weight: 600;
   text-align: left;
   letter-spacing: 0.02rem;
 }
 
 .mypage-table td {
-  padding: 1rem 1.2rem;
-  font-size: 1.05rem;
+  padding: 1rem;
+  font-size: 1.4rem;
   color: #343a40;
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
