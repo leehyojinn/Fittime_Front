@@ -409,8 +409,8 @@ const CenterSearch = () => {
 
                         {center.tags && (
                         <div className="center-tags">
-                            {JSON.parse(center.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
+                            {JSON.parse(center.tags).map((tag,idx) => (
+                            <span key={idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
                             ))}
                         </div>
                             )}
