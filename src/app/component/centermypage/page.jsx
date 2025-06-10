@@ -98,7 +98,7 @@ const CenterMyPage = () => {
     // 입력
     const changeCenter = (e) =>{
         let {name,value} = e.target;
-        // console.log(value.address);
+         //console.log(name,value);
         setCenter((prevForm) => ({
             ...prevForm,
             [name]: value
@@ -294,6 +294,8 @@ const CenterMyPage = () => {
             const {data} = await axios.post('http://localhost/update/Profile', formData,{
                 headers: {'Content-Type': 'multipart/form-data'}
             });
+            console.log(formData);
+            console.log(center);
             // console.log('data',data);
             await getCenter();
             sessionStorage.setItem('exercise_level',center.exercise_level);
@@ -337,7 +339,7 @@ const CenterMyPage = () => {
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">연락처</span>
-                    {editMode ? <input className='width_fit' defaultValue={center.phone} name='phone' value={center.phone} onChange={changeCenter}/> : <span className="label font_weight_400">{center.phone}</span>}
+                    {editMode ? <input className='width_fit' defaultValue={center.center_phone} name='center_phone' value={center.center_phone} onChange={changeCenter}/> : <span className="label font_weight_400">{center.center_phone}</span>}
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">소개</span>
