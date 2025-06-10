@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import { useAlertModalStore, usePasswordStore } from '../../zustand/store';
@@ -24,6 +24,20 @@ function LoginPage() {
             [name]: value
         }));
     }
+
+    useEffect(()=>{
+        let user_id = sessionStorage.getItem('user_id');
+        let user_level = sessionStorage.getItem('user_level');
+        if(user_id != null || user_level != null){
+            openModal({
+                svg: '❗',
+                msg1: '비정상적인 접근입니다.',
+                msg2: '이미 로그인 돼 있습니다.',
+                showCancel: false,
+                onConfirm : () => window.location = "/"
+            });
+        }
+    },[])
 
     const handleIdFocus = (e) => {
         const inputLength = e.target.value.length;
