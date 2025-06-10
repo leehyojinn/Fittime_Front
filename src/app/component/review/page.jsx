@@ -516,10 +516,11 @@ const ReviewPage = () => {
                                     ✦ {centerName}
                                     ✦
                                 </option>
+                                {trainerId !== 'undefined' ?
                                 <option value="trainer">
-                                    ✦ {trainerName}
-                                    ✦
+                                     ✦{trainerName}✦
                                 </option>
+                                    : '' }
                             </select>
 
                         </div>
