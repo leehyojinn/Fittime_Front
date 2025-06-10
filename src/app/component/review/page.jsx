@@ -469,10 +469,10 @@ const ReviewPage = () => {
                         </div>
                         <div className="trainer-center-info">
                             <h4 style={{fontSize:'1.9rem',marginBottom:'10px', fontWeight:"bold"}}>소속 센터</h4>
-                            <div className="center-brief" style={{ borderWidth: '1px', background: '#dbdbdb'}}>
+                            <div className="center-brief" style={{ borderWidth: '1px', background: 'rgb(230 232 238)'}}>
                                 <span className="center-name" style={{color:'#222'}}>{trainerInfo.center_name}</span>
-                                <span className="center-address" style={{fontSize:'1.4rem', color:'#7E92BF'}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
-                                <span className="center-contact" style={{fontSize:'1.3rem', color:'#7E92BF'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
+                                <span className="center-address" style={{fontSize:'1.4rem', color:'rgb(75, 80, 85)'}}><FaMapMarkerAlt /> {trainerInfo.center_address}</span>
+                                <span className="center-contact" style={{fontSize:'1.3rem', color:'rgb(75, 80, 85)'}}><FaPhoneAlt /> {trainerInfo.center_phone}</span>
                                 <button
                                 className='review-submit-btn-n'
                                 onClick={handleToggleMap}
@@ -535,7 +535,7 @@ const ReviewPage = () => {
                                 }}>
 
                                 <button
-                                    onClick={handReviewForm} style={{ backgroundColor: '#CED4E0' ,padding:'1rem', fontSize:'1.8rem' ,color:'#8B9DCC'}}
+                                    onClick={handReviewForm} style={{ backgroundColor: '#c7cbd5' ,padding:'1rem', fontSize:'1.8rem' ,color:'#979dac'}}
                                     className={`review-toggle-small-btn ${showReviewForm
                                         ? 'active'
                                         : ''}`}>
@@ -561,7 +561,7 @@ const ReviewPage = () => {
                             <div>
 
                                 {/* 리뷰 작성 인풋 */}
-                                <div className="trainer-review-write" style={{ padding:'2rem 6rem 2rem 3rem', backgroundColor: '#e4e4e5'}} >
+                                <div className="trainer-review-write" style={{ padding:'2rem 6rem 2rem 3rem', backgroundColor: 'rgb(210 214 223 / 78%)'}} >
                                     <form onSubmit={handleReviewSubmit}>
                                         <div className="star-input">
                                             {
@@ -576,7 +576,7 @@ const ReviewPage = () => {
                                                             className="star"
                                                             color={(
                                                                 (hoverStar || star) >= i)
-                                                                ? '#8897aa'
+                                                                ? '#555'
                                                                 : '#C0C6CC'}
                                                             onMouseEnter={() => handleStarHover(i)}
                                                             onMouseLeave={handleStarOut}
@@ -590,7 +590,7 @@ const ReviewPage = () => {
                                                             className="star half"
                                                             color={(
                                                                 (hoverStar || star) >= i - 0.5) && ((hoverStar || star) < i)
-                                                                ? '#8897aa'
+                                                                ? '#555'
                                                                 : 'transparent'}
                                                             style={{
                                                                 cursor: 'pointer',
@@ -607,7 +607,7 @@ const ReviewPage = () => {
                                                     </span>
                                                 ))
                                             }
-                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem'}}>{
+                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem',color:'#222'}}>{
                                                     star > 0
                                                         ? star
                                                         : ''
@@ -621,7 +621,7 @@ const ReviewPage = () => {
                                             onChange={e => setReviewText(e.target.value)}
                                             required="required"/>
                                         <div className="review-file-input">
-                                            <label htmlFor="trainer-review-upload" className="file-label"  style={{ backgroundColor: '#a0acc0', fontSize:'2rem', padding:'12px 14px', marginLeft:'10px' }}>
+                                            <label htmlFor="trainer-review-upload" className="file-label"  style={{ backgroundColor: 'rgb(121 125 131)', fontSize:'2rem', padding:'12px 14px', marginLeft:'10px' }}>
                                                 <FaCamera/>
                                                 <input
                                                     id="trainer-review-upload"
@@ -641,13 +641,14 @@ const ReviewPage = () => {
                                             </div>
                                             <button
                                                 type="submit"
-                                                className="review-submit-btn" style={{ backgroundColor: '#a0acc0', fontSize:'2rem', padding:'12px 14px', borderRadius: '50%' }}
+                                                className="review-submit-btn" style={{ backgroundColor: 'rgb(121 125 131)', fontSize:'2rem', padding:'12px 14px', borderRadius: '50%' }}
                                                 onClick={handleReviewSubmit}>✔</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         )
+
                     }
 
                     {/* 리뷰 리스트 */}
@@ -658,11 +659,11 @@ const ReviewPage = () => {
                             <ul>
                             {
                             paginatedReviews?.map(r => (
-                            <li key={r.review_idx} className="review-review-item" style={{flexDirection:'column', color: '#7fa6a6', fontSize:'1.5rem', margin:'1.5rem', padding:'1.4rem'}}>
+                            <li key={r.review_idx} className="review-review-item" style={{flexDirection:'column', color: 'rgb(138 145 152)', fontSize:'1.5rem', margin:'1.5rem', padding:'1.4rem'}}>
                                 {/* 첫 줄: 작성자 + 별점 + 날짜 */}
-                                <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit' ,color: '#7e8eb8', fontSize:'1.7rem'}}>
+                                <div className="review-meta" style={{textAlign:'left', paddingLeft:'20px', paddingTop:'inherit' ,color: 'rgb(138 145 152)', fontSize:'1.7rem'}}>
                                 <span className="review-user">{r.user_id}</span>
-                                <span className="review-rating" style={{color:'#7e8eb8'}}><FaStar/> {r.rating}</span>
+                                <span className="review-rating" style={{color:'#666'}}><FaStar/> {r.rating}</span>
                                 <span className="review-date">{r.date}</span>
                                 </div>
 
@@ -687,7 +688,7 @@ const ReviewPage = () => {
                                                 borderRadius: '1.4rem',
                                                 marginLeft: 4,
                                                 color: '',
-                                                border: '1px solid #7e8eb8'
+                                                border: '1px solid #999'
                                             }}
                                             />
                                         ))
