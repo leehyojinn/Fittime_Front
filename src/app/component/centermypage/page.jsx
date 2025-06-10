@@ -240,7 +240,7 @@ const CenterMyPage = () => {
     // 센터 스케줄 가져오기
     const getSchedules = async () => {
         const {data} = await axios.post(`http://localhost/schedule_list/${sessionStorage.getItem('user_id')}`);
-        console.log(data);
+        console.log('schedules',data);
         setSchedules(data.list);
     }
 
@@ -350,7 +350,13 @@ const CenterMyPage = () => {
                     })}
                 </div>
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">홈페이지</span><span className="label font_weight_400">{center.homepage}</span></div>*/}
-                <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours}</span></div>
+                    {editMode ?
+                        <div className="mypage-profile-row">
+                            <span className="label font_weight_500">운영 시간</span>
+                            <input className='width_fit' style={{width:216}} defaultValue={center.operation_hours} name='operation_hours' value={center.operation_hours} onChange={changeCenter}/>
+                        </div>
+                    : <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours}</span></div> }
+
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">주차</span><span className="label font_weight_400">{center.parking}</span></div>*/}
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">위치</span><span className="label font_weight_400">({center.latitude},{center.longitude})</span></div>*/}
                 {editMode &&
