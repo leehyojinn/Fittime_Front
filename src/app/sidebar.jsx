@@ -13,7 +13,7 @@ const Sidebar = () => {
         { label: 'Home', href: '/' },
         { label: '팝업 등록', href: '/component/popup_write' },
         { label: '관리자 부여', href: '/component/grant'},
-        { label: '블랙리스트 추가', href: '/component/blacklist'},
+        { label: '블랙리스트 관리', href: '/component/blacklist'},
         { label: '태그 등록', href: '/component/tagmanagement'},
     ];
     const centerLinks = [

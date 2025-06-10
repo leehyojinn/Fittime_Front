@@ -420,8 +420,8 @@ const TrainerSearch = () => {
 
                         {trainer.tags && (
                         <div className="trainer-tags">
-                        {JSON.parse(trainer.tags).map((tag) => (
-                            <span key={tag.tag_idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
+                        {JSON.parse(trainer.tags).map((tag,idx) => (
+                            <span key={idx} className="tag"  style={{fontSize:"1.5rem"}}>{tag}</span>
                         ))}
                         </div>
                             )}
