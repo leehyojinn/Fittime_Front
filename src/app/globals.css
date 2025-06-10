@@ -2740,7 +2740,7 @@ table tr.selected {
   color: #3673c1;
 }
 .review-item {
-  background-color: #dbdbdb;
+  background-color: var(--border-color);
   border-radius: 15px;
   box-shadow: var(--shadow);
   padding: 1.5rem;
@@ -2752,13 +2752,17 @@ table tr.selected {
 .review-user {
   font-weight: 500;
   margin-right: 1rem;
+  font-size: 1.8rem;
 }
 .review-rating {
   color: #f8c200;
   margin-right: 1rem;
+  font-size: 1.8rem;
 }
 .review-content {
   color: #444;
+  font-size: 1.5rem;
+  line-height: 2.5rem;
 }
 
 .center-review-write, .trainer-review-write {

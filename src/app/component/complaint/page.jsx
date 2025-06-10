@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
 import axios from 'axios';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import {useRouter, useSearchParams} from "next/navigation";
-import { useAuthStore } from '@/app/zustand/store';
+import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
+import AlertModal from '../alertmodal/page';
 
 const ComplaintForm = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -20,6 +21,8 @@ const ComplaintForm = () => {
   const review_idx = searchParams.get('review_idx');
   const report_id = searchParams.get('report_id');
   const target_id = searchParams.get('target_id');
+
+  const {openModal} = useAlertModalStore();
 
   const router = useRouter();
 
@@ -36,11 +39,21 @@ const ComplaintForm = () => {
     const files = Array.from(e.target.files);
 
     if (files.length > 5) {
-      alert('최대 5개의 이미지만 업로드할 수 있습니다.');
+      openModal({
+        svg: '❗',
+        msg1: '실패',
+        msg2: '최대 5개의 이미지만 업로드할 수 있습니다.',
+        showCancel: false
+    });
       return;
     }
     if (files.some(file => file.size > 10 * 1024 * 1024)) {
-      alert('각 이미지는 10MB 이하여야 합니다.');
+      openModal({
+        svg: '❗',
+        msg1: '실패',
+        msg2: '각 이미지는 10MB 이하여야 합니다.',
+        showCancel: false
+    });
       return;
     }
     const newImages = files.map(file => ({
@@ -53,6 +66,18 @@ const ComplaintForm = () => {
   // 신고 등록
   const handleComplaintSubmit = async (data) => {
     setLoading(true);
+    
+    if (!selectedImages || selectedImages.length === 0) {
+      openModal({
+        svg: '❗',
+        msg1: '실패',
+        msg2: '한개 이상의 이미지를 첨부해주세요.',
+        showCancel: false
+      });
+      setLoading(false);
+      return;
+    }
+  
     try {
       const formData = new FormData();
       const complaintData = {
@@ -74,16 +99,30 @@ const ComplaintForm = () => {
       );
 
       if (response.data && response.data.success) {
-        alert('신고가 정상적으로 접수되었습니다.');
+        openModal({
+          svg: '✔',
+          msg1: '신고 접수',
+          msg2: '신고 접수가 정상처리 되었습니다.',
+          showCancel: false
+      });
         setSelectedImages([]);
         reset();
         getComplaintList();
       } else {
-        alert('신고 접수에 실패했습니다.');
+        openModal({
+          svg: '❗',
+          msg1: '실패',
+          msg2: '신고 접수에 실패했습니다.',
+          showCancel: false
+      });
       }
     } catch (err) {
-      console.error(err);
-      alert('신고 접수 중 오류가 발생했습니다.');
+      openModal({
+        svg: '❗',
+        msg1: '오류',
+        msg2: '신고 접수 중 오류가 발생했습니다.',
+        showCancel: false
+    });
     }
     setLoading(false);
     getComplaintList();
@@ -94,7 +133,6 @@ const ComplaintForm = () => {
     try {
       const { data } = await axios.post(`http://localhost/complaint_list/${user_id}`);
       setComplaintList(data.list || []);
-      console.log(data.list);
     } catch (err) {
       console.error(err);
       setComplaintList([]);
@@ -208,6 +246,7 @@ const ComplaintForm = () => {
                 <input
                   id="images"
                   type="file"
+                  name='images'                  
                   accept="image/jpeg, image/png"
                   onChange={handleImageChange}
                   multiple
@@ -301,6 +340,7 @@ const ComplaintForm = () => {
         </div>
       </div>
       <Footer/>
+      <AlertModal/>
     </div>
   );
 };

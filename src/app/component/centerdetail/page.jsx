@@ -113,7 +113,7 @@ const CenterDetail = () => {
                 <div>
                     <h2 style={{fontSize: "3.5rem",
                         fontWeight: 'bold',
-                        color:'#3673c1'}}>{centerInfo.center_name}</h2>
+                        color:'#000'}}>{centerInfo.center_name}</h2>
                         <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                     <div className="center-header">
                         <img
@@ -245,7 +245,7 @@ const CenterDetail = () => {
                 <div className='wrap padding_120_0'>
 
                     <div className="trainer-reviews">
-                        <h4>리뷰</h4>
+                        <h4 className='middle_title2'>리뷰</h4>
                         <ul>
                             {
                                 paginatedReviews?.map(r => (
