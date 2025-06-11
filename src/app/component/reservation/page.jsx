@@ -110,7 +110,7 @@ const ReservationContent = () => {
         user_id : user_id,
         center_id : initialCenterId
       })
-      .then(res => setMyProducts(res.data.list || []))
+      .then(res => {setMyProducts(res.data.list || []);console.log(res.data.list)})
       .catch(() => setMyProducts([]))
       .finally(() => setMyProductLoading(false));
   }, [user_id, initialCenterId]);
@@ -122,7 +122,7 @@ const ReservationContent = () => {
       const center = centers.find(c => String(c.center_id) === String(initialCenterId));
       if (center) setSelectedCenter(center);
     }
-    if (initialTrainerId && !selectedTrainer) {
+    if (initialTrainerId && !selectedTrainer && !selectedProduct?.duration) {
       const center = centers.find(c => String(c.center_id) === String(initialCenterId));
       if (!center) return;
       axios.post(`${apiUrl}/reservation/trainer_info/${center.center_idx}`)
@@ -131,7 +131,7 @@ const ReservationContent = () => {
           if (trainer) setSelectedTrainer(trainer);
         });
     }
-  }, [centers, initialCenterId, initialTrainerId, selectedTrainer]);
+  }, [centers, initialCenterId, initialTrainerId, selectedTrainer, selectedProduct]);
 
   // 센터 선택 시 상품/트레이너 불러오기
   useEffect(() => {
@@ -160,6 +160,7 @@ const ReservationContent = () => {
 
   // 상품 클릭 시 클래스 정보 불러오기
   const handleProductClick = (product, isMyProduct = false) => {
+    console.log(product);
     setSelectedProduct(product);
     setIsMyProductSelected(isMyProduct);
     setSelectedTrainer(null);
@@ -347,24 +348,27 @@ const ReservationContent = () => {
         date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null,
-        trainer_id: selectedProduct.trainer_id,
+        trainer_id: selectedTrainer?.trainer_id || null,
         class_idx: selectedClass?.class_idx,
         center_id: selectedCenter.center_id,
       };
       axios.post(`${apiUrl}/booking`, param)
         .then(res => {
           console.log('param',param);
+          console.log(res.data);
           setIsSubmitting(false);
           if (res.data.success) {
             setResultMsg('예약이 완료되었습니다!');
             setStep(5);
           } else {
             setResultMsg('예약에 실패했습니다. 인원 초과 또는 오류');
+            alert('예약에 실패했습니다. 인원 초과 또는 오류');
           }
         })
         .catch(() => {
           setIsSubmitting(false);
           setResultMsg('예약 중 오류가 발생했습니다.');
+          alert('예약 중 오류가 발생했습니다.');
         });
     } else {
       // 전체상품 예약(현장결제)
@@ -372,7 +376,7 @@ const ReservationContent = () => {
         user_id: user_id,
         center_id: selectedCenter.center_id,
         product_idx: selectedProduct.product_idx,
-        trainer_id: selectedProduct.trainer_id,
+        trainer_id: selectedTrainer?.trainer_id || null,
         class_idx: selectedClass?.class_idx,
         date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
@@ -387,11 +391,13 @@ const ReservationContent = () => {
             setStep(5);
           } else {
             setResultMsg('예약에 실패했습니다. 인원 초과 또는 오류');
+            alert('예약에 실패했습니다. 인원 초과 또는 오류');
           }
         })
         .catch(() => {
           setIsSubmitting(false);
           setResultMsg('예약 중 오류가 발생했습니다.');
+          alert('예약 중 오류가 발생했습니다.');
         });
     }
   };
@@ -722,6 +728,32 @@ const ReservationContent = () => {
     // 전체상품 결제 플로우
     if (paymentMethod === 'direct') {
       handleSubmitReservation();
+    } else if(paymentMethod === 'card'){
+      setIsSubmitting(true);
+
+      const bookingParam = {
+        user_id: user_id,
+        center_id: selectedCenter.center_id,
+        product_idx: selectedProduct.product_idx,
+        trainer_id: selectedTrainer?.trainer_id || null,
+        payment_price: calculateFinalPrice(),
+        class_idx: selectedClass?.class_idx,
+        count: selectedProduct.count > 0 ? selectedProduct.count- 1 : null,
+        rest_period: selectedProduct.duration,
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
+        start_time: selectedTime?.time || null,
+        end_time: selectedTime?.endTime || null
+      };
+
+      const {data} = await axios.post(`${apiUrl}/insert/payment`, bookingParam);
+      console.log(data);
+      if(!data.success){
+        alert('결제 도중 오류가 발생했습니다.');
+      } else {
+        setStep(5);
+      }
+      setIsSubmitting(false);
+
     } else if (paymentMethod === 'kakao') {
       setIsSubmitting(true);
   
@@ -729,10 +761,10 @@ const ReservationContent = () => {
         user_id: user_id,
         center_id: selectedCenter.center_id,
         product_idx: selectedProduct.product_idx,
-        trainer_id: selectedProduct.trainer_id,
+        trainer_id: selectedTrainer?.trainer_id || null,
         payment_price: calculateFinalPrice(),
         class_idx: selectedClass?.class_idx,
-        count: selectedProduct.count - 1,
+        count: selectedProduct.count > 0 ? selectedProduct.count- 1 : null,
         rest_period: selectedProduct.duration,
         date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         start_time: selectedTime?.time || null,
@@ -849,6 +881,16 @@ const ReservationContent = () => {
                   onChange={() => setPaymentMethod('direct')}
                 />
                 <span className='label'>현장결제</span>
+              </label>
+              <label className="payment-option">
+                <input
+                    type="radio"
+                    name="payment"
+                    value="card"
+                    checked={paymentMethod === 'card'}
+                    onChange={() => setPaymentMethod('card')}
+                />
+                <span className='label'>카드</span>
               </label>
               <label className="payment-option">
                 <input
