@@ -272,6 +272,9 @@ const CenterMyPage = () => {
         }
     }
 
+    console.log(center);
+    
+
   return (
     <div>
         <Header/>
@@ -301,7 +304,7 @@ const CenterMyPage = () => {
                 <div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">센터명</span>
-                    <span className="label font_weight_400">{center.center_name}</span>
+                    {editMode ? <input className='width_fit' defaultValue={center.center_name} name='center_name' value={center.center_name} onChange={changeCenter}/> : <span className="label font_weight_400">{center.center_name}</span>}
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">주소</span>
