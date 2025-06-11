@@ -49,6 +49,7 @@ const ReservationContent = () => {
   const [isMyProductSelected, setIsMyProductSelected] = useState(false);
   const [trainers, setTrainers] = useState([]);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
   // 클래스 관련
   const [classInfo, setClassInfo] = useState(null); // 선택 상품의 클래스 정보
@@ -445,10 +446,75 @@ const ReservationContent = () => {
     );
   };
   
-
-  const filteredProducts = selectedCenter
-    ? products.filter(product => product.center_id === selectedCenter.center_id)
-    : [];
+  useEffect(() => {
+    if (!products.length || !selectedCenter) {
+      setFilteredProducts([]);
+      return;
+    }
+  
+    const filterProducts = async () => {
+      // 레벨 2: 시간 없는 상품(트레이너/일반 모두) 제외
+      if (selectedCenter.exercise_level === 2) {
+        const filtered = await Promise.all(products.map(async (product) => {
+          if (product.trainer_id) {
+            // 트레이너 상품: classInfo에서 시간 정보 체크
+            try {
+              const res = await axios.post(`${apiUrl}/reservation/class_info`, {
+                center_id: product.center_id,
+                trainer_id: product.trainer_id,
+                product_idx: product.product_idx
+              });
+              const cls = (res.data.list || []).filter(
+                c => !c.delete && c.start_time && c.end_time
+              );
+              if (cls.length > 0) return product;
+              return null;
+            } catch {
+              return null;
+            }
+          } else {
+            // 일반 상품: start_time, end_time 모두 있어야 노출
+            if (product.start_time && product.end_time) return product;
+            return null;
+          }
+        }));
+        setFilteredProducts(filtered.filter(Boolean));
+        return;
+      }
+  
+      // 레벨 4: 트레이너 상품만 시간 없는 상품 제외, 일반 상품은 무조건 노출
+      if (selectedCenter.exercise_level === 4) {
+        const filtered = await Promise.all(products.map(async (product) => {
+          if (!product.trainer_id) {
+            // 일반 상품: 시간 정보 없어도 무조건 노출
+            return product;
+          }
+          // 트레이너 상품: classInfo에서 시간 정보 체크
+          try {
+            const res = await axios.post(`${apiUrl}/reservation/class_info`, {
+              center_id: product.center_id,
+              trainer_id: product.trainer_id,
+              product_idx: product.product_idx
+            });
+            const cls = (res.data.list || []).filter(
+              c => !c.delete && c.start_time && c.end_time
+            );
+            if (cls.length > 0) return product;
+            return null;
+          } catch {
+            return null;
+          }
+        }));
+        setFilteredProducts(filtered.filter(Boolean));
+        return;
+      }
+  
+      // 그 외 레벨: 전체 노출
+      setFilteredProducts(products);
+    };
+  
+    filterProducts();
+  }, [products, selectedCenter]);
 
   const renderProductSelectionStep = () => (
     <div className="reservation-section">
