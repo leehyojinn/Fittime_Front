@@ -30,6 +30,8 @@ const TrainerSearch = () => {
 
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
       checkAuthAndAlert(router, null, { noGuest: true });
   }, [checkAuthAndAlert, router]);
