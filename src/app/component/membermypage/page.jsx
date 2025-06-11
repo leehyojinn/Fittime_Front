@@ -56,6 +56,8 @@ const MemberMyPage = () => {
   const [profileFile, setProfileFile] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [reservationPage, setReservationPage] = useState(1);
+  const [reservationTotalPage, setReservationTotalPage] = useState(1);
   const router = useRouter();
 
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
@@ -98,7 +100,7 @@ const MemberMyPage = () => {
     await axios.post('http://localhost/list/userBook',{"user_id":sessionStorage.getItem("user_id")})
         .then(({data}) => {
           setReservations(data.bookingList);
-          console.log(data.bookingList);
+          console.log(data);
         })
   }
 

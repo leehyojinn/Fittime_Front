@@ -208,7 +208,7 @@ const TrainerMyPage = () => {
                 <div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">이름</span>
-                    <span className="label font_weight_400">{trainer.user_name}</span>
+                    <span className="label font_weight_400">{trainer.name}</span>
                 </div>
                 <div className="mypage-profile-row">
                     <span className="label font_weight_500">아이디</span>
