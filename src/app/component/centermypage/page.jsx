@@ -438,7 +438,7 @@ const CenterMyPage = () => {
                 </table>
             </div>
                 {reservationTotalPage > 1 ?
-                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                    <div style={{display:'flex', justifyContent:'center', marginBottom:'10px'}}>
                         {reservationPage > 1 ?
                             <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
                             :<div style={{width:'fit-content'}}></div>}
@@ -473,11 +473,11 @@ const CenterMyPage = () => {
                 </table>
             </div>
                 {reviewTotalPage > 1 ?
-                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                    <div style={{display:'flex', justifyContent:'center', marginBottom:'10px'}}>
                         {reviewPage > 1 ?
                             <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>reviewPage(reviewPage-1)}>이전</button>
                             :<div style={{width:'fit-content'}}></div>}
-                        {reviewPage < reviewTotalPage ?
+                        {reviewPage > reviewTotalPage ?
                             <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>reviewPage(reviewPage+1)}>다음</button>
                             :''}
                     </div> : ''
