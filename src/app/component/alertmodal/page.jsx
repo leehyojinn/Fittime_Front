@@ -1,3 +1,5 @@
+'use client'
+
 import { useAlertModalStore } from "@/app/zustand/store";
 
 export default function AlertModal() {

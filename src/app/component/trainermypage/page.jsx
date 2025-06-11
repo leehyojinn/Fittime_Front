@@ -32,7 +32,7 @@ const TrainerMyPage = () => {
     }, [checkAuthAndAlert, router]);
 
     const handleMoveComplaint = (r) => {
-        router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${sessionStorage.getItem('user_id')}`);
+        router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""}`);
     }
 
     const handleMainImageChange = e => {
@@ -71,30 +71,30 @@ const TrainerMyPage = () => {
     }, []);
 
     const getTrainer = async () => {
-        await axios.post(`${apiUrl}/detail/profile`,{"trainer_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
+        await axios.post(`${apiUrl}/detail/profile`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "","user_level":typeof window !== "undefined" ? sessionStorage.getItem("user_level") : ""})
             .then(({data}) => {
                 console.log(data);
                 setTrainer(data);
-                setMainImage(`${apiUrl}/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+                setMainImage(`${apiUrl}/profileImg/profile/${typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""}`);
                 setSubImages(data.photos?.map(photo => `${apiUrl}/centerImg/${photo.profile_file_idx}`));
                 //console.log(profileImage);
             })
     }
 
     const getReservation = async () =>{
-        const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":sessionStorage.getItem("user_id")});
+        const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""});
         //console.log(data);
         setReservation(data.bookingList);
     }
 
     const getReviews = async () => {
-        const {data} = await axios.post(`${apiUrl}/list/reviewByTrainer`,{"trainer_id":sessionStorage.getItem("user_id")});
+        const {data} = await axios.post(`${apiUrl}/list/reviewByTrainer`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""});
         setReviews(data.reviews);
         console.log(data);
     }
 
     const getSchedules = async () => {
-        const {data} = await axios.post(`${apiUrl}/schedule_list/${sessionStorage.getItem("user_id")}`);
+        const {data} = await axios.post(`${apiUrl}/schedule_list/${typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""}`);
         setSchedules(data.list);
         console.log(data);
     }
