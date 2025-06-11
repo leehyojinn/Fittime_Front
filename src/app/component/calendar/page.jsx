@@ -49,6 +49,8 @@ export default function MyCalendar() {
 
   const router = useRouter();
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
   useEffect(() => {
@@ -75,10 +77,10 @@ export default function MyCalendar() {
       const trainer_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
   
       const [eventRes, userRes, reservationRes, dayoffRes] = await Promise.all([
-        axios.post(`http://localhost/schedule_list/${user_id}`), // 개인 일정
-        axios.post(`http://localhost/user_reservation_schedule/${user_id}`, {}), // 회원용 예약 일정
-        axios.post(`http://localhost/trainer_reservation_schedule/${trainer_id}`, {}), // 트레이너용 예약 일정
-        axios.post(`http://localhost/center_dayoff/${trainer_id}`), // 트레이너 휴무
+        axios.post(`${apiUrl}/schedule_list/${user_id}`), // 개인 일정
+        axios.post(`${apiUrl}/user_reservation_schedule/${user_id}`, {}), // 회원용 예약 일정
+        axios.post(`${apiUrl}/trainer_reservation_schedule/${trainer_id}`, {}), // 트레이너용 예약 일정
+        axios.post(`${apiUrl}/center_dayoff/${trainer_id}`), // 트레이너 휴무
       ]);
       const combinedEvents = [];
 
@@ -225,7 +227,7 @@ export default function MyCalendar() {
     setErrors({});
 
     try {
-      await axios.post('http://localhost/schedule_insert', {
+      await axios.post(`${apiUrl}/schedule_insert`, {
         user_id: user_id,
         title: form.title,
         content: form.content,
@@ -262,7 +264,7 @@ export default function MyCalendar() {
       showCancel: true,
       onConfirm: async () => {
         try {
-          await axios.post(`http://localhost/schedule_del/${user_id}/${event.id}`);
+          await axios.post(`${apiUrl}/schedule_del/${user_id}/${event.id}`);
           setDetailInfo({ open: false, event: null, x: 0, y: 0 });
           setEditForm(null);
           fetchEvents();
@@ -291,7 +293,7 @@ export default function MyCalendar() {
       return;
     }
     try {
-      await axios.post(`http://localhost/schedule_update/${user_id}/${event.id}`, {
+      await axios.post(`${apiUrl}/schedule_update/${user_id}/${event.id}`, {
         title: editData.title,
         content: editData.content,
         start_date: format(event.start, 'yyyy-MM-dd'),

@@ -9,36 +9,6 @@ import axios from "axios";
 import TagModal from "@/app/TagModal";
 import { useRouter } from 'next/navigation';
 
-const trainerSample = {
-    user_id: 'trainer1',
-    user_name: '김트레이너',
-    phone: '010-2222-3333',
-    email: 'trainer@naver.com',
-    gender: '남',
-    age: 32,
-    address: '서울 강남구',
-    profile_image: '/member.png',
-    sub_images: ['/member.png','/member.png'],
-    tags: ['유경험자','체계적인','친절한'],
-    career: '10년 경력의 퍼스널 트레이너',
-    center: {
-      center_idx: 1,
-      center_name: '헬스월드 강남점',
-      address: '서울 강남구 역삼동 123-45',
-      phone: '02-1234-5678'
-    }
-  };
-const mockTrainerReservations = [
-  { reservation_idx: 1, member_name: '홍길동', phone: '010-1234-5678', date: '2025-05-21', start_time: '10:00', end_time: '11:00', product_name: 'PT 10회', status: '예약완료' }
-];
-const mockTrainerReviews = [
-  { review_id: 1, member_name: '회원A', rating: 5, content: '트레이닝이 정말 체계적이에요!', date: '2025-05-10' }
-];
-const mockSchedules = [
-  { schedule_id: 1, title: '휴무', start_time: '2025-05-22 00:00', end_time: '2025-05-22 23:59', type: '휴무' },
-  { schedule_id: 2, title: '1:1 PT', start_time: '2025-05-23 14:00', end_time: '2025-05-23 15:00', type: 'PT' }
-];
-
 const TrainerMyPage = () => {
     const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
     const [editMode, setEditMode] = useState(false);
@@ -51,6 +21,7 @@ const TrainerMyPage = () => {
     const [reviews, setReviews] = useState([]);
     const [schedules, setSchedules] = useState([]);
     const [tagModalOpen, setTagModalOpen] = useState(false);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const router = useRouter();
 
@@ -100,30 +71,30 @@ const TrainerMyPage = () => {
     }, []);
 
     const getTrainer = async () => {
-        await axios.post('http://localhost/detail/profile',{"trainer_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
+        await axios.post(`${apiUrl}/detail/profile`,{"trainer_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
             .then(({data}) => {
                 console.log(data);
                 setTrainer(data);
-                setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
-                setSubImages(data.photos?.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
+                setMainImage(`${apiUrl}/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+                setSubImages(data.photos?.map(photo => `${apiUrl}/centerImg/${photo.profile_file_idx}`));
                 //console.log(profileImage);
             })
     }
 
     const getReservation = async () =>{
-        const {data} = await axios.post('http://localhost/list/trainerBook',{"trainer_id":sessionStorage.getItem("user_id")});
+        const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":sessionStorage.getItem("user_id")});
         //console.log(data);
         setReservation(data.bookingList);
     }
 
     const getReviews = async () => {
-        const {data} = await axios.post('http://localhost/list/reviewByTrainer',{"trainer_id":sessionStorage.getItem("user_id")});
+        const {data} = await axios.post(`${apiUrl}/list/reviewByTrainer`,{"trainer_id":sessionStorage.getItem("user_id")});
         setReviews(data.reviews);
         console.log(data);
     }
 
     const getSchedules = async () => {
-        const {data} = await axios.post(`http://localhost/schedule_list/${sessionStorage.getItem("user_id")}`);
+        const {data} = await axios.post(`${apiUrl}/schedule_list/${sessionStorage.getItem("user_id")}`);
         setSchedules(data.list);
         console.log(data);
     }
@@ -169,7 +140,7 @@ const TrainerMyPage = () => {
             for (let [key, value] of formData.entries()) {
                 console.log(`${key}:`, value);
             }
-            const {data} = await axios.post('http://localhost/update/Profile', formData,{
+            const {data} = await axios.post(`${apiUrl}/update/Profile`, formData,{
                 headers: {'Content-Type': 'multipart/form-data'}
             });
             // console.log('data',data);

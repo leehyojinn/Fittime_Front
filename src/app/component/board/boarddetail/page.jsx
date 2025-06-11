@@ -1,13 +1,13 @@
 'use client'
 import Footer from '@/app/Footer';
 import Header from '@/app/Header';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
 import { useAuthStore } from '@/app/zustand/store';
 
-export default function BoardDetail() {
+function BoardDetailContent() {
     const searchParams = useSearchParams();
     const board_idx = searchParams.get('board_idx');
     const category = searchParams.get('category');
@@ -20,6 +20,8 @@ export default function BoardDetail() {
     const [replyState, setReplyState] = useState(false);
     const [commentIdx, setCommentIdx] = useState(null);
     const [replys, setReplys] = useState([]);
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
@@ -34,13 +36,13 @@ export default function BoardDetail() {
     }, []);
 
     const getBoardDetail = async () => {
-        const { data } = await axios.post(`http://localhost/detail/bbs/${board_idx}`);
+        const { data } = await axios.post(`${apiUrl}/detail/bbs/${board_idx}`);
         setBoard(data.dto);
         setFiles(data.photos);
     }
 
     const getComment = async () => {
-        const { data } = await axios.post(`http://localhost/list/comment/${board_idx}`);
+        const { data } = await axios.post(`${apiUrl}/list/comment/${board_idx}`);
         setComments(data.comments);
     }
 
@@ -62,7 +64,7 @@ export default function BoardDetail() {
     }
 
     const delBoard = async () => {
-        const { data } = await axios.post(`http://localhost/del/bbs/${board_idx}`);
+        const { data } = await axios.post(`${apiUrl}/del/bbs/${board_idx}`);
         if (data.success) {
             router.push(getLink());
         }
@@ -70,14 +72,14 @@ export default function BoardDetail() {
 
     const writeComment = async () => {
         if (update_idx != null) {
-            const { data } = await axios.post('http://localhost/update/comment', { content: text, comment_idx: update_idx });
+            const { data } = await axios.post(`${apiUrl}/update/comment`, { content: text, comment_idx: update_idx });
             if (data.success) {
                 setUpdate_idx(null);
                 setText('');
                 getComment();
             }
         } else {
-            const { data } = await axios.post('http://localhost/write/comment', {
+            const { data } = await axios.post(`${apiUrl}/write/comment`, {
                 user_id: sessionStorage.getItem('user_id'),
                 content: text,
                 board_idx: board_idx
@@ -91,7 +93,7 @@ export default function BoardDetail() {
 
     const writeReply = async () => {
         if (update_idx != null) {
-            const { data } = await axios.post('http://localhost/update/reply', { content: text, reply_idx: update_idx });
+            const { data } = await axios.post(`${apiUrl}/update/reply`, { content: text, reply_idx: update_idx });
             if (data.success) {
                 setUpdate_idx(null);
                 setReplyState(false);
@@ -99,7 +101,7 @@ export default function BoardDetail() {
                 getReplys();
             }
         } else {
-            const { data } = await axios.post('http://localhost/write/reply', { content: text, comment_idx: commentIdx, user_id: sessionStorage.getItem('user_id') });
+            const { data } = await axios.post(`${apiUrl}/write/reply`, { content: text, comment_idx: commentIdx, user_id: sessionStorage.getItem('user_id') });
             if (data.success) {
                 setText('');
                 setReplyState(false);
@@ -109,7 +111,7 @@ export default function BoardDetail() {
     }
 
     const getReplys = async () => {
-        const { data } = await axios.post(`http://localhost/list/reply/${board_idx}`);
+        const { data } = await axios.post(`${apiUrl}/list/reply/${board_idx}`);
         setReplys(data.reply);
     }
 
@@ -124,7 +126,7 @@ export default function BoardDetail() {
     }
 
     const delComment = async (idx) => {
-        const { data } = await axios.post(`http://localhost/del/comment/${idx}`);
+        const { data } = await axios.post(`${apiUrl}/del/comment/${idx}`);
         if (data.success) {
             getComment();
         }
@@ -148,7 +150,7 @@ export default function BoardDetail() {
     }
 
     const delReply = async (reply_idx) => {
-        const { data } = await axios.post(`http://localhost/del/reply/${reply_idx}`);
+        const { data } = await axios.post(`${apiUrl}/del/reply/${reply_idx}`);
         if (data.success) {
             getReplys();
         }
@@ -180,7 +182,7 @@ export default function BoardDetail() {
                                 {files.map((file) => (
                                     <img
                                         key={file.file_idx}
-                                        src={`http://localhost/bbsImg/${file.file_idx}`}
+                                        src={`${apiUrl}/bbsImg/${file.file_idx}`}
                                         alt="첨부 이미지"
                                         className="board-detail-image"
                                     />
@@ -263,5 +265,13 @@ export default function BoardDetail() {
             </div>
             <Footer />
         </div>
+    );
+}
+
+export default function BoardDetail(){
+    return(
+        <Suspense>
+            <BoardDetailContent/>
+        </Suspense>
     );
 }

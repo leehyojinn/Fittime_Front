@@ -8,6 +8,8 @@ function FindModal({ open, onClose }){
     const [tags, setTags] = useState([]);
     const [selectTags, setSelectTags] = useState([]);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const handleClose = () => {
         onClose();
     };
@@ -17,7 +19,7 @@ function FindModal({ open, onClose }){
     }, [open]);
 
     const getTags = async () => {
-        const {data} = await axios.post(`http://localhost/list/tags/${sessionStorage.getItem('user_level')}`);
+        const {data} = await axios.post(`${apiUrl}/list/tags/${sessionStorage.getItem('user_level')}`);
         // console.log(data);
         setTags(data.tags);
     }
@@ -37,7 +39,7 @@ function FindModal({ open, onClose }){
     };
 
     const insertTag = async ()=>{
-        const {data} = await axios.post('http://localhost/insert/tags',{'user_level':sessionStorage.getItem('user_level'),'user_id':sessionStorage.getItem('user_id'),'tags':selectTags});
+        const {data} = await axios.post(`${apiUrl}/insert/tags`,{'user_level':sessionStorage.getItem('user_level'),'user_id':sessionStorage.getItem('user_id'),'tags':selectTags});
         console.log(data);
             setTags([]);
             setSelectTags([]);

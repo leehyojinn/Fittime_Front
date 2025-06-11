@@ -7,6 +7,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
     const [userId, setUserId] = useState('');
     const [trainers, setTrainers] = useState([]);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     // 모달이 닫힐 때 상태 초기화
     const handleClose = () => {
@@ -17,7 +18,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
 
     // 트레이너 검색
     const searchTrainers = async ()=>{
-        const {data} = await axios.post('http://localhost/search/trainers',{"id":userId})
+        const {data} = await axios.post(`${apiUrl}/search/trainers`,{"id":userId})
         console.log(userId);
         console.log(data);
         setTrainers(data.trainers);
@@ -25,7 +26,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
 
     // 소속 트레이너 추가
     const insertTrainer= async (trainer_idx) =>{
-        const {data} = await axios.post('http://localhost/add/trainer',{"trainer_idx": trainer_idx, "center_idx" : center_idx});
+        const {data} = await axios.post(`${apiUrl}/add/trainer`,{"trainer_idx": trainer_idx, "center_idx" : center_idx});
         console.log(data);
         if(data.success){
             await searchTrainers();
@@ -60,7 +61,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                     padding: '40px 30px',
                     minWidth: '320px',
                     position: 'relative',
-                    width: '400px'
+                    width: '700px'
                 }}
             >
                 <button
@@ -70,7 +71,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                         top: 20,
                         background: 'none',
                         border: 'none',
-                        fontSize: '1.3rem',
+                        fontSize: '3rem',
                         cursor: 'pointer'
                     }}
                     onClick={handleClose}
@@ -107,9 +108,9 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                                                 )}
                                             <tbody>
                                             {trainers?.map(t=>(
-                                                <tr key={t.trainer_id}>
+                                                <tr key={t.trainer_id} >
                                                     <td>
-                                                        <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
+                                                        <img src={`${apiUrl}/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
                                                         {t.trainer_id}
                                                     </td>
                                                     <td>

@@ -60,6 +60,8 @@ const MemberMyPage = () => {
   const [reservationTotalPage, setReservationTotalPage] = useState(1);
   const router = useRouter();
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
   useEffect(() => {
@@ -87,17 +89,17 @@ const MemberMyPage = () => {
   }, []);
 
   const getUser = async () => {
-    await axios.post('http://localhost/detail/profile',{"user_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
+    await axios.post(`${apiUrl}/detail/profile`,{"user_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
         .then(({data}) => {
           // console.log(data);
           setUser(data);
-          setProfileImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+          setProfileImage(`${apiUrl}/profileImg/profile/${sessionStorage.getItem("user_id")}`);
           //console.log(profileImage);
         })
   }
 
   const getReservations = async () => {
-    await axios.post('http://localhost/list/userBook',{"user_id":sessionStorage.getItem("user_id")})
+    await axios.post(`${apiUrl}/list/userBook`,{"user_id":sessionStorage.getItem("user_id")})
         .then(({data}) => {
           setReservations(data.bookingList);
           console.log(data);
@@ -105,7 +107,7 @@ const MemberMyPage = () => {
   }
 
   const getReviews = async () => {
-    await axios.post('http://localhost/list/reviewByUser',{"user_id":sessionStorage.getItem("user_id")})
+    await axios.post(`${apiUrl}/list/reviewByUser`,{"user_id":sessionStorage.getItem("user_id")})
         .then(({data}) => {
           console.log(data);
           setReviews(data.reviews);
@@ -113,7 +115,7 @@ const MemberMyPage = () => {
   }
 
   const handleDeleteReview = async (idx) =>{
-    const {data} = await axios.post(`http://localhost/del/review/${idx}`);
+    const {data} = await axios.post(`${apiUrl}/del/review/${idx}`);
     console.log(data.success);
     if(data.success){
       getReviews();
@@ -121,7 +123,7 @@ const MemberMyPage = () => {
   }
 
   const handleUpdateReview = async(idx) =>{
-    const {data} = await axios.get(`http://localhost/get/review/${idx}`);
+    const {data} = await axios.get(`${apiUrl}/get/review/${idx}`);
     console.log(data);
     router.push(`/component/review?center_id=${data.map.center_id}&trainer_id=${data.map.trainer_id}&reservation_idx=${data.map.reservation_idx}&trainer_name=${data.map.trainer_name}&&center_name=${data.map.center_name}&review_idx=${idx}`);
     //router.push(`/component/review?`);
@@ -144,7 +146,7 @@ const MemberMyPage = () => {
       if(profileFile){
         formData.append('file',profileFile);
         formData.append('param',new Blob([JSON.stringify(user)], { type: "application/json" }));
-        const {data} = await axios.post('http://localhost/update/Profile', formData, {
+        const {data} = await axios.post(`${apiUrl}/update/Profile`, formData, {
           headers: {'content-type': 'multipart/form-data'}
         })
         console.log(data);
@@ -152,7 +154,7 @@ const MemberMyPage = () => {
       else {
         formData.append('param',new Blob([JSON.stringify(user)], { type: "application/json" }));
         // console.log('user',user);
-        const {data} = await axios.post('http://localhost/update/Profile', formData, {
+        const {data} = await axios.post(`${apiUrl}/update/Profile`, formData, {
           headers: {'content-type': 'multipart/form-data'}
         });
         // console.log('data',data);

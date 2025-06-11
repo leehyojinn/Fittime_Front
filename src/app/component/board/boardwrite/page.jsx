@@ -2,14 +2,14 @@
 
 import Footer from '@/app/Footer';
 import Header from '@/app/Header';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { FaCamera } from "react-icons/fa";
 import { useAuthStore } from '@/app/zustand/store';
 
-export default function BoardWrite() {
+function BoardWriteContent() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [submitted, setSubmitted] = useState(false);
@@ -20,6 +20,8 @@ export default function BoardWrite() {
     const category = searchParams.get('category');
     const board_idx = searchParams.get('board_idx');
     const router = useRouter();
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const fileInputRef = useRef(null);
 
@@ -37,7 +39,7 @@ export default function BoardWrite() {
 
     const getBoardDetail = () => {
         axios
-            .post(`http://localhost/detail/bbs/${board_idx}`)
+            .post(`${apiUrl}/detail/bbs/${board_idx}`)
             .then(({ data }) => {
                 setTitle(data.dto.title);
                 setContent(data.dto.content);
@@ -46,7 +48,7 @@ export default function BoardWrite() {
                     setPreviewUrls([]);
                     data.photos.forEach((photo) => {
                         axios
-                            .get(`http://localhost/bbsImg/${photo.file_idx}`, { responseType: "blob" })
+                            .get(`${apiUrl}/bbsImg/${photo.file_idx}`, { responseType: "blob" })
                             .then(({ data: blob }) => {
                                 const file = new File([blob], `${photo.file_name}`, { type: blob.type });
                                 setFiles(prev => [...prev, file]);
@@ -72,7 +74,7 @@ export default function BoardWrite() {
         formData.append('content', content);
         if (board_idx != null) {
             formData.append('board_idx', board_idx);
-            const { data } = await axios.post('http://localhost/update/bbs', formData, {
+            const { data } = await axios.post(`${apiUrl}/update/bbs`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -85,7 +87,7 @@ export default function BoardWrite() {
         } else {
             formData.append('user_id', sessionStorage.getItem('user_id'));
             formData.append('category', category);
-            const { data } = await axios.post('http://localhost/write/bbs', formData, {
+            const { data } = await axios.post(`${apiUrl}/write/bbs`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -205,5 +207,13 @@ export default function BoardWrite() {
             </div>
             <Footer />
         </div>
+    );
+}
+
+export default function BoardWrite(){
+    return(
+        <Suspense>
+            <BoardWriteContent/>
+        </Suspense>
     );
 }

@@ -1,5 +1,5 @@
 'use client'
-import React, {useEffect, useState} from 'react';
+import React, {Suspense, useEffect, useState} from 'react';
 import Header from "@/app/Header";
 import {FaCamera, FaMapMarkerAlt, FaStar, FaPhoneAlt, FaTag} from "react-icons/fa";
 import Footer from "@/app/Footer";
@@ -9,7 +9,7 @@ import KakaoMap from '../map/kakaomap';
 import {useAlertModalStore, useAuthStore} from '@/app/zustand/store';
 import Link from "next/link";
 
-const ReviewPage = () => {
+const ReviewPageContent = () => {
     const [showMap, setShowMap] = useState(false);
     const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -20,6 +20,8 @@ const ReviewPage = () => {
     const trainerName = searchParams.get('trainer_name');
     const centerName = searchParams.get('center_name');
     const review_idx = searchParams.get('review_idx');
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     const [reviewTarget, setReviewTarget] = useState('');
     const [target, setTarget] = useState(centerId);
@@ -56,13 +58,13 @@ const ReviewPage = () => {
     }
 
     const getTrainerInfo = async() =>{
-        const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainerId,"user_level":'2'});
+        const {data} = await axios.post(`${apiUrl}/detail/profile`,{"trainer_id":trainerId,"user_level":'2'});
         console.log(data);
         setTrainerInfo(data);
     }
 
     const getCenterInfo = async() =>{
-        const {data} = await axios.post('http://localhost/detail/profile',{"center_id":centerId,"user_level":'3'});
+        const {data} = await axios.post(`${apiUrl}/detail/profile`,{"center_id":centerId,"user_level":'3'});
         console.log(data);
         setCenterInfo(data);
     }
@@ -76,7 +78,7 @@ const ReviewPage = () => {
     }, []);
 
     const updateFiles = ()=>{
-        axios.get(`http://localhost/get/review/${review_idx}`)
+        axios.get(`${apiUrl}/get/review/${review_idx}`)
             .then(({data})=>{
                 console.log('data : ',data);
                 console.log(review_idx);
@@ -84,7 +86,7 @@ const ReviewPage = () => {
                 if(data.photos?.length>0) {
                     //setFiles(data.photos);
                     data.photos.map((photo)=>{
-                        axios.get(`http://localhost/reviewImg/${photo.file_idx}`,{
+                        axios.get(`${apiUrl}/reviewImg/${photo.file_idx}`,{
                             responseType: "blob"
                         })
                             .then(({data})=>{
@@ -131,8 +133,6 @@ const ReviewPage = () => {
             .slice(0, 5);
         setFiles(newFiles);
     };
-
-    console.log(centerInfo);
 
     // 리뷰 등록
     const handleReviewSubmit = async(e) => {
@@ -205,7 +205,7 @@ const ReviewPage = () => {
                 formData.append("reservation_idx", reservationIdx);
             
                 try {
-                    const { data } = await axios.post('http://localhost/insert/review', formData, {
+                    const { data } = await axios.post(`${apiUrl}/insert/review`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
@@ -260,7 +260,7 @@ const ReviewPage = () => {
          for (let pair of formData.entries()) {
              console.log(pair[0] + ':', pair[1]);
          }
-         const {data} = await axios.post('http://localhost/update/review', formData, {
+         const {data} = await axios.post(`${apiUrl}/update/review`, formData, {
              headers: {
                  'Content-Type': 'multipart/form-data'
              }
@@ -297,6 +297,7 @@ const ReviewPage = () => {
                 setStar(0);
                 setFiles([]);
                 setPage(1);
+                fetchReviews();
         } catch (e) {
             alert('작성된 리뷰가 없습니다');
         }
@@ -312,7 +313,7 @@ const ReviewPage = () => {
 
     const fetchReviews = async () => {
         const {data} = await axios.post(
-            `http://localhost/list/review/0`,
+            `${apiUrl}/list/review/0`,
             {reservation_idx: reservationIdx}
         );
         console.log(data);
@@ -382,7 +383,7 @@ const ReviewPage = () => {
                             <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                         <div className="center-header">
                             <img
-                                src={`http://localhost/profileImg/profile/${centerId}`}
+                                src={`${apiUrl}/profileImg/profile/${centerId}`}
                                 alt={centerInfo.center_name}
                                 className="center-main-image"/>
                             <div className="center-header-info">
@@ -448,7 +449,7 @@ const ReviewPage = () => {
                             color:'#3673c1'}}>{trainerInfo.name}</h2>
                             <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                         <div className="trainer-header">
-                            <img src={`http://localhost/profileImg/profile/${trainerId}`} alt={trainerInfo.name} className="trainer-main-image" />
+                            <img src={`${apiUrl}/profileImg/profile/${trainerId}`} alt={trainerInfo.name} className="trainer-main-image" />
                             <div className="trainer-header-info">
 
                                 <div className="trainer-tags">
@@ -608,7 +609,7 @@ const ReviewPage = () => {
                                                     </span>
                                                 ))
                                             }
-                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem',color:'#222'}}>{
+                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem',color:'#444'}}>{
                                                     star > 0
                                                         ? star
                                                         : ''
@@ -680,7 +681,7 @@ const ReviewPage = () => {
                                         JSON.parse(r.file_idx).map((img, idx) => (
                                             <img
                                             key={idx}
-                                            src={`http://localhost/reviewImg/${img}`}
+                                            src={`${apiUrl}/reviewImg/${img}`}
                                             alt="첨부"
                                             style={{
                                                 width: 132,
@@ -741,4 +742,10 @@ const ReviewPage = () => {
 
 }
 
-export default ReviewPage;
+export default function ReviewPage(){
+    return(
+        <Suspense>
+            <ReviewPageContent/>
+        </Suspense>
+    );
+};

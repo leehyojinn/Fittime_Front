@@ -7,6 +7,8 @@ function FindModal({ open, onClose }){
 
     const [blackList, setBlackList] = useState([]);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const handleClose = () => {
         onClose();
     };
@@ -16,13 +18,13 @@ function FindModal({ open, onClose }){
     }, [open]);
 
     const getBlackList = async () => {
-        const {data} = await axios.post('http://localhost/list/blacklist');
+        const {data} = await axios.post(`${apiUrl}/list/blacklist`);
         console.log(data);
         setBlackList(data.blacklist);
     }
 
     const UnBlackList = async (b)=>{
-        const {data} = await axios.post(`http://localhost/del/blacklist/${b.blacklist_idx}`,{user_id:b.target_id});
+        const {data} = await axios.post(`${apiUrl}/del/blacklist/${b.blacklist_idx}`,{user_id:b.target_id});
         console.log(data);
         if(data.success){
             getBlackList();
@@ -57,7 +59,7 @@ function FindModal({ open, onClose }){
                     padding: '40px 30px',
                     minWidth: '320px',
                     position: 'relative',
-                    width: '480px'
+                    width: '600px'
                 }}
             >
                 <button
@@ -88,7 +90,7 @@ function FindModal({ open, onClose }){
                                 {blackList?.map(b=>(
                                     <tr key={b.blacklist_idx}>
                                         <td>
-                                            <img src={`http://localhost/profileImg/profile/${b.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
+                                            <img src={`${apiUrl}/profileImg/profile/${b.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
                                             {b.target_id}
                                         </td>
                                         <td style={{textAlign:'center'}}>

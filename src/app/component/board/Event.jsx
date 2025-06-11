@@ -19,6 +19,8 @@ export default function Event() {
     const [myTotalPage, setMyTotalPage] = useState(1);
     const router = useRouter();
     
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
     const user_level = typeof window !== "undefined" ? sessionStorage.getItem("user_level") : "";
@@ -38,14 +40,14 @@ export default function Event() {
     }, [filter]);
 
     const getboard = async () => {
-        const {data} = await axios.post('http://localhost/list/bbs',{category:'이벤트',page:page})
+        const {data} = await axios.post(`${apiUrl}/list/bbs`,{category:'이벤트',page:page})
         console.log(data);
         setList(data.list);
         setTotalPage(data.totalpage);
     }
 
     const getMyList = async() => {
-        const {data} = await axios.post('http://localhost/list/bbs',{category:'이벤트',page:page,user_id:sessionStorage.getItem('user_id')})
+        const {data} = await axios.post(`${apiUrl}/list/bbs`,{category:'이벤트',page:page,user_id:sessionStorage.getItem('user_id')})
         console.log(data);
         setMyList(data.list);
         setMyTotalPage(data.totalpage);

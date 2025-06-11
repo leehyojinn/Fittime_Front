@@ -81,6 +81,8 @@ function LoginPage() {
     const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
     const [findModalOpen, setFindModalOpen] = useState(false);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const login = async () => {
         if (!form.user_id || !form.password) {
             openModal({
@@ -91,7 +93,7 @@ function LoginPage() {
             });
             return;
         }
-        let { data } = await axios.post('http://localhost/login', form);
+        let { data } = await axios.post(`${apiUrl}/login`, form);
         if (data.success) {
             sessionStorage.setItem('user_id', form.user_id);
             sessionStorage.setItem('token', data.token);

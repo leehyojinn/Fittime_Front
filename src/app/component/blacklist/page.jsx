@@ -20,6 +20,7 @@ const BlacklistManagement = () => {
   const [openComplaint, setOpenComplaint] = useState(false);
   const [openBlackList, setOpenBlackList] = useState(false);
   
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const {openModal} = useAlertModalStore();
 
@@ -31,7 +32,7 @@ const BlacklistManagement = () => {
 
   const getComplaints = async () => {
     try {
-      const { data } = await axios.post('http://localhost/blacklist_list');
+      const { data } = await axios.post(`${apiUrl}/blacklist_list`);
       console.log(data);
       // 콘솔로 실제 응답 구조 확인
       // 배열만 반환되면
@@ -71,7 +72,7 @@ const BlacklistManagement = () => {
     try {
       // 상태/처리내용 업데이트
       const res = await axios.post(
-        `http://localhost/blacklist_status/${selectedComplaint.report_idx}`,
+        `${apiUrl}/blacklist_status/${selectedComplaint.report_idx}`,
         { status: data.status, process_history: data.process_history, admin_id: sessionStorage.getItem('user_id') }
       );
       console.log(data.process_history);
@@ -125,7 +126,7 @@ const BlacklistManagement = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `http://localhost/blacklist_level/${selectedComplaint.report_id}`,{report_idx:selectedComplaint.report_idx}
+        `${apiUrl}/blacklist_level/${selectedComplaint.report_id}`,{report_idx:selectedComplaint.report_idx}
       );
       if (res.data && res.data.success) {
         openModal({
@@ -257,7 +258,7 @@ const BlacklistManagement = () => {
                     {selectedComplaint.images.map((img, idx) => (
                       <img
                         key={idx}
-                        src={`http://localhost/complaint/${img}`}
+                        src={`${apiUrl}/complaint/${img}`}
                         alt={`증빙이미지${idx + 1}`}
                         style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                       />

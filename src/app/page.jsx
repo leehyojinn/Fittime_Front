@@ -28,6 +28,8 @@ const MainPage = () => {
     const [isAuthed, setIsAuthed] = useState(true);
     const router = useRouter();
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const { openModal } = useAlertModalStore();
     const user_level = typeof window !== "undefined" ? sessionStorage.getItem("user_level") : "";
 
@@ -47,12 +49,12 @@ const MainPage = () => {
     }, []);
 
     const center_list = async () => {
-        let {data} = await axios.post('http://localhost/center_rating/list');
+        let {data} = await axios.post(`${apiUrl}/center_rating/list`);
         if (data && data.list) 
             setCenterList(data.list);
         };
     const trainer_list = async () => {
-        let {data} = await axios.post('http://localhost/trainer_rating/list');
+        let {data} = await axios.post(`${apiUrl}/trainer_rating/list`);
         if (data && data.list) 
             setTrainerList(data.list);
         };
@@ -67,7 +69,7 @@ const MainPage = () => {
     const getMyList = async () => {
         let all = [];
         for (let category of BOARD_CATEGORIES) {
-            const {data} = await axios.post('http://localhost/list/bbs', {
+            const {data} = await axios.post(`${apiUrl}/list/bbs`, {
                 category,
                 page: 1,
             });
@@ -196,7 +198,7 @@ const MainPage = () => {
                                         onClick={() => handleMoveCenter(center.center_id)}>
                                         <div
                                             style={{
-                                                background:`url('http://localhost/profileImg/profile/${center.center_id}') center center/cover no-repeat`,
+                                                background:`url('${apiUrl}/profileImg/profile/${center.center_id}') center center/cover no-repeat`,
                                                 width:'100%',
                                                 aspectRatio:'1/1',
                                                 borderRadius :'10px'
@@ -293,7 +295,7 @@ const MainPage = () => {
                                             onClick={() => handleMoveTrainer(trainer.trainer_id)}>
                                             <div
                                                 style={{
-                                                    background:`url('http://localhost/profileImg/profile/${trainer.trainer_id}') center center/cover no-repeat`,
+                                                    background:`url('${apiUrl}/profileImg/profile/${trainer.trainer_id}') center center/cover no-repeat`,
                                                     width:'100%',
                                                     aspectRatio:'1/1',
                                                     borderRadius :'10px'

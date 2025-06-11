@@ -16,6 +16,8 @@ export default function QnA() {
     const [filter, setFilter] = useState(false);
     const router = useRouter();
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
     useEffect(() => {
@@ -33,14 +35,14 @@ export default function QnA() {
     }, [filter]);
 
     const getboard = async () => {
-        const {data} = await axios.post('http://localhost/list/bbs',{category:'QnA',page:page})
+        const {data} = await axios.post(`${apiUrl}/list/bbs`,{category:'QnA',page:page})
         console.log(data);
         setList(data.list);
         setTotalPage(data.totalpage);
     }
 
     const getMyList = async() => {
-        const {data} = await axios.post('http://localhost/list/bbs',{category:'QnA',page:page,user_id:sessionStorage.getItem('user_id')})
+        const {data} = await axios.post(`${apiUrl}/list/bbs`,{category:'QnA',page:page,user_id:sessionStorage.getItem('user_id')})
         console.log(data);
         setMyList(data.list);
         setMyTotalPage(data.totalpage);
