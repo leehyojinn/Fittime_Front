@@ -1715,6 +1715,7 @@ table tr.selected {
 
 .tag_List {
     padding: 5px 10px;
+    margin-top: 5px;
     box-sizing: border-box;
     background-color: #dee2e6;
     color: black;
