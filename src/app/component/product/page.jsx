@@ -65,6 +65,7 @@ const ProductManagement = () => {
     try {
       const { data } = await axios.post(`${apiUrl}/list/product`, { center_id: user_id });
       setProducts(data.products || []);
+      console.log(data.products);
     } catch (err) {
       openModal({
         svg: '❗',
@@ -151,7 +152,7 @@ const ProductManagement = () => {
       product_name: product.product_name,
       price: product.price,
       discount_rate: product.discount_rate,
-      service_level: exerciseLevel,
+      service_level: String(exerciseLevel) === String(4) ? (product.count === 0 ? 1:3) : exerciseLevel,
       duration: product.duration,
       max_people: product.max_people,
       count: product.count,

@@ -37,7 +37,7 @@ const Sidebar = () => {
             if (userLevel > '3') {
                 setLinks(adminLinks);
             } else if (userLevel === '3') {
-                if(exercise_level === '2'){
+                if(exercise_level === '2'||exercise_level === '4'){
                     setLinks(centerLinks);
                 }else{
                     setLinks(centerLinks_2);
