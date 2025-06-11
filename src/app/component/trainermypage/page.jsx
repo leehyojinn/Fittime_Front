@@ -94,15 +94,14 @@ const TrainerMyPage = () => {
     }
 
     const getReservation = async () =>{
-        const {data} = await axios.post(`${apiUrl}/list/trainerBook?page=${reservationPage}`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id"):""});
+        const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id"):""});
         setReservation(data.bookingList);
         setReservationPage(data.page);
         setReservationTotalPage(data.totalPage);
-        console.log('reservation',data);
     }
 
     const getReviews = async () => {
-        const {data} = await axios.post(`${apiUrl}/list/reviewByTrainer?page=${reviewPage}`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""});
+        const {data} = await axios.post(`${apiUrl}/list/reviewByTrainer`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""});
         setReviews(data.reviews);
         setReviewPage(data.page);
         setReviewTotalPage(data.totalPage);
