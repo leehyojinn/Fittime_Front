@@ -17,6 +17,8 @@ const ProductManagement = () => {
 
   const router = useRouter();
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
   useEffect(() => {
