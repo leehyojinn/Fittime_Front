@@ -30,7 +30,7 @@ const userData={
   phone:"",
   status:"",
   user_id: typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "",
-  user_level:typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : ""
+  user_level:typeof window !== "undefined" ? sessionStorage.getItem("user_level") : ""
 }
 
 const mockReservations = [
