@@ -17,6 +17,7 @@ const Sidebar = () => {
         { label: '태그 등록', href: '/component/tagmanagement'},
     ];
     const centerLinks = [
+        { label: 'Home', href: '/' },
         { label: '상품 등록', href: '/component/product'},
         // { label: '신고하기', href: '/component/complaint'},
         { label: '클래스 등록', href: '/component/classmanagement'},
@@ -24,6 +25,7 @@ const Sidebar = () => {
     ];
 
     const centerLinks_2 = [
+        { label: 'Home', href: '/' },
         { label: '통계', href: '/component/dashboard'},
         { label: '상품 등록', href: '/component/product'},
         // { label: '신고하기', href: '/component/complaint'},
