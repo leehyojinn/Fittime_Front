@@ -43,7 +43,7 @@ const TrainerSearch = () => {
     }, []);
 
     const getCity = async () => {
-        const {data}= await axios.post('http://localhost/get/city');
+        const {data}= await axios.post(`${apiUrl}/get/city`);
         console.log(data);
         setCityOptions(data.City);
     }
@@ -59,7 +59,7 @@ const TrainerSearch = () => {
       // API 호출하여 해당 도시의 구 옵션 로드
       // const mockDistricts = ['강남구', '서초구', '송파구', '마포구', '중구', '강동구'];
       // setDistrictOptions(mockDistricts);
-        axios.post('http://localhost/get/district',{"sido":location.city})
+        axios.post(`${apiUrl}/get/district`,{"sido":location.city})
             .then(({data}) => {
                 setDistrictOptions(data.District);
                 console.log(data);
@@ -72,7 +72,7 @@ const TrainerSearch = () => {
       // API 호출하여 해당 구의 동 옵션 로드
       // const mockNeighborhoods = ['역삼동', '삼성동', '대치동', '서초동', '잠실동', '송파동'];
       // setNeighborhoodOptions(mockNeighborhoods);
-        axios.post('http://localhost/get/neighborhood',{"sido":location.city ,"gugun":location.district})
+        axios.post(`${apiUrl}/get/neighborhood`,{"sido":location.city ,"gugun":location.district})
             .then(({data}) => {
                 setNeighborhoodOptions(data.Neighborhood);
                 console.log(data);
@@ -85,7 +85,7 @@ const TrainerSearch = () => {
     // API 호출하여 트레이너 태그 로드
     // const mockTags = ['유경험자', '친절한', '체계적인', '열정적인', '세심한', '커리큘럼 보유'];
     // setAvailableTags(mockTags);
-      axios.post('http://localhost/tag_list',{category:"트레이너"})
+      axios.post(`${apiUrl}/tag_list`,{category:"트레이너"})
           .then(({data}) => {
               console.log(data);
               setAvailableTags(data.list);
@@ -134,7 +134,7 @@ const TrainerSearch = () => {
       }
     ];
 
-      const {data} = await axios.post('http://localhost/search/trainer',
+      const {data} = await axios.post(`${apiUrl}/search/trainer`,
           {
               "sido":location.city,
               "gugun":location.district,
@@ -385,7 +385,7 @@ const TrainerSearch = () => {
                     <div className="center-image" style={{width:"fit-content"}}>
                         <img
                         //src={trainer.profile_image || '/default-profile.jpg'}
-                        src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
+                        src={`${apiUrl}/profileImg/profile/${trainer.trainer_id}`}
                         alt={trainer.name}
                         width={200}
                         height={150}

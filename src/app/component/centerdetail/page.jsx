@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useEffect, useState} from 'react';
+import React, {Suspense, useEffect, useState} from 'react';
 import { FaMapMarkerAlt, FaPhoneAlt, FaStar, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
@@ -25,7 +25,7 @@ const centerSample = {
   ]
 };
 
-const CenterDetail = () => {
+const CenterDetailContent = () => {
   const [reviewText, setReviewText] = useState('');
   const [star, setStar] = useState(0);
   const [hoverStar, setHoverStar] = useState(0);
@@ -43,6 +43,8 @@ const CenterDetail = () => {
 
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     checkAuthAndAlert(router, null, { noGuest: true });
   }, [checkAuthAndAlert, router]);
@@ -56,7 +58,7 @@ const CenterDetail = () => {
   }
 
   const getCenterInfo = async() =>{
-      const {data} = await axios.post('http://localhost/detail/profile',{"center_id":center_id,"user_level":'3'});
+      const {data} = await axios.post(`${apiUrl}/detail/profile`,{"center_id":center_id,"user_level":'3'});
       setCenterInfo(data);
   }
 
@@ -77,7 +79,7 @@ const CenterDetail = () => {
 
     const fetchReviews = async () => {
         const {data} = await axios.post(
-            `http://localhost/list/review/0`
+            `${apiUrl}/list/review/0`
         );
 
         console.log(data);
@@ -117,7 +119,7 @@ const CenterDetail = () => {
                         <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                     <div className="center-header">
                         <img
-                            src={`http://localhost/profileImg/profile/${center_id}`}
+                            src={`${apiUrl}/profileImg/profile/${center_id}`}
                             alt={centerInfo.center_name}
                             className="center-main-image"/>
                         <div className="center-header-info">
@@ -270,7 +272,7 @@ const CenterDetail = () => {
                                                                 JSON.parse(r.file_idx).map((img, idx) => (
                                                                     <img
                                                                         key={idx}
-                                                                        src={`http://localhost/reviewImg/${img}`}
+                                                                        src={`${apiUrl}/reviewImg/${img}`}
                                                                         alt="첨부"
                                                                         style={{
                                                                             width: 132,
@@ -331,4 +333,10 @@ const CenterDetail = () => {
   );
 };
 
-export default CenterDetail;
+export default function CenterDetail(){
+    return(
+        <Suspense>
+            <CenterDetailContent/>
+        </Suspense>
+    );
+};

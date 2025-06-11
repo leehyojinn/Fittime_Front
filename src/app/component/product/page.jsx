@@ -61,7 +61,7 @@ const ProductManagement = () => {
   const fetchProducts = async () => {
     if (!user_id) return;
     try {
-      const { data } = await axios.post(`http://localhost/list/product`, { center_id: user_id });
+      const { data } = await axios.post(`${apiUrl}/list/product`, { center_id: user_id });
       setProducts(data.products || []);
     } catch (err) {
       openModal({
@@ -111,7 +111,7 @@ const ProductManagement = () => {
       }
       req.exercise_level = Number(data.service_level);
 
-      const { data: res } = await axios.post('http://localhost/insert/product', req);
+      const { data: res } = await axios.post(`${apiUrl}/insert/product`, req);
       if (res.success) {
         fetchProducts();
         reset({ service_level: exerciseLevel });
@@ -183,7 +183,7 @@ const ProductManagement = () => {
       req.exercise_level = Number(data.service_level);
 
       const { data: res } = await axios.post(
-        `http://localhost/update/product`,
+        `${apiUrl}/update/product`,
         req
       );
       if (res.success) {
@@ -224,7 +224,7 @@ const ProductManagement = () => {
       showCancel: true,
       onConfirm: async () => {
         try {
-          const { data } = await axios.post(`http://localhost/del/product/${product_idx}`);
+          const { data } = await axios.post(`${apiUrl}/del/product/${product_idx}`);
           if (data.success) {
             fetchProducts();
             setSelectedProduct(null);
@@ -259,7 +259,7 @@ const ProductManagement = () => {
   const handleToggleStatus = async (product) => {
     try {
       const { data } = await axios.get(
-        `http://localhost/update/productStatus/${product.product_idx}`
+        `${apiUrl}/update/productStatus/${product.product_idx}`
       );
       if (data.success) {
         fetchProducts();

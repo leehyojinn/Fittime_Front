@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useEffect, useState} from 'react';
+import React, {Suspense, useEffect, useState} from 'react';
 import { FaStar, FaMapMarkerAlt, FaPhoneAlt, FaTag, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
@@ -10,25 +10,8 @@ import {useRouter, useSearchParams} from "next/navigation";
 import axios from "axios";
 import { useAuthStore } from '@/app/zustand/store';
 
-const trainerSample = {
-  user_id: 'trainer1',
-  user_name: '김트레이너',
-  profile_image: '/trainer1.jpg',
-  center_idx: 1,
-  center_name: '헬스월드 강남점',
-  center_address: '서울 강남구 역삼동 123-45',
-  center_contact: '02-1234-5678',
-  exercise_type: 'PT',
-  tags: ['유경험자', '체계적인', '친절한'],
-  intro: '10년 경력의 퍼스널 트레이너. 맞춤형 프로그램 진행.',
-  rating: 4.8,
-  reviews: [
-    { review_id: 1, user_name: '회원A', rating: 5, content: '트레이닝이 정말 체계적이에요!', date: '2025-05-01', images: [] },
-    { review_id: 2, user_name: '회원B', rating: 4.5, content: '운동법을 꼼꼼히 알려주셔서 좋아요.', date: '2025-05-02', images: [] }
-  ]
-};
 
-const TrainerDetail = () => {
+const TrainerDetailContent = () => {
   const [reviewText, setReviewText] = useState('');
   const [star, setStar] = useState(0);
   const [hoverStar, setHoverStar] = useState(0);
@@ -39,6 +22,7 @@ const TrainerDetail = () => {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const searchParams = useSearchParams();
   const trainer_id = searchParams.get('trainer_id');
@@ -50,7 +34,7 @@ const TrainerDetail = () => {
     }, [checkAuthAndAlert, router]);
 
   const getTrainerInfo = async() =>{
-      const {data} = await axios.post('http://localhost/detail/profile',{"trainer_id":trainer_id,"user_level":'2'});
+      const {data} = await axios.post(`${apiUrl}/detail/profile`,{"trainer_id":trainer_id,"user_level":'2'});
       console.log(data);
       setTrainerInfo(data);
   }
@@ -76,7 +60,7 @@ const TrainerDetail = () => {
 
     const fetchReviews = async () => {
         const {data} = await axios.post(
-            `http://localhost/list/review/0`
+            `${apiUrl}/list/review/0`
         );
 
         console.log(data);
@@ -115,7 +99,7 @@ const TrainerDetail = () => {
                         color:'#3673c1'}}>{trainerInfo.name}</h2>
                     <div className="review-submit-btn width_fit" style={{fontSize:'1.5rem'}} onClick={handleMoveReservation}>예약 하기</div>
                     <div className="trainer-header">
-                        <img src={`http://localhost/profileImg/profile/${trainer_id}`} alt={trainerInfo.name} className="trainer-main-image" />
+                        <img src={`${apiUrl}/profileImg/profile/${trainer_id}`} alt={trainerInfo.name} className="trainer-main-image" />
                         <div className="trainer-header-info">
 
                             <div className="trainer-tags">
@@ -257,7 +241,7 @@ const TrainerDetail = () => {
                                                             JSON.parse(r.file_idx).map((img, idx) => (
                                                                 <img
                                                                     key={idx}
-                                                                    src={`http://localhost/reviewImg/${img}`}
+                                                                    src={`${apiUrl}/reviewImg/${img}`}
                                                                     alt="첨부"
                                                                     style={{
                                                                         width: 132,
@@ -318,4 +302,10 @@ const TrainerDetail = () => {
   );
 };
 
-export default TrainerDetail;
+export default function TrainerDetail(){
+    return(
+        <Suspense>
+            <TrainerDetailContent/>
+        </Suspense>
+    );
+};

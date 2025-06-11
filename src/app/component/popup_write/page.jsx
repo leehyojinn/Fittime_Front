@@ -149,7 +149,7 @@ export default function PopupTable() {
   const [editingPopup, setEditingPopup] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
@@ -194,7 +194,7 @@ export default function PopupTable() {
     );
     setIsEdit(!!popup);
     if (popup && popup.file_name) {
-      setPreviewUrl(`http://localhost/image/${popup.file_name}`);
+      setPreviewUrl(`${apiUrl}/image/${popup.file_name}`);
     } else {
       setPreviewUrl(null);
     }
@@ -290,7 +290,7 @@ export default function PopupTable() {
     try {
       if (isEdit) {
         formData.append('popup_idx', editingPopup.popup_idx);
-        const { data } = await axios.post('http://localhost/popup_update', formData);
+        const { data } = await axios.post(`${apiUrl}/popup_update`, formData);
         if (data.success) {
           openModal({
             svg: '✔',
@@ -311,7 +311,7 @@ export default function PopupTable() {
           });
         }
       } else {
-        const { data } = await axios.post('http://localhost/popup_write', formData);
+        const { data } = await axios.post(`${apiUrl}/popup_write`, formData);
         if (data.success) {
           openModal({
             svg: '✔',
@@ -351,7 +351,7 @@ export default function PopupTable() {
       showCancel: true,
       onConfirm: async () => {
         try {
-          const { data } = await axios.post(`http://localhost/popup_delete/${popup_idx}`);
+          const { data } = await axios.post(`${apiUrl}/popup_delete/${popup_idx}`);
           if (data.success) {
             openModal({
               svg: '✔',
@@ -383,7 +383,7 @@ export default function PopupTable() {
   // 토글 변경
   const handleToggle = async (popup_idx) => {
     try {
-      const { data } = await axios.get('http://localhost/toggle/' + popup_idx);
+      const { data } = await axios.get(`${apiUrl}/toggle/` + popup_idx);
       if (data.success) {
         await popup_list();
       } else {
@@ -406,7 +406,7 @@ export default function PopupTable() {
 
   const popup_list = async () => {
     try {
-      const { data } = await axios.get('http://localhost/popup_list');
+      const { data } = await axios.get(`${apiUrl}/popup_list`);
       setPopups(data.data);
     } catch (err) {
       openModal({

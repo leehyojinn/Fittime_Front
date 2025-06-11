@@ -9,15 +9,13 @@ import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
 import { useRouter } from 'next/navigation';
 
-const TAG_API = 'http://localhost/';
-
 const TagManagement = () => {
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm();
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('센터');
   const [editingTag, setEditingTag] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const {openModal} = useAlertModalStore();
 
   const router = useRouter();
@@ -32,7 +30,7 @@ const TagManagement = () => {
   const fetchTags = async (category = selectedCategory) => {
     setLoading(true);
     try {
-      const { data } = await axios.post(TAG_API + 'tag_list', { category });
+      const { data } = await axios.post(apiUrl + '/' + 'tag_list', { category });
       setTags(data.list || []);
     } catch (e) {
       openModal({
@@ -58,7 +56,7 @@ const TagManagement = () => {
     if (editingTag) {
       // 수정
       try {
-        const res = await axios.post(TAG_API + 'tag_update', {
+        const res = await axios.post(apiUrl + '/' + 'tag_update', {
           tag_idx: editingTag.tag_idx,
           tag_name: data.tag_name,
           category: data.category,
@@ -102,7 +100,7 @@ const TagManagement = () => {
           });
           return;
         }
-        const res = await axios.post(TAG_API + 'tag', {
+        const res = await axios.post(apiUrl + '/' + 'tag', {
           tag_name: data.tag_name,
           category: data.category,
         });
@@ -167,7 +165,7 @@ const TagManagement = () => {
   // 태그 삭제
   const handleDeleteTag = async (tagToDelete) => {
     try {
-      const res = await axios.post(TAG_API + 'tag_del', { tag_idx: tagToDelete.tag_idx });
+      const res = await axios.post(apiUrl + '/' + 'tag_del', { tag_idx: tagToDelete.tag_idx });
       if (res.data.success) {
         fetchTags(selectedCategory);
       } else {

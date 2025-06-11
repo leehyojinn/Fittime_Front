@@ -12,45 +12,6 @@ import TagModal from "@/app/TagModal";
 import {useRouter} from "next/navigation";
 import TrainerModal from "@/app/TrainerModal";
 
-const centerProfileSample = {
-    center_idx: 1,
-    center_name: '헬스월드 강남점',
-    address: '서울 강남구 역삼동 123-45',
-    phone: '02-1234-5678',
-    introduction: '최신 장비와 쾌적한 환경의 24시간 프리미엄 헬스장',
-    tags: ['24시간', '샤워시설', '주차가능'],
-    homepage: 'https://center-homepage.com',
-    open_hour: '06:00',
-    close_hour: '23:00',
-    parking: '가능',
-    longitude: 127.123456,
-    latitude: 37.123456,
-    // 이미지 관리
-    main_image: '/center.jpg',
-    sub_images: [
-      '/center.jpg', '/center.jpg', '/center.jpg','/center.jpg','/center.jpg'
-      // 최대 10장까지
-    ],
-    products: [
-      { product_idx: 1, product_name: '헬스 1개월', price: 100000, discount_rate: 10 }
-    ],
-    trainers: [
-      { user_id: 'trainer1', user_name: '김트레이너', profile_image: '/member.png', phone: '010-2222-3333', rating: 4.8 }
-    ]
-  };
-const mockCenterReservations = [
-  { reservation_idx: 1, member_name: '홍길동', phone: '010-1234-5678', product_name: '헬스 1개월', date: '2025-05-21', start_time: '10:00', end_time: '11:00', trainer_name: '', status: '예약완료' },
-  { reservation_idx: 2, member_name: '이영희', phone: '010-9876-5432', product_name: 'PT 10회', date: '2025-05-25', start_time: '15:00', end_time: '16:00', trainer_name: '김트레이너', status: '예약완료' }
-];
-const mockCenterReviews = [
-  { review_id: 1, member_name: '회원A', rating: 5, content: '시설이 정말 좋아요!', date: '2025-05-10' },
-  { review_id: 2, member_name: '회원B', rating: 4.5, content: '샤워실이 깨끗해서 만족!', date: '2025-05-12' }
-];
-const mockCenterSchedules = [
-  { schedule_id: 1, title: '센터 휴무', start_time: '2025-05-22 00:00', end_time: '2025-05-22 23:59', type: '휴무' },
-  { schedule_id: 2, title: '요가 클래스', start_time: '2025-05-23 14:00', end_time: '2025-05-23 15:00', type: '클래스' }
-];
-
 const CenterMyPage = () => {
   const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
 
@@ -71,6 +32,8 @@ const CenterMyPage = () => {
   const [TrainerModalOpen, setTrainerModalOpen] = useState(false);
 
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     useEffect(() => {
         checkAuthAndAlert(router, null, { minLevel: 3 });
@@ -185,38 +148,38 @@ const CenterMyPage = () => {
 
     // 센터 정보 가져오기
     const getCenter = async () =>{
-        const {data} = await axios.post('http://localhost/detail/profile',{"center_id":sessionStorage.getItem('user_id'), "user_level":sessionStorage.getItem('user_level')});
+        const {data} = await axios.post(`${apiUrl}/detail/profile`,{"center_id":sessionStorage.getItem('user_id'), "user_level":sessionStorage.getItem('user_level')});
         //console.log(data);
         setCenter(data);
-        setMainImage(`http://localhost/profileImg/profile/${sessionStorage.getItem("user_id")}`);
-        setSubImages(data.photos?.map(photo => `http://localhost/centerImg/${photo.profile_file_idx}`));
+        setMainImage(`${apiUrl}/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+        setSubImages(data.photos?.map(photo => `${apiUrl}/centerImg/${photo.profile_file_idx}`));
         //console.log(tagModalOpen);
     }
 
     // 상품 리스트 가져오기
     const getProducts = async () =>{
-        const {data} = await axios.post('http://localhost/list/product',{'center_id':sessionStorage.getItem('user_id')});
+        const {data} = await axios.post(`${apiUrl}/list/product`,{'center_id':sessionStorage.getItem('user_id')});
         //console.log(data.products);
         setProducts(data.products);
     }
 
     // 상품 활성화/비활성화
     const handleProductStaus = async (product_idx)=>{
-        const {data} = await axios.get(`http://localhost/update/productStatus/${product_idx}`);
+        const {data} = await axios.get(`${apiUrl}/update/productStatus/${product_idx}`);
         //console.log(data);
         await getProducts();
     }
 
     // 소속 트레이너 리스트 가져오기
     const getTrainer = async () =>{
-        const {data} = await axios.post(`http://localhost/list/trainers/${sessionStorage.getItem('user_id')}`);
+        const {data} = await axios.post(`${apiUrl}/list/trainers/${sessionStorage.getItem('user_id')}`);
         //console.log(data);
         setTrainers(data.trainers);
     }
 
     // 소속 트레이너 삭제
     const deleteTrainer = async (idx) =>{
-        const {data} = await axios.post(`http://localhost/del/trainers/${idx}`);
+        const {data} = await axios.post(`${apiUrl}/del/trainers/${idx}`);
         //console.log(data);
         if(data.success){
             await getTrainer();
@@ -225,21 +188,21 @@ const CenterMyPage = () => {
 
     // 예약 리스트 가져오기
     const getReservations = async () =>{
-        const {data} = await axios.post('http://localhost/list/centerBook',{'center_id':sessionStorage.getItem('user_id')});
+        const {data} = await axios.post(`${apiUrl}/list/centerBook`,{'center_id':sessionStorage.getItem('user_id')});
         //console.log(data);
         setReservations(data.bookingList);
     }
 
     // 리뷰 리스트 가져오기
     const getReviews = async ()=>{
-        const {data} = await axios.post('http://localhost/list/reviewByCenter',{'center_id':sessionStorage.getItem('user_id')});
+        const {data} = await axios.post(`${apiUrl}/list/reviewByCenter`,{'center_id':sessionStorage.getItem('user_id')});
         console.log(data);
         setReviews(data.reviews);
     }
 
     // 센터 스케줄 가져오기
     const getSchedules = async () => {
-        const {data} = await axios.post(`http://localhost/schedule_list/${sessionStorage.getItem('user_id')}`);
+        const {data} = await axios.post(`${apiUrl}/schedule_list/${sessionStorage.getItem('user_id')}`);
         console.log('schedules',data);
         setSchedules(data.list);
     }
@@ -291,7 +254,7 @@ const CenterMyPage = () => {
             for (let [key, value] of formData.entries()) {
                 console.log(`${key}:`, value);
             }
-            const {data} = await axios.post('http://localhost/update/Profile', formData,{
+            const {data} = await axios.post(`${apiUrl}/update/Profile`, formData,{
                 headers: {'Content-Type': 'multipart/form-data'}
             });
             console.log(formData);
@@ -401,7 +364,7 @@ const CenterMyPage = () => {
                     {trainers&&trainers?.map(t=>(
                     <tr key={t.trainer_id}>
                         <td>
-                        <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
+                        <img src={`${apiUrl}/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
                         {t.name}
                         </td>
                         <td>{t.phone}</td>

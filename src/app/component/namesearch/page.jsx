@@ -31,9 +31,11 @@ const NameSearch = () => {
         router.push(`/component/centerdetail?center_id=${id}`);
     }
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 
     const search=async()=>{
-        const {data} = await axios.post('http://localhost/search/name',{name:searchTerm, page:page});
+        const {data} = await axios.post(`${apiUrl}/search/name`,{name:searchTerm, page:page});
         console.log(data);
         // const results = {
         //     trainers: searchType === 'center'
@@ -209,7 +211,7 @@ const NameSearch = () => {
                                     <div className="center-image" style={{width:"fit-content"}}>
                                         <img
                                             //src={trainer.profile_image || '/default-profile.jpg'}
-                                            src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
+                                            src={`${apiUrl}/profileImg/profile/${trainer.trainer_id}`}
                                             alt={trainer.name}
                                             width={200}
                                             height={150}
@@ -269,7 +271,7 @@ const NameSearch = () => {
                                     <div className={"center-image"} style={{width:"fit-content"}}>
                                         <img
                                             //src={center.center_image || '/default-center.jpg'}
-                                            src={`http://localhost/profileImg/profile/${center.center_id}`}
+                                            src={`${apiUrl}/profileImg/profile/${center.center_id}`}
                                             alt={center.center_name}
                                             className="facility-image"
                                         />
@@ -328,7 +330,7 @@ const NameSearch = () => {
                                                 <div className="center-image" style={{width:"fit-content"}}>
                                                     <img
                                                         //src={center.center_image || '/default-center.jpg'}
-                                                        src={`http://localhost/profileImg/profile/${center.center_id}`}
+                                                        src={`${apiUrl}/profileImg/profile/${center.center_id}`}
                                                         alt={center.center_name}
                                                         width={150}
                                                         height={150}
@@ -383,7 +385,7 @@ const NameSearch = () => {
                                                     <div className="center-image"  style={{width:"fit-content"}}>
                                                         <img
                                                             //src={trainer.profile_image || '/default-profile.jpg'}
-                                                            src={`http://localhost/profileImg/profile/${trainer.trainer_id}`}
+                                                            src={`${apiUrl}/profileImg/profile/${trainer.trainer_id}`}
                                                             alt={trainer.user_name}
                                                             width={150}
                                                             height={150}

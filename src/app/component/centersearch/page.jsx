@@ -31,7 +31,7 @@ const CenterSearch = () => {
     const handleMoveCenter = (id) =>{
         router.push(`/component/centerdetail?center_id=${id}`)
     }
-
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
     useEffect(() => {
@@ -43,7 +43,7 @@ const CenterSearch = () => {
     }, []);
 
   const getCity = async () => {
-      const {data}= await axios.post('http://localhost/get/city');
+      const {data}= await axios.post(`${apiUrl}/get/city`);
       console.log(data);
       setCityOptions(data.City);
   }
@@ -58,7 +58,7 @@ const CenterSearch = () => {
     if (location.city) {
       // API 호출하여 해당 도시의 구 옵션 로드
       //const mockDistricts = ['강남구', '서초구', '송파구', '마포구', '중구', '강동구'];
-      axios.post('http://localhost/get/district',{"sido":location.city})
+      axios.post(`${apiUrl}/get/district`,{"sido":location.city})
           .then(({data}) => {
               setDistrictOptions(data.District);
               console.log(data);
@@ -72,7 +72,7 @@ const CenterSearch = () => {
       // API 호출하여 해당 구의 동 옵션 로드
       // const mockNeighborhoods = ['역삼동', '삼성동', '대치동', '서초동', '잠실동', '송파동'];
       // setNeighborhoodOptions(mockNeighborhoods);
-        axios.post('http://localhost/get/neighborhood',{"sido":location.city ,"gugun":location.district})
+        axios.post(`${apiUrl}/get/neighborhood`,{"sido":location.city ,"gugun":location.district})
         .then(({data}) => {
             setNeighborhoodOptions(data.Neighborhood);
             console.log(data);
@@ -84,7 +84,7 @@ const CenterSearch = () => {
   useEffect(() => {
     // API 호출하여 센터 태그 로드
     const mockTags = ['24시간', '샤워시설', '피트니스', '주차가능', '락커', '무료 PT'];
-    axios.post('http://localhost/tag_list',{category:"센터"})
+    axios.post(`${apiUrl}/tag_list`,{category:"센터"})
         .then(({data}) => {
             console.log(data);
             setAvailableTags(data.list);
@@ -95,43 +95,9 @@ const CenterSearch = () => {
   // 검색 실행
   const handleSearch = async () => {
     // API 호출하여 검색 결과 로드
-    const mockResults = [
-      {
-        center_idx: 1,
-        center_name: '헬스월드 강남점',
-        center_image: '/center1.jpg',
-        lowest_price: 80000,
-        tags: ['24시간', '샤워시설', '피트니스'],
-        rating: 4.6,
-        rating_count: 48,
-        address: '서울 강남구 역삼동 123-45',
-        description: '최신 장비를 갖춘 24시간 헬스장입니다.'
-      },
-      {
-        center_idx: 2,
-        center_name: '파워짐 송파점',
-        center_image: '/center2.jpg',
-        lowest_price: 70000,
-        tags: ['피트니스', '무료 PT', '락커'],
-        rating: 4.8,
-        rating_count: 36,
-        address: '서울 송파구 잠실동 456-78',
-        description: '합리적인 가격과 전문 트레이너가 함께하는 헬스장입니다.'
-      },
-      {
-        center_idx: 3,
-        center_name: '웰니스 필라테스',
-        center_image: '/center3.jpg',
-        lowest_price: 150000,
-        tags: ['샤워시설', '주차가능'],
-        rating: 4.9,
-        rating_count: 27,
-        address: '서울 서초구 서초동 789-10',
-        description: '1:1 맞춤 필라테스 수업을 제공합니다.'
-      }
-    ];
+    
 
-      const {data} = await axios.post('http://localhost/search/location',
+      const {data} = await axios.post(`${apiUrl}/search/location`,
           {
               "sido":location.city,
               "gugun":location.district,
@@ -377,7 +343,7 @@ const CenterSearch = () => {
                         <div className={"center-image"} style={{width:"fit-content"}}>
                         <img
                             //src={center.center_image || '/default-center.jpg'}
-                            src={`http://localhost/profileImg/profile/${center.center_id}`}
+                            src={`${apiUrl}/profileImg/profile/${center.center_id}`}
                             alt={center.center_name}
                             className="facility-image"
                         />

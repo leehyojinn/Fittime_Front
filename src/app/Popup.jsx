@@ -4,17 +4,17 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 
-const IMAGE_BASE_URL = 'http://localhost/popup/'; // 실제 이미지 경로에 맞게 수정하세요
-
 const Popup = () => {
     const [popupData, setPopupData] = useState([]);
     const [visiblePopups, setVisiblePopups] = useState({});
     const [positions, setPositions] = useState({});
     const [dragInfo, setDragInfo] = useState({}); // { [popup_idx]: {isDragging, diff} }
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     // 팝업 데이터 불러오기
     const fetchPopupData = async () => {
-        const { data } = await axios.get('http://localhost/popup_list');
+        const { data } = await axios.get(`${apiUrl}/popup_list`);
         setPopupData(data.data || []);
     };
 
@@ -123,7 +123,7 @@ const Popup = () => {
                 // 실제 이미지 경로
                 const imageUrl = popup.file_name.startsWith('http')
                     ? popup.file_name
-                    : IMAGE_BASE_URL + popup.file_name;
+                    : apiUrl + '/' + popup.file_name;
 
                 const now = new Date();
                 const startDate = popup.start_date ? new Date(popup.start_date) : null;

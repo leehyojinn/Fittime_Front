@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
 import axios from 'axios';
@@ -10,7 +10,7 @@ import {useRouter, useSearchParams} from "next/navigation";
 import { useAlertModalStore, useAuthStore } from '@/app/zustand/store';
 import AlertModal from '../alertmodal/page';
 
-const ComplaintForm = () => {
+const ComplaintFormContent = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [selectedImages, setSelectedImages] = useState([]);
   const [complaintList, setComplaintList] = useState([]);
@@ -23,6 +23,8 @@ const ComplaintForm = () => {
   const target_id = searchParams.get('target_id');
 
   const {openModal} = useAlertModalStore();
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const router = useRouter();
 
@@ -93,7 +95,7 @@ const ComplaintForm = () => {
       });
 
       const response = await axios.post(
-        'http://localhost/complaint',
+        `${apiUrl}/complaint`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
@@ -131,7 +133,7 @@ const ComplaintForm = () => {
   // 신고내역 불러오기
   const getComplaintList = async () => {
     try {
-      const { data } = await axios.post(`http://localhost/complaint_list/${user_id}`);
+      const { data } = await axios.post(`${apiUrl}/complaint_list/${user_id}`);
       setComplaintList(data.list || []);
     } catch (err) {
       console.error(err);
@@ -325,7 +327,7 @@ const ComplaintForm = () => {
                         {complaint.images.map((img, idx) => (
                           <img
                             key={idx}
-                            src={`http://localhost/complaint/${img}`}
+                            src={`${apiUrl}/complaint/${img}`}
                             alt={`증빙이미지${idx + 1}`}
                             style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                           />
@@ -345,4 +347,10 @@ const ComplaintForm = () => {
   );
 };
 
-export default ComplaintForm;
+export default function ComplaintForm(){
+  return(
+    <Suspense>
+      <ComplaintFormContent/>
+    </Suspense>
+  );
+};

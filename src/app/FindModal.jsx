@@ -8,9 +8,11 @@ function FindModal({ open, onClose }) {
     const [userId, setUserId] = useState('');
     const [result, setResult] = useState(null); // 결과 화면 상태
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     // "아이디 찾기" 버튼 클릭 시
     const handleFindId = async() => {
-        const {data} = await axios.post('http://localhost/find/id',{email});
+        const {data} = await axios.post(`${apiUrl}/find/id`,{email});
         console.log(data);
         if (data.success) {
             setResult({
@@ -27,7 +29,7 @@ function FindModal({ open, onClose }) {
 
     // "비밀번호 재설정" 버튼 클릭 시
     const handleResetPw = async() => {
-        const {data} = await axios.post(`http://localhost/emailSend/${userId}`,{email:email});
+        const {data} = await axios.post(`${apiUrl}/emailSend/${userId}`,{email:email});
         if (data.success) {
             setResult({
                 type:'pw',

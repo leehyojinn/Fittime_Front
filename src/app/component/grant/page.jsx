@@ -43,12 +43,14 @@ const Grant = () => {
     localStorage.setItem('adminGrantHistory', JSON.stringify(history));
   }, [history]);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   // 검색 핸들러
   const handleSearch = async () => {
     try {
       setLoading(true);
       setSearchResults([]);
-      const { data } = await axios.post(`http://localhost/grant_search/${searchId}`);
+      const { data } = await axios.post(`${apiUrl}/grant_search/${searchId}`);
       if (!data?.list?.length) {
         openModal({
           svg: '❗',
@@ -79,7 +81,7 @@ const Grant = () => {
     try {
       const isGranting = user.user_level === 1;
       const endpoint = isGranting ? 'grant' : 'revoke';
-      const { data } = await axios.post(`http://localhost/${endpoint}/${user.user_id}`);
+      const { data } = await axios.post(`${apiUrl}/${endpoint}/${user.user_id}`);
       if (data.success) {
         const newLevel = isGranting ? 4 : 1;
         const newHistory = [
@@ -135,7 +137,7 @@ const Grant = () => {
     try {
       const isRevertToAdmin = selectedItem.previous_level === 4;
       const endpoint = isRevertToAdmin ? 'grant' : 'revoke';
-      const { data } = await axios.post(`http://localhost/${endpoint}/${selectedItem.user_id}`);
+      const { data } = await axios.post(`${apiUrl}/${endpoint}/${selectedItem.user_id}`);
       if (data.success) {
         if (history.length === 0 || history[0].user_id === selectedItem.user_id) {
           setHistory([

@@ -23,6 +23,8 @@ const ClassManagement = () => {
 
   const router = useRouter();
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ const ClassManagement = () => {
 
   // 트레이너 리스트 불러오기
   const trainer_list = async (uid) => {
-    let { data } = await axios.post(`http://localhost/list/trainers/${uid}`);
+    let { data } = await axios.post(`${apiUrl}/list/trainers/${uid}`);
     if (data) {
       const newTrainers = data.trainers.map((item) => ({
         user_id: item.trainer_id,
@@ -50,7 +52,7 @@ const ClassManagement = () => {
 
   // 상품 리스트 불러오기 (max_people 포함)
   const product_list = async(uid) => {
-    let {data} = await axios.post('http://localhost/list/product',{center_id : uid});
+    let {data} = await axios.post(`${apiUrl}/list/product`,{center_id : uid});
     if(data){
       const newProducts = data.products.map((item)=>({
         product_idx : item.product_idx,
@@ -64,7 +66,7 @@ const ClassManagement = () => {
 
   // 클래스 리스트 불러오기 (상품명/트레이너명은 렌더링시 매번 찾아서 표시)
   const class_list = async(uid) => {
-    let {data} = await axios.post("http://localhost/list/class",{center_id : uid});
+    let {data} = await axios.post(`${apiUrl}/list/class`,{center_id : uid});
     if(data && data.list) {
       setClasses(data.list);
     }
@@ -93,7 +95,7 @@ const ClassManagement = () => {
     };
 
     try {
-      const {data} = await axios.post('http://localhost/insert/class',newClass);
+      const {data} = await axios.post(`${apiUrl}/insert/class`,newClass);
       if(data.success){
         reset();
         useAlertModalStore.getState().openModal({
@@ -153,7 +155,7 @@ const ClassManagement = () => {
       week: data.days.join(','),
     };
     try {
-      const res = await axios.post('http://localhost/update/class', updateParam);
+      const res = await axios.post(`${apiUrl}/update/class`, updateParam);
       if (res.data.success) {
         setIsEditing(false);
         useAlertModalStore.getState().openModal({
@@ -190,7 +192,7 @@ const ClassManagement = () => {
       showCancel: true,
       onConfirm: async () => {
         try {
-          const res = await axios.delete(`http://localhost/del/class/${classIdx}`);
+          const res = await axios.delete(`${apiUrl}/del/class/${classIdx}`);
           if (res.data.success) {
             if (selectedClass && selectedClass.class_idx === classIdx) {
               setSelectedClass(null);

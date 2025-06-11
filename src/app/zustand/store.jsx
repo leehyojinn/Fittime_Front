@@ -73,11 +73,11 @@ export const useDashboardStore = create((set) => ({
                 set({loading:false});
                 return;
             }
-
-            const {data:idxRes} = await axios.post('http://localhost/list/centerIdx',{user_id});
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            const {data:idxRes} = await axios.post(`${apiUrl}/list/centerIdx`,{user_id});
             const center_idx = idxRes.center_idx;
 
-            const {data:chartRes} = await axios.post('http://localhost/list/chart',{user_id, center_idx});
+            const {data:chartRes} = await axios.post(`${apiUrl}/list/chart`,{user_id, center_idx});
 
             set({
                 centerIdx: center_idx,

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Calendar from 'react-calendar';
@@ -35,7 +35,7 @@ function getHourSlots(start, end) {
   return slots;
 }
 
-const Reservation = () => {
+const ReservationContent = () => {
   const searchParams = useSearchParams();
   const initialCenterId = searchParams.get('center_id');
   const initialTrainerId = searchParams.get('trainer_id');
@@ -85,13 +85,15 @@ const Reservation = () => {
 
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
       checkAuthAndAlert(router, null, { noGuest: true });
   }, [checkAuthAndAlert, router]);
 
   // 센터 정보 불러오기
   useEffect(() => {
-    axios.post(`http://localhost/reservation/center_info/${initialCenterId}`)
+    axios.post(`${apiUrl}/reservation/center_info/${initialCenterId}`)
       .then(res => {
         setCenters(res.data.list || []);
         if (res.data.list && res.data.list.length > 0) {
@@ -103,7 +105,7 @@ const Reservation = () => {
   useEffect(() => {
     if (!user_id || !initialCenterId) return;
     setMyProductLoading(true);
-    axios.post('http://localhost/reservation/myproduct_list', {
+    axios.post(`${apiUrl}/reservation/myproduct_list`, {
         user_id : user_id,
         center_id : initialCenterId
       })
@@ -122,7 +124,7 @@ const Reservation = () => {
     if (initialTrainerId && !selectedTrainer) {
       const center = centers.find(c => String(c.center_id) === String(initialCenterId));
       if (!center) return;
-      axios.post(`http://localhost/reservation/trainer_info/${center.center_idx}`)
+      axios.post(`${apiUrl}/reservation/trainer_info/${center.center_idx}`)
         .then(res => {
           const trainer = res.data.list?.find(t => String(t.trainer_id) === String(initialTrainerId));
           if (trainer) setSelectedTrainer(trainer);
@@ -133,9 +135,9 @@ const Reservation = () => {
   // 센터 선택 시 상품/트레이너 불러오기
   useEffect(() => {
     if (!selectedCenter) return;
-    axios.post(`http://localhost/reservation/center_product/${selectedCenter.center_id}`)
+    axios.post(`${apiUrl}/reservation/center_product/${selectedCenter.center_id}`)
       .then(res => setProducts(res.data.list || []));
-    axios.post(`http://localhost/reservation/trainer_info/${selectedCenter.center_idx}`)
+    axios.post(`${apiUrl}/reservation/trainer_info/${selectedCenter.center_idx}`)
       .then(res => setTrainers(res.data.list || []));
   }, [selectedCenter]);
 
@@ -145,7 +147,7 @@ const Reservation = () => {
     const start = new Date();
     const end = new Date();
     end.setMonth(end.getMonth() + 1);
-    axios.post('http://localhost/reservation/booked_count_date_range', {
+    axios.post(`${apiUrl}/reservation/booked_count_date_range`, {
       product_idx: selectedProduct.product_idx,
       start_date: start.toISOString().slice(0, 10),
       end_date: end.toISOString().slice(0, 10)
@@ -170,7 +172,7 @@ const Reservation = () => {
   
     // 트레이너 정보 등은 기존과 동일하게 처리
     if (product.trainer_id) {
-      axios.post('http://localhost/reservation/class_info', {
+      axios.post(`${apiUrl}/reservation/class_info`, {
         center_id: product.center_id,
         trainer_id: product.trainer_id,
         product_idx: product.product_idx
@@ -200,7 +202,7 @@ const Reservation = () => {
 
   useEffect(() => {
     if(productTrainerInfo) {
-      axios.post('http://localhost/reservation/class_info', {
+      axios.post(`${apiUrl}/reservation/class_info`, {
         center_id: selectedProduct.center_id,
         trainer_id: selectedProduct.trainer_id,
         product_idx: selectedProduct.product_idx
@@ -244,7 +246,7 @@ const Reservation = () => {
       setAvailableTimes(slots);
       // 시간별 예약 인원 조회
       filteredclassInfo.forEach(c=>{
-        axios.post('http://localhost/reservation/booked_count', {
+        axios.post(`${apiUrl}/reservation/booked_count`, {
           class_idx: c.class_idx,
           date: selectedDate.toISOString().slice(0, 10),
           times: slots.map(slot => ({ start_time: slot.time, end_time: slot.endTime }))
@@ -257,7 +259,7 @@ const Reservation = () => {
       })
     } else {
       // 시간 없는 상품: 날짜별 예약 인원 조회
-      axios.post('http://localhost/reservation/booked_count_date', {
+      axios.post(`${apiUrl}/reservation/booked_count_date`, {
         product_idx: selectedProduct.product_idx,
         date: selectedDate.toISOString().slice(0, 10)
       }).then(res => {
@@ -296,7 +298,7 @@ const Reservation = () => {
   // 휴무일 정보 불러오기 (기존 유지)
   useEffect(() => {
     if (!selectedCenter) return;
-    axios.post('http://localhost/reservation/schedule_info', {
+    axios.post(`${apiUrl}/reservation/schedule_info`, {
       center_id: selectedCenter?.center_id,
       trainer_id: selectedTrainer?.trainer_id
     }).then(res => {
@@ -348,7 +350,7 @@ const Reservation = () => {
         class_idx: selectedClass?.class_idx,
         center_id: selectedCenter.center_id,
       };
-      axios.post('http://localhost/booking', param)
+      axios.post(`${apiUrl}/booking`, param)
         .then(res => {
           console.log('param',param);
           setIsSubmitting(false);
@@ -375,7 +377,7 @@ const Reservation = () => {
         start_time: selectedTime?.time || null,
         end_time: selectedTime?.endTime || null
       };
-      axios.post('http://localhost/booking', param)
+      axios.post(`${apiUrl}/booking`, param)
         .then(res => {
           console.log('param',param);
           setIsSubmitting(false);
@@ -423,7 +425,7 @@ const Reservation = () => {
               }}
             >
               <div className="center-info">
-                <img src={`http://localhost/profileImg/profile/${center.center_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
+                <img src={`${apiUrl}/profileImg/profile/${center.center_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc', marginBottom:10}} />
                 <h4 className='page-title' style={{margin:0}}>{center.center_name}</h4>
                 <p className="center-address"><FaMapMarkerAlt /> {center.address}</p>
                 <p className="center-rating">
@@ -527,7 +529,7 @@ const Reservation = () => {
         <div key={info.trainer_id} className={`trainer-info-box ${selectedTrainer && selectedTrainer.trainer_id === info.trainer_id ? 'selected' : ''}`} style={{marginTop: '16px', padding: '16px', border: '1px solid #eee', borderRadius: '8px',cursor:'pointer'}}
              onClick={()=>setSelectedTrainer(info)}>
           <div className="flex column align_center justify_con_center gap_20">
-            <img src={`http://localhost/profileImg/profile/${info.trainer_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
+            <img src={`${apiUrl}/profileImg/profile/${info.trainer_id}`} alt="프로필" style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc'}} />
             <div className='flex column gap_3'>
               <h4 className='page-title mb_0'>{info.name || info.trainer_id}</h4>
               <p className='label'>{info.career}</p>
@@ -673,7 +675,7 @@ const Reservation = () => {
       window.localStorage.setItem("booking_param", JSON.stringify(bookingParam));
   
       try {
-        const res = await axios.post('http://localhost/kakaopay/ready', {
+        const res = await axios.post(`${apiUrl}/kakaopay/ready`, {
           user_id: user_id,
           product_idx: selectedProduct.product_idx,
           item_name: selectedProduct.product_name,
@@ -698,7 +700,7 @@ const Reservation = () => {
     if (waitingKakao && kakaoTid) {
       interval = setInterval(async () => {
         try {
-          const res = await axios.get(`http://localhost/kakaopay/status?tid=${kakaoTid}`);
+          const res = await axios.get(`${apiUrl}/kakaopay/status?tid=${kakaoTid}`);
           if (res.data.status === '성공') {
             setShowKakaoQR(false);
             setWaitingKakao(false);
@@ -923,7 +925,7 @@ const Reservation = () => {
                 onClick={async () => {
                   // step2→step3로 이동할 때 클래스 정보가 없는 경우(트레이너 상품)라면 여기서 불러오기
                   if (step === 2 && selectedProduct && selectedProduct.trainer_id && !classInfo) {
-                    const res = await axios.post('http://localhost/reservation/class_info', {
+                    const res = await axios.post(`${apiUrl}/reservation/class_info`, {
                       center_id: selectedProduct.center_id,
                       trainer_id: selectedProduct.trainer_id,
                       product_idx: selectedProduct.product_idx
@@ -949,4 +951,10 @@ const Reservation = () => {
   );
 };
 
-export default Reservation;
+export default function Reservation(){
+  return(
+    <Suspense>
+      <ReservationContent/>
+    </Suspense>
+  );
+};

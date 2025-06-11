@@ -39,6 +39,8 @@ const JoinPage = () => {
         eupmyeondong:''
     });
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const openModal = useAlertModalStore((state) => state.openModal);
 
     const inputRefs = {
@@ -108,7 +110,7 @@ const JoinPage = () => {
             setErrors((prev) => ({ ...prev, user_id: true }));
             return;
         }
-        const { data } = await axios.post('http://localhost/overlay/id', {
+        const { data } = await axios.post(`${apiUrl}/overlay/id`, {
             user_id: form.user_id,
         });
         if (data.use) {
@@ -142,7 +144,7 @@ const JoinPage = () => {
             return;
         }
 
-        const { data } = await axios.post('http://localhost/overlay/email', {
+        const { data } = await axios.post(`${apiUrl}/overlay/email`, {
             email: form.email,
         });
 
@@ -215,7 +217,7 @@ const JoinPage = () => {
             ...region
         }
 
-        const { data } = await axios.post('http://localhost/join', fullForm);
+        const { data } = await axios.post(`${apiUrl}/join`, fullForm);
         if (data.success) {
             openModal({
                 svg: '✔',

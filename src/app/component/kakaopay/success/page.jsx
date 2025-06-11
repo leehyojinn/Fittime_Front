@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
-export default function KakaoPaySuccessPage() {
+function KakaoPaySuccessContent() {
   const searchParams = useSearchParams();
   const pg_token = searchParams.get('pg_token');
   const tid = typeof window !== "undefined" ? window.localStorage.getItem("kakao_tid") : null;
@@ -16,12 +16,14 @@ export default function KakaoPaySuccessPage() {
   const [resultMsg, setResultMsg] = useState('결제 승인 처리 중...');
   const [done, setDone] = useState(false);
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     if (!pg_token || !tid || done) return;
     setDone(true);
     // POST로 예약 정보와 함께 결제 승인 요청
     axios.post(
-      `http://localhost/kakaopay/success?tid=${tid}&pg_token=${pg_token}`,
+      `${apiUrl}/kakaopay/success?tid=${tid}&pg_token=${pg_token}`,
       bookingParam,
       { headers: { 'Content-Type': 'application/json' } }
     )
@@ -52,5 +54,13 @@ export default function KakaoPaySuccessPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function KakaoPaySuccessPage() {
+  return (
+    <Suspense>
+      <KakaoPaySuccessContent />
+    </Suspense>
   );
 }
