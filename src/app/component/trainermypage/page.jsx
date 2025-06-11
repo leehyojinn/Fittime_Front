@@ -18,7 +18,11 @@ const TrainerMyPage = () => {
     const [mainImageFile, setMainImageFile] = useState(null);
     const [subImageFiles, setSubImageFiles] = useState(null);
     const [reservation, setReservation] = useState([]);
+    const [reservationPage, setReservationPage] = useState(1);
+    const [reservationTotalPage, setReservationTotalPage] = useState(3);
     const [reviews, setReviews] = useState([]);
+    const [reviewPage, setReviewPage] = useState(1);
+    const [reviewTotalPage, setReviewTotalPage] = useState(1);
     const [schedules, setSchedules] = useState([]);
     const [tagModalOpen, setTagModalOpen] = useState(false);
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -83,20 +87,20 @@ const TrainerMyPage = () => {
 
     const getReservation = async () =>{
         const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":sessionStorage.getItem("user_id")});
-        //console.log(data);
+        console.log('reservation',data);
         setReservation(data.bookingList);
     }
 
     const getReviews = async () => {
         const {data} = await axios.post(`${apiUrl}/list/reviewByTrainer`,{"trainer_id":sessionStorage.getItem("user_id")});
         setReviews(data.reviews);
-        console.log(data);
+        console.log('review',data);
     }
 
     const getSchedules = async () => {
         const {data} = await axios.post(`${apiUrl}/schedule_list/${sessionStorage.getItem("user_id")}`);
         setSchedules(data.list);
-        console.log(data);
+        console.log('schedules',data);
     }
 
     const edit = async() =>{
@@ -253,6 +257,16 @@ const TrainerMyPage = () => {
                 </tbody>
                 </table>
             </div>
+                {reservationTotalPage > 1 ?
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                        {reservationPage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                            :<div style={{width:'fit-content'}}></div>}
+                        {reservationPage < reservationTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                            :''}
+                    </div> : ''
+                }
             <div className="mypage-section">
                 <h4 className='label text_left font_weight_500'><FaStar /> 받은 리뷰</h4>
                 <table className="mypage-table">
@@ -277,6 +291,16 @@ const TrainerMyPage = () => {
                 </tbody>
                 </table>
             </div>
+                {reservationTotalPage > 1 ?
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                        {reservationPage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                            :<div style={{width:'fit-content'}}></div>}
+                        {reservationPage < reservationTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                            :''}
+                    </div> : ''
+                }
             <div className="mypage-section">
                 <h4 className='label text_left font_weight_500'><FaCalendarAlt /> 내 스케줄</h4>
                 <table className="mypage-table">
@@ -295,6 +319,16 @@ const TrainerMyPage = () => {
                 </tbody>
                 </table>
             </div>
+                {reservationTotalPage > 1 ?
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                        {reservationPage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                            :<div style={{width:'fit-content'}}></div>}
+                        {reservationPage < reservationTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                            :''}
+                    </div> : ''
+                }
             </div>
         </div>
         <TagModal open={tagModalOpen} onClose={tagModalClose} />

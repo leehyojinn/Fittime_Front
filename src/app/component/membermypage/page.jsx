@@ -58,6 +58,8 @@ const MemberMyPage = () => {
   const [reviews, setReviews] = useState([]);
   const [reservationPage, setReservationPage] = useState(1);
   const [reservationTotalPage, setReservationTotalPage] = useState(1);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewTotalPage, setReviewTotalPage] = useState(1);
   const router = useRouter();
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -88,6 +90,10 @@ const MemberMyPage = () => {
     getReviews();
   }, []);
 
+  useEffect(() => {
+    getReservations();
+  }, [reservationPage]);
+
   const getUser = async () => {
     await axios.post(`${apiUrl}/detail/profile`,{"user_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
         .then(({data}) => {
@@ -99,18 +105,22 @@ const MemberMyPage = () => {
   }
 
   const getReservations = async () => {
-    await axios.post(`${apiUrl}/list/userBook`,{"user_id":sessionStorage.getItem("user_id")})
+    await axios.post(`${apiUrl}/list/userBook?page=${reservationPage}`,{"user_id":sessionStorage.getItem("user_id")})
         .then(({data}) => {
           setReservations(data.bookingList);
           console.log(data);
+          setReservationPage(data.page);
+          setReservationTotalPage(data.totalPage);
         })
   }
 
   const getReviews = async () => {
-    await axios.post(`${apiUrl}/list/reviewByUser`,{"user_id":sessionStorage.getItem("user_id")})
+    await axios.post(`${apiUrl}/list/reviewByUser?page=${reviewPage}`,{"user_id":sessionStorage.getItem("user_id")})
         .then(({data}) => {
-          console.log(data);
+          console.log('review',data);
           setReviews(data.reviews);
+          setReviewPage(data.page);
+          setReviewTotalPage(data.totalPage);
         })
   }
 
@@ -250,6 +260,16 @@ const MemberMyPage = () => {
               </tbody>
             </table>
           </div>
+          {reservationTotalPage > 1 ?
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+            {reservationPage > 1 ?
+            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                :<div style={{width:'fit-content'}}></div>}
+            {reservationPage < reservationTotalPage ?
+            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                :''}
+          </div> : ''
+          }
           <div className="mypage-section">
             <h4 className='label text_left font_weight_500'><FaStar /> 내가 쓴 리뷰</h4>
             <table className="mypage-table">
@@ -279,6 +299,16 @@ const MemberMyPage = () => {
               </tbody>
             </table>
           </div>
+          {reviewTotalPage > 1 ?
+              <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                {reviewPage > 1 ?
+                    <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>reviewPage(reviewPage-1)}>이전</button>
+                    :<div style={{width:'fit-content'}}></div>}
+                {reviewPage < reviewTotalPage ?
+                    <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>reviewPage(reviewPage+1)}>다음</button>
+                    :''}
+              </div> : ''
+          }
           {/* 후순위 */}
           {/* <div className="mypage-section">
             <h4><FaTicketAlt /> 내 쿠폰</h4>
