@@ -67,7 +67,7 @@ export const useDashboardStore = create((set) => ({
     fetchDashboard: async () => {
         set({loading:true});
         try {
-            const user_id = sessionStorage.getItem('user_id');
+            const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
 
             if(!user_id){
                 set({loading:false});
@@ -103,9 +103,9 @@ const levelMessages = {
 export const useAuthStore = create((set, get) => ({
   // 인증 및 권한 체크
   isAuthenticated: (options = {}) => {
-    const user_id = sessionStorage.getItem("user_id");
-    const token = sessionStorage.getItem("token");
-    const user_level = Number(sessionStorage.getItem("user_level"));
+    const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : "";
+    const user_level = typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : "";
     if (!user_id || !token) return false;
 
     // 게스트(0)만 차단, 일반회원(1) 이상 허용
@@ -122,9 +122,9 @@ export const useAuthStore = create((set, get) => ({
 
   // 인증 및 권한 체크 + AlertModal + 리다이렉트
   checkAuthAndAlert: (router, customMsg, options = {}) => {
-    const user_id = sessionStorage.getItem("user_id");
-    const token = sessionStorage.getItem("token");
-    const user_level = Number(sessionStorage.getItem("user_level"));
+    const user_id = typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "";
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("token") : "";
+    const user_level = typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : "";
 
     // 인증 체크
     if (!user_id || !token) {
@@ -186,6 +186,6 @@ export const useAuthStore = create((set, get) => ({
   },
 
   getUserLevel: () => {
-    return Number(sessionStorage.getItem("user_level"));
+    return typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : "";
   },
 }));

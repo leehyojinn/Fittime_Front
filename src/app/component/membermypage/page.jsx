@@ -29,8 +29,8 @@ const userData={
   password:"",
   phone:"",
   status:"",
-  user_id:sessionStorage.getItem("user_id"),
-  user_level:sessionStorage.getItem('user_level')
+  user_id: typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "",
+  user_level:typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : ""
 }
 
 const mockReservations = [
@@ -95,17 +95,17 @@ const MemberMyPage = () => {
   }, [reservationPage]);
 
   const getUser = async () => {
-    await axios.post(`${apiUrl}/detail/profile`,{"user_id":sessionStorage.getItem("user_id"),"user_level":sessionStorage.getItem("user_level")})
+    await axios.post(`${apiUrl}/detail/profile`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "","user_level":typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : ""})
         .then(({data}) => {
           // console.log(data);
           setUser(data);
-          setProfileImage(`${apiUrl}/profileImg/profile/${sessionStorage.getItem("user_id")}`);
+          setProfileImage(`${apiUrl}/profileImg/profile/${typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""}`);
           //console.log(profileImage);
         })
   }
 
   const getReservations = async () => {
-    await axios.post(`${apiUrl}/list/userBook?page=${reservationPage}`,{"user_id":sessionStorage.getItem("user_id")})
+    await axios.post(`${apiUrl}/list/userBook?page=${reservationPage}`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""})
         .then(({data}) => {
           setReservations(data.bookingList);
           console.log(data);
@@ -115,7 +115,7 @@ const MemberMyPage = () => {
   }
 
   const getReviews = async () => {
-    await axios.post(`${apiUrl}/list/reviewByUser?page=${reviewPage}`,{"user_id":sessionStorage.getItem("user_id")})
+    await axios.post(`${apiUrl}/list/reviewByUser?page=${reviewPage}`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""})
         .then(({data}) => {
           console.log('review',data);
           setReviews(data.reviews);
