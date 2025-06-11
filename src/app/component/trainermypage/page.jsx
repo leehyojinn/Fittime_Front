@@ -24,6 +24,8 @@ const TrainerMyPage = () => {
     const [reviewPage, setReviewPage] = useState(1);
     const [reviewTotalPage, setReviewTotalPage] = useState(1);
     const [schedules, setSchedules] = useState([]);
+    const [schedulePage, setSchedulePage] = useState(1);
+    const [scheduleTotalPage, setScheduleTotalPage] = useState(1);
     const [tagModalOpen, setTagModalOpen] = useState(false);
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -73,6 +75,12 @@ const TrainerMyPage = () => {
         getReviews();
         getSchedules();
     }, []);
+
+    useEffect(() => {
+        getReservation();
+        getReviews();
+        getSchedules();
+    }, [schedulePage, reservationPage, reviewPage]);
 
     const getTrainer = async () => {
         await axios.post(`${apiUrl}/detail/profile`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "","user_level":typeof window !== "undefined" ? sessionStorage.getItem("user_level") : ""})
@@ -280,7 +288,7 @@ const TrainerMyPage = () => {
                         <td>{r.rating}</td>
                         <td>{r.content}</td>
                         <td>{r.reg_date.substring(0,10)}</td>
-                        <td>{sessionStorage.user_level >= 2 && <div style={{display:'flex',justifyContent:'center'}}>
+                        <td>{(typeof window !== "undefined" ? sessionStorage.getItem("user_level") : "") >= 2 && <div style={{display:'flex',justifyContent:'center'}}>
                             <button className='warning-button ' onClick={()=>handleMoveComplaint(r)}>
                                 <span class="material-symbols-outlined">warning</span>
                                 <span className='material-symbols-outlined-text' style={{fontSize:'1.2rem'}}>신고하기</span>
@@ -291,13 +299,13 @@ const TrainerMyPage = () => {
                 </tbody>
                 </table>
             </div>
-                {reservationTotalPage > 1 ?
+                {reviewTotalPage > 1 ?
                     <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
-                        {reservationPage > 1 ?
-                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                        {reviewPage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReviewPage(reviewPage-1)}>이전</button>
                             :<div style={{width:'fit-content'}}></div>}
-                        {reservationPage < reservationTotalPage ?
-                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                        {reviewPage < reviewTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReviewPage(reviewPage+1)}>다음</button>
                             :''}
                     </div> : ''
                 }
@@ -319,13 +327,13 @@ const TrainerMyPage = () => {
                 </tbody>
                 </table>
             </div>
-                {reservationTotalPage > 1 ?
+                {scheduleTotalPage > 1 ?
                     <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
-                        {reservationPage > 1 ?
-                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                        {schedulePage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setSchedulePage(schedulePage-1)}>이전</button>
                             :<div style={{width:'fit-content'}}></div>}
-                        {reservationPage < reservationTotalPage ?
-                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                        {schedulePage < scheduleTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setSchedulePage(schedulePage+1)}>다음</button>
                             :''}
                     </div> : ''
                 }

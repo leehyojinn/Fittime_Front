@@ -95,7 +95,7 @@ const MemberMyPage = () => {
   }, [reservationPage]);
 
   const getUser = async () => {
-    await axios.post(`${apiUrl}/detail/profile`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "","user_level":typeof window !== "undefined" ? Number(sessionStorage.getItem("user_level")) : ""})
+    await axios.post(`${apiUrl}/detail/profile`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "","user_level":typeof window !== "undefined" ? sessionStorage.getItem("user_level") : ""})
         .then(({data}) => {
           // console.log(data);
           setUser(data);
