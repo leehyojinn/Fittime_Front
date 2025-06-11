@@ -86,7 +86,7 @@ const TrainerMyPage = () => {
     }
 
     const getReservation = async () =>{
-        const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id")});
+        const {data} = await axios.post(`${apiUrl}/list/trainerBook`,{"trainer_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id"):""});
         console.log('reservation',data);
         setReservation(data.bookingList);
     }
