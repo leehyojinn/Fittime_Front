@@ -30,6 +30,10 @@ const CenterMyPage = () => {
   const [reviews, setReviews] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [TrainerModalOpen, setTrainerModalOpen] = useState(false);
+  const [reservationPage, setReservationPage] = useState(1);
+  const [reservationTotalPage, setReservationTotalPage] = useState(1);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewTotalPage, setReviewTotalPage] = useState(1);
 
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
@@ -191,13 +195,18 @@ const CenterMyPage = () => {
         const {data} = await axios.post(`${apiUrl}/list/centerBook`,{'center_id':sessionStorage.getItem('user_id')});
         //console.log(data);
         setReservations(data.bookingList);
+        setReservationPage(data.page);
+        setReservationTotalPage(data.totalPage);
     }
 
     // 리뷰 리스트 가져오기
     const getReviews = async ()=>{
         const {data} = await axios.post(`${apiUrl}/list/reviewByCenter`,{'center_id':sessionStorage.getItem('user_id')});
-        console.log(data);
+        console.log(data.page);
+        console.log(data.totalPage);
         setReviews(data.reviews);
+        setReviewPage(data.page);
+        setReviewTotalPage(data.totalPage);
     }
 
     // 센터 스케줄 가져오기
@@ -430,6 +439,16 @@ const CenterMyPage = () => {
                 </tbody>
                 </table>
             </div>
+                {reservationTotalPage > 1 ?
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                        {reservationPage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage-1)}>이전</button>
+                            :<div style={{width:'fit-content'}}></div>}
+                        {reservationPage < reservationTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setReservationPage(reservationPage+1)}>다음</button>
+                            :''}
+                    </div> : ''
+                }
             <div className="mypage-section">
                 <h4 className='label text_left font_weight_500'><FaStar /> 받은 리뷰</h4>
                 <table className="mypage-table">
@@ -455,6 +474,16 @@ const CenterMyPage = () => {
                 </tbody>
                 </table>
             </div>
+                {reviewTotalPage > 1 ?
+                    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                        {reviewPage > 1 ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>reviewPage(reviewPage-1)}>이전</button>
+                            :<div style={{width:'fit-content'}}></div>}
+                        {reviewPage < reviewTotalPage ?
+                            <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>reviewPage(reviewPage+1)}>다음</button>
+                            :''}
+                    </div> : ''
+                }
             <div className="mypage-section">
                 <h4 className='label text_left font_weight_500'><FaCalendarAlt /> 센터 스케줄</h4>
                 <table className="mypage-table">

@@ -82,7 +82,6 @@ const MemberMyPage = () => {
     await axios.post(`${apiUrl}/list/userBook?page=${reservationPage || 1}`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""})
         .then(({data}) => {
           setReservations(data.bookingList);
-          console.log(data);
           setReservationPage(data.page);
           setReservationTotalPage(data.totalPage);
         })
