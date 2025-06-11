@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import { FaStar, FaCalendarAlt, FaUser, FaEdit, FaPlus, FaTrash, FaCamera } from 'react-icons/fa';
 import Header from '../../Header';
 import Footer from '../../Footer';
-import {useAuthStore, usePasswordStore} from "@/app/zustand/store";
+import {useAlertModalStore, useAuthStore, usePasswordStore} from "@/app/zustand/store";
 import axios from "axios";
 import FindModal from "@/app/FindModal";
 import findModal from "@/app/FindModal";
@@ -34,14 +34,50 @@ const CenterMyPage = () => {
   const [reservationTotalPage, setReservationTotalPage] = useState(1);
   const [reviewPage, setReviewPage] = useState(1);
   const [reviewTotalPage, setReviewTotalPage] = useState(1);
+  const [start_time, setStart_time] = useState(null);
+  const [end_time, setEnd_time] = useState(null);
+
+    const {openModal} = useAlertModalStore();
 
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+    // 시간 옵션
+    const getTimeOptions = () => {
+        const options = [];
+        for (let hour = 6; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                const hourStr = hour.toString().padStart(2, '0');
+                const minuteStr = minute.toString().padStart(2, '0');
+                options.push(`${hourStr}:${minuteStr}`);
+            }
+        }
+        return options;
+    };
+    const timeOptions = getTimeOptions();
+
     useEffect(() => {
         checkAuthAndAlert(router, null, { minLevel: 3 });
     }, [checkAuthAndAlert, router]);
+
+    useEffect(() => {
+        if(start_time && end_time && start_time >= end_time) {
+            openModal({
+                svg: '❗',
+                msg1 : '오류',
+                msg2 : '종료 시간은 시작 시간보다 늦어야 합니다.',
+                showCancel : false,
+            })
+            setStart_time(null);
+            setEnd_time(null);
+        } else if(start_time && end_time && start_time <= end_time){
+            setCenter((prevForm) => ({
+                ...prevForm,
+                operation_hours: `${start_time}-${end_time}`,
+            }))
+        }
+    }, [start_time,end_time]);
 
     const handleMoveComplaint = (r) => {
         router.push(`/component/complaint?review_idx=${r.review_idx}&target_id=${r.user_id}&report_id=${sessionStorage.getItem('user_id')}`);
@@ -153,11 +189,13 @@ const CenterMyPage = () => {
     // 센터 정보 가져오기
     const getCenter = async () =>{
         const {data} = await axios.post(`${apiUrl}/detail/profile`,{"center_id":sessionStorage.getItem('user_id'), "user_level":sessionStorage.getItem('user_level')});
-        //console.log(data);
+        console.log(data);
         setCenter(data);
         setMainImage(`${apiUrl}/profileImg/profile/${sessionStorage.getItem("user_id")}`);
         setSubImages(data.photos?.map(photo => `${apiUrl}/centerImg/${photo.profile_file_idx}`));
         //console.log(tagModalOpen);
+        setStart_time(data.operation_hours.split('-')[0]);
+        setEnd_time(data.operation_hours.split('-')[1]);
     }
 
     // 상품 리스트 가져오기
@@ -272,9 +310,6 @@ const CenterMyPage = () => {
         }
     }
 
-    console.log(center);
-    
-
   return (
     <div>
         <Header/>
@@ -328,9 +363,38 @@ const CenterMyPage = () => {
                     {editMode ?
                         <div className="mypage-profile-row">
                             <span className="label font_weight_500">운영 시간</span>
-                            <input className='width_fit' style={{width:216}} defaultValue={center.operation_hours} name='operation_hours' value={center.operation_hours} onChange={changeCenter}/>
+                            <div className="form-group half">
+                                <label htmlFor="start_time" className='label'>시작 시간</label>
+                                <select
+                                    name="start_time"
+                                    style={{width:'100%'}}
+                                    onChange={(e)=>setStart_time(e.target.value)}
+                                >
+                                    <option value="">{start_time?start_time:'시작 시간 선택'}</option>
+                                    {timeOptions.map((time) => (
+                                        <option key={`start-${time}`} value={time}>
+                                            {time}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group half">
+                                <label htmlFor="end_time" className='label'>종료 시간</label>
+                                <select
+                                    name="end_time"
+                                    style={{width:'100%'}}
+                                    onChange={(e)=>setEnd_time(e.target.value)}
+                                >
+                                    <option value="">{end_time?end_time:'종료 시간 선택'}</option>
+                                    {timeOptions.map((time) => (
+                                        <option key={`end-${time}`} value={time}>
+                                            {time}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
-                    : <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours}</span></div> }
+                    : <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours&&`${center.operation_hours.split('-')[0]} ~ ${center.operation_hours.split('-')[1]}`}</span></div> }
 
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">주차</span><span className="label font_weight_400">{center.parking}</span></div>*/}
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">위치</span><span className="label font_weight_400">({center.latitude},{center.longitude})</span></div>*/}

@@ -211,7 +211,7 @@ const ReservationContent = () => {
         const cls = (res.data.list || []).filter(c => !c.delete).filter(c => c.trainer_id === selectedTrainer.trainer_id);
         setClassInfo(cls || null);
         if(cls.length===0){
-          const arr = selectedCenter.operation_hours.split('-');
+          const arr = selectedCenter.operation_hours.split('-') || selectedCenter.operation_hours.split('~');
           const slots = getHourSlots(arr[0],arr[1]);
           setAvailableTimes(slots);
         }
