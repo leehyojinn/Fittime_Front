@@ -126,7 +126,7 @@ const BlacklistManagement = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `${apiUrl}/blacklist_level/${selectedComplaint.report_id}`,{report_idx:selectedComplaint.report_idx}
+        `${apiUrl}/blacklist_level/${selectedComplaint.target_id}`,{report_idx:selectedComplaint.report_idx}
       );
       if (res.data && res.data.success) {
         openModal({
