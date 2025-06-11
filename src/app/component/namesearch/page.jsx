@@ -15,6 +15,8 @@ const NameSearch = () => {
     const [searchResults, setSearchResults] = useState({trainers: [], centers: []});
     const [isLoading, setIsLoading] = useState(false);
     const [page,setPage] = useState(1);
+    const [centerTotal, setCenterTotal] = useState(1);
+    const [trainerTotal, setTrainerTotal] = useState(1);
     const router = useRouter();
 
     const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
@@ -36,6 +38,7 @@ const NameSearch = () => {
 
     const search=async()=>{
         const {data} = await axios.post(`${apiUrl}/search/name`,{name:searchTerm, page:page});
+        console.log(page);
         console.log(data);
         // const results = {
         //     trainers: searchType === 'center'
@@ -51,10 +54,18 @@ const NameSearch = () => {
             centers: data.center_list ?? []
         };
         console.log(results);
-
         setSearchResults(results);
         setIsLoading(false);
+        setCenterTotal(data.centerTotalPage);
+        setTrainerTotal(data.trainerTotalPage);
     }
+
+    useEffect(() => {
+        if(page !== 0){
+            if(!searchTerm.trim())return;
+            search();
+        }
+    }, [page]);
 
     // 검색 실행
     const handleSearch = () => {
@@ -211,7 +222,7 @@ const NameSearch = () => {
                                     <div className="center-image" style={{width:"fit-content"}}>
                                         <img
                                             //src={trainer.profile_image || '/default-profile.jpg'}
-                                            src={`${apiUrl}/profileImg/profile/${trainer.trainer_id}`}
+                                            src={`${apiUrl}/profileImg/profile/${trainer.user_id}`}
                                             alt={trainer.name}
                                             width={200}
                                             height={150}
@@ -234,14 +245,14 @@ const NameSearch = () => {
 
                                         <div className="trainer-price">
                                             <span className="label">최저 가격:</span>
-                                            {trainer.price && <span className="value">{trainer.price.toLocaleString()}원~</span>}
+                                            {trainer.min_price && <span className="value">{trainer.min_price.toLocaleString()}원~</span>}
                                         </div>
 
                                         <div className="trainer-rating">
                                             <FaStar className="star-icon" />
-                                            {trainer.review_cnt > 0 &&
+                                            {trainer.cnt > 0 &&
                                                 <span className="rating">{trainer.rating > 1 ? trainer.rating : trainer.rating.toFixed(1)}</span>}
-                                            <span className="rating-count">({trainer.review_cnt})</span>
+                                            <span className="rating-count">({trainer.cnt})</span>
                                         </div>
 
                                         {trainer.tags && (
@@ -385,8 +396,8 @@ const NameSearch = () => {
                                                     <div className="center-image"  style={{width:"fit-content"}}>
                                                         <img
                                                             //src={trainer.profile_image || '/default-profile.jpg'}
-                                                            src={`${apiUrl}/profileImg/profile/${trainer.trainer_id}`}
-                                                            alt={trainer.user_name}
+                                                            src={`${apiUrl}/profileImg/profile/${trainer.user_id}`}
+                                                            alt={trainer.name}
                                                             width={150}
                                                             height={150}
                                                             className="facility-image"
@@ -395,7 +406,7 @@ const NameSearch = () => {
 
                                                     <div className="center-info" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                                                         <div style={{display: 'flex', gap:"inherit"}}>
-                                                            <h4 className="center-name" style={{fontSize:'2rem', fontWeight:"bold", textAlign:"left", width:'100%'}}>{trainer.user_name}</h4>
+                                                            <h4 className="center-name" style={{fontSize:'2rem', fontWeight:"bold", textAlign:"left", width:'100%'}}>{trainer.name}</h4>
 
                                                             <div className="center-rating" style={{justifyContent: "flex-end"}}>
                                                                 <FaStar className="star-icon" />
@@ -416,7 +427,7 @@ const NameSearch = () => {
 
                                                         <div className="center-price" style={{textAlign:"left"}}>
                                                             <span className="label">최저 가격:</span>
-                                                            {trainer.price && <span className="value">{trainer.price.toLocaleString()}원~</span>}
+                                                            {trainer.min_price && <span className="value">{trainer.min_price.toLocaleString()}원~</span>}
                                                         </div>
                                                         {trainer.tags && (
                                                         <div className="center-tags" style={{marginTop:'0px'}}>
@@ -429,10 +440,23 @@ const NameSearch = () => {
                                                 </div>
                                         ))}
                                             </>}
+
                                     </div>
                                 </div>
                             </div>
                         )}
+                        <div>
+                            {Math.max(trainerTotal, centerTotal) > 1 &&
+                            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                                {page > 1 ?
+                                    <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setPage(page-1)}>이전</button>
+                                    : <div style={{width:'fit-content'}}></div>}
+                                {page < Math.max(trainerTotal, centerTotal) &&
+                                    <button className="review-submit-btn width_fit" style={{fontSize:'1.2rem', margin:'3px'}} onClick={()=>setPage(page+1)}>다음</button>
+                                }
+                            </div>
+                            }
+                        </div>
                     </>
                 )}
                 </div>
