@@ -202,8 +202,6 @@ const CenterMyPage = () => {
     // 리뷰 리스트 가져오기
     const getReviews = async ()=>{
         const {data} = await axios.post(`${apiUrl}/list/reviewByCenter`,{'center_id':sessionStorage.getItem('user_id')});
-        console.log(data.page);
-        console.log(data.totalPage);
         setReviews(data.reviews);
         setReviewPage(data.page);
         setReviewTotalPage(data.totalPage);

@@ -99,7 +99,6 @@ const TrainerMyPage = () => {
         setReservationPage(data.page);
         setReservationTotalPage(data.totalPage);
         console.log('reservation',data);
-        setReservation(data.bookingList||[]);
     }
 
     const getReviews = async () => {
