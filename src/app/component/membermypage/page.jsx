@@ -8,18 +8,6 @@ import axios from "axios";
 import {useAuthStore, usePasswordStore} from "@/app/zustand/store";
 import {useRouter} from "next/navigation";
 
-const mockUser = {
-  user_id: 'user123',
-  user_name: '홍길동',
-  phone: '010-1234-5678',
-  email: 'hong@naver.com',
-  gender: '남',
-  age: 28,
-  address: '서울 강남구 역삼동',
-  profile_image: '/member.png',
-  point: 3500
-};
-
 const userData={
   address:"",
   age:0,
@@ -29,30 +17,16 @@ const userData={
   password:"",
   phone:"",
   status:"",
-  user_id: typeof window !== "undefined" ? sessionStorage.getItem("user_id") : "",
-  user_level:typeof window !== "undefined" ? sessionStorage.getItem("user_level") : ""
+  user_id: "",
+  user_level:""
 }
-
-const mockReservations = [
-  { reservation_idx: 1, center_name: '헬스월드 강남점', product_name: '헬스 1개월', date: '2025-05-21', start_time: '10:00', end_time: '11:00', trainer_name: '', status: '예약완료' },
-  { reservation_idx: 2, center_name: '피트니스클럽', product_name: 'PT 10회', date: '2025-05-25', start_time: '15:00', end_time: '16:00', trainer_name: '김트레이너', status: '예약완료' }
-];
-
-const mockReviews = [
-  { review_id: 1, target: '헬스월드 강남점', type: '센터', rating: 5, content: '시설이 정말 좋아요!', date: '2025-05-10' },
-  { review_id: 2, target: '김트레이너', type: '트레이너', rating: 4.5, content: '운동법을 꼼꼼히 알려주셔서 좋아요.', date: '2025-05-12' }
-];
-const mockCoupons = [
-  { coupon_key: 'C123456', description: '1만원 할인', expire: '2025-06-30', used: false },
-  { coupon_key: 'C987654', description: '5% 할인', expire: '2025-05-31', used: true }
-];
 
 const MemberMyPage = () => {
 
   const { passwordVisible, togglePasswordVisibility } = usePasswordStore();
   const [editMode, setEditMode] = useState(false);
   const [user, setUser] = useState(userData);
-  const [profileImage, setProfileImage] = useState(mockUser.profile_image);
+  const [profileImage, setProfileImage] = useState('');
   const [profileFile, setProfileFile] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -105,7 +79,7 @@ const MemberMyPage = () => {
   }
 
   const getReservations = async () => {
-    await axios.post(`${apiUrl}/list/userBook?page=${reservationPage}`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""})
+    await axios.post(`${apiUrl}/list/userBook?page=${reservationPage || 1}`,{"user_id":typeof window !== "undefined" ? sessionStorage.getItem("user_id") : ""})
         .then(({data}) => {
           setReservations(data.bookingList);
           console.log(data);
@@ -173,6 +147,8 @@ const MemberMyPage = () => {
     }
   }
 
+  console.log(user);
+
   return (
     <div>
       <Header/>
@@ -181,7 +157,7 @@ const MemberMyPage = () => {
           <h2 className='middle_title2'>마이페이지</h2>
           <div className="mypage-profile">
             <div className="profile-image-container">
-              <img src={profileImage} alt="프로필" className="mypage-profile-img" />
+              <img src={profileImage || null} alt="프로필" className="mypage-profile-img" />
               {editMode && (
                 <label className="btn label white_color mt_20">
                   <FaCamera /> 이미지 변경
