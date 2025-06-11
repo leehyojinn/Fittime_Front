@@ -28,7 +28,7 @@ const BlacklistManagement = () => {
 
   const checkAuthAndAlert = useAuthStore((state) => state.checkAuthAndAlert);
 
-  checkAuthAndAlert(router, null, { minLevel: 3 });
+
 
   const getComplaints = async () => {
     try {
@@ -47,7 +47,11 @@ const BlacklistManagement = () => {
       setComplaints([]);
     }
   };
-  
+
+  useEffect(() => {
+    checkAuthAndAlert(router, null, { minLevel: 3 });
+  }, [checkAuthAndAlert, router]);
+
   useEffect(() => {
     getComplaints();
   }, []);

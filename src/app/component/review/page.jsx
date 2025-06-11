@@ -134,17 +134,15 @@ const ReviewPageContent = () => {
         setFiles(newFiles);
     };
 
-    console.log(centerInfo);
-
     // 리뷰 등록
     const handleReviewSubmit = async(e) => {
         e.preventDefault();
-        if (star < 0.5) {
-            console.log(star);
+
+        if (star < 0.5 || star === undefined) {
             openModal({svg: '★', msg1: '별점을 입력해주세요.', showCancel: false});
             return;
         }
-        if (reviewText.trim().length < 15) {
+        if (reviewText.trim().length < 15 || reviewText.trim() === undefined) {
             openModal({svg: '💬', msg1: '리뷰를 15자 이상 입력해주세요.', showCancel: false});
             return;
         }
