@@ -137,8 +137,8 @@ const ReviewPage = () => {
     // 리뷰 등록
     const handleReviewSubmit = async(e) => {
         e.preventDefault();
-
         if (star < 0.5) {
+            console.log(star);
             openModal({svg: '★', msg1: '별점을 입력해주세요.', showCancel: false});
             return;
         }
@@ -297,6 +297,7 @@ const ReviewPage = () => {
                 setStar(0);
                 setFiles([]);
                 setPage(1);
+                fetchReviews();
         } catch (e) {
             alert('작성된 리뷰가 없습니다');
         }
@@ -607,7 +608,7 @@ const ReviewPage = () => {
                                                     </span>
                                                 ))
                                             }
-                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem',color:'#222'}}>{
+                                            <span className="review-star-score" style={{marginTop: '1.2rem', marginLeft:'1.5rem',fontSize:'1.6rem',color:'#444'}}>{
                                                     star > 0
                                                         ? star
                                                         : ''

@@ -57,7 +57,7 @@ function FindModal({ open, onClose }){
                     padding: '40px 30px',
                     minWidth: '320px',
                     position: 'relative',
-                    width: '480px'
+                    width: '600px'
                 }}
             >
                 <button

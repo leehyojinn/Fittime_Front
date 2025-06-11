@@ -60,7 +60,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                     padding: '40px 30px',
                     minWidth: '320px',
                     position: 'relative',
-                    width: '400px'
+                    width: '700px'
                 }}
             >
                 <button
@@ -70,7 +70,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                         top: 20,
                         background: 'none',
                         border: 'none',
-                        fontSize: '1.3rem',
+                        fontSize: '3rem',
                         cursor: 'pointer'
                     }}
                     onClick={handleClose}
@@ -107,7 +107,7 @@ function TrainerModal({ open, onClose , handleMoveTrainerDetail, center_idx}) {
                                                 )}
                                             <tbody>
                                             {trainers?.map(t=>(
-                                                <tr key={t.trainer_id}>
+                                                <tr key={t.trainer_id} >
                                                     <td>
                                                         <img src={`http://localhost/profileImg/profile/${t.trainer_id}`} alt="트레이너" style={{width:32,height:32,borderRadius:'50%',marginRight:8,verticalAlign:'middle'}} />
                                                         {t.trainer_id}
