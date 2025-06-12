@@ -376,7 +376,7 @@ const ReviewPageContent = () => {
             </div>
             <div className='wrap padding_120_0'>
                 <div className="center-detail-container">
-                    {target !== centerId ? (
+                    {(target === undefined || null ? centerId : target ) === centerId ? (
                     <div>
                         <h2 style={{fontSize: "3.5rem",
                             fontWeight: 'bold',

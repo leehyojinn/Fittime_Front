@@ -186,6 +186,13 @@ const CenterMyPage = () => {
         getSchedules();
     }, []);
 
+    useEffect(() => {
+        getProducts();
+        getReservations();
+        getReviews();
+        getSchedules();
+    }, [reviewPage,reservationPage]);
+
     // 센터 정보 가져오기
     const getCenter = async () =>{
         const {data} = await axios.post(`${apiUrl}/detail/profile`,{"center_id":sessionStorage.getItem('user_id'), "user_level":sessionStorage.getItem('user_level')});
@@ -230,16 +237,16 @@ const CenterMyPage = () => {
 
     // 예약 리스트 가져오기
     const getReservations = async () =>{
-        const {data} = await axios.post(`${apiUrl}/list/centerBook`,{'center_id':sessionStorage.getItem('user_id')});
-        //console.log(data);
+        const {data} = await axios.post(`${apiUrl}/list/centerBook?page=${reservationPage}`,{'center_id':sessionStorage.getItem('user_id')});
         setReservations(data.bookingList);
         setReservationPage(data.page);
         setReservationTotalPage(data.totalPage);
+
     }
 
     // 리뷰 리스트 가져오기
     const getReviews = async ()=>{
-        const {data} = await axios.post(`${apiUrl}/list/reviewByCenter`,{'center_id':sessionStorage.getItem('user_id')});
+        const {data} = await axios.post(`${apiUrl}/list/reviewByCenter?page=${reviewPage}`,{'center_id':sessionStorage.getItem('user_id')});
         setReviews(data.reviews);
         setReviewPage(data.page);
         setReviewTotalPage(data.totalPage);
