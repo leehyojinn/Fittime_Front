@@ -122,8 +122,8 @@ const Popup = () => {
 
                 // 실제 이미지 경로
                 const imageUrl = popup.file_name.startsWith('http')
-                    ? popup.file_name
-                    : apiUrl + '/' + popup.file_name;
+                    ?  apiUrl + '/popup/' + popup.file_name
+                    : apiUrl + '/popup/' + popup.file_name;
 
                 const now = new Date();
                 const startDate = popup.start_date ? new Date(popup.start_date) : null;
