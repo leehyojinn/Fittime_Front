@@ -363,7 +363,7 @@ const CenterMyPage = () => {
                     {editMode ?
                         <div className="mypage-profile-row">
                             <span className="label font_weight_500">운영 시간</span>
-                            <div className="form-group half">
+                            <div className="form-group half" style={{flex:1}}>
                                 <label htmlFor="start_time" className='label'>시작 시간</label>
                                 <select
                                     name="start_time"
@@ -378,7 +378,7 @@ const CenterMyPage = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="form-group half">
+                            <div className="form-group half" style={{flex:1}}>
                                 <label htmlFor="end_time" className='label'>종료 시간</label>
                                 <select
                                     name="end_time"
@@ -394,7 +394,7 @@ const CenterMyPage = () => {
                                 </select>
                             </div>
                         </div>
-                    : <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours&&`${center.operation_hours.split('-')[0]} ~ ${center.operation_hours.split('-')[1]}`}</span></div> }
+                    : <div className="mypage-profile-row"><span className="label font_weight_500">운영시간</span><span className="label font_weight_400">{center.operation_hours&&`${center.operation_hours.split('-')[0]} - ${center.operation_hours.split('-')[1]}`}</span></div> }
 
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">주차</span><span className="label font_weight_400">{center.parking}</span></div>*/}
                 {/*<div className="mypage-profile-row"><span className="label font_weight_500">위치</span><span className="label font_weight_400">({center.latitude},{center.longitude})</span></div>*/}
@@ -496,7 +496,7 @@ const CenterMyPage = () => {
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
                         <td>{r.start_time != null && r.end_time != null ?
-                            `${r.start_time.substring(0,5)} ~ ${r.end_time.substring(0,5)}` : ''}</td>
+                            `${r.start_time.substring(0,5)} - ${r.end_time.substring(0,5)}` : ''}</td>
                         <td>{r.trainer_name}</td>
                         <td>{r.status}</td>
                     </tr>
