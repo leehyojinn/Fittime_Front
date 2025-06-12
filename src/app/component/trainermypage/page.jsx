@@ -260,7 +260,7 @@ const TrainerMyPage = () => {
                         <td>{r.user_phone}</td>
                         <td>{r.product_name}</td>
                         <td>{r.date}</td>
-                        {r.exercise_level === 'class'?<td>{r.class_start_time}~{r.class_end_time}</td>:<td>{r.start_time}~{r.end_time}</td>}
+                        {r.exercise_level === 'class'?<td>{r.class_start_time?.substring(0, 5)}~{r.class_end_time?.substring(0, 5)}</td>:<td>{r.start_time?.substring(0, 5)}~{r.end_time?.substring(0, 5)}</td>}
                         <td>{r.status}</td>
                     </tr>
                     ))}
