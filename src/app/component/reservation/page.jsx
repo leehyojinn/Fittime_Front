@@ -98,11 +98,13 @@ const ReservationContent = () => {
     }
     if(availableTimes && availableTimes.length > 0 && !availableTimes[0].class_idx && selectedDate){
         axios.post(`${apiUrl}/reservation/booked_count`,{
-          date : selectedDate.toISOString().slice(0, 10),
+          date : `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
           product_idx : selectedProduct.product_idx,
           times : availableTimes.map((t)=>({start_time :t.time ,end_time : t.endTime}))
         })
             .then(({data}) => {
+              console.log(data);
+              console.log(selectedDate.toISOString().slice(0, 10));
               setTimeSlotCounts((prev)=>({
                 ...prev,
                 [selectedProduct.product_idx]:data.counts || {}
@@ -170,8 +172,8 @@ const ReservationContent = () => {
     end.setMonth(end.getMonth() + 1);
     axios.post(`${apiUrl}/reservation/booked_count_date_range`, {
       product_idx: selectedProduct.product_idx,
-      start_date: start.toISOString().slice(0, 10),
-      end_date: end.toISOString().slice(0, 10)
+      start_date: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`,
+      end_date: `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`,
     }).then(res => {
       setDateBookedCounts(res.data.counts || {});
     });
@@ -268,7 +270,7 @@ const ReservationContent = () => {
       filteredclassInfo.forEach(c=>{
         axios.post(`${apiUrl}/reservation/booked_count`, {
           class_idx: c.class_idx,
-          date: selectedDate.toISOString().slice(0, 10),
+          date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
           times: slots.map(slot => ({ start_time: slot.time, end_time: slot.endTime }))
         }).then(res => {
           setTimeSlotCounts((prev)=>({
@@ -281,7 +283,7 @@ const ReservationContent = () => {
       // 시간 없는 상품: 날짜별 예약 인원 조회
       axios.post(`${apiUrl}/reservation/booked_count_date`, {
         product_idx: selectedProduct.product_idx,
-        date: selectedDate.toISOString().slice(0, 10)
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
       }).then(res => {
         setDateBookedCount(res.data.count || 0);
       });
@@ -722,6 +724,8 @@ const ReservationContent = () => {
                         disabled={isFull}
                         onClick={() => {
                           !isFull && setSelectedTime(slot);
+                          console.log('timeSlotCounts',timeSlotCounts);
+                          console.log('availableTimes',availableTimes);
                         }}
                     >
                       <FaClock /> {slot.time} - {slot.endTime}
