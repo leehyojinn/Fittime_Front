@@ -14,12 +14,16 @@ const teamMembers = [
     }, {
         id: 2,
         name: '이준혁',
-        position: '백엔드 개발',
+        position: '백엔드, 프론트엔드 개발',
         image: '/이준혁.png',
         detail: `
         • ERD
-        • 프로필 Back 작업
-        • 검색 Back 작업`
+        • 프로필 Back,Front 작업
+        • 검색 Back,Front 작업
+        • 예약 Back,Front 작업
+        • 블랙리스트 신고 추가 Back,Front 작업
+        • 관리자권한 부여 Back,Front 작업
+        `
     }, {
         id: 3,
         name: '김다의',
@@ -27,18 +31,22 @@ const teamMembers = [
         image: '/김다의.png',
         detail: `
         • ERD
-        • 로그인 Back 작업
-        • 회원가입 Back 작업
-        • 아이디/비밀번호 Back 작업
-        `
+        • 로그인 BACK 작업
+        • 회원가입/탈퇴 BACK 작업
+        • 아이디/비밀번호찾기 BACK, FRONT 작업
+        • 예약 BACK 작업
+        • 스케줄 예약/휴무 연동 BACK, FRONT 작업
+        • 통계 BACK, FRONT 작업
+                `
     }, {
         id: 4,
         name: '김보연',
-        position: '백엔드,프론트엔드 개발',
+        position: '백엔드,프론트엔드 개발,퍼블리싱',
         image: '/김보연.png',
         detail: `
         • ERD
-        • 리뷰 및 별점 Back 작업`
+        • 리뷰 및 별점 Back 작업
+        • 리뷰 및 별점 Front 작업`
     }, {
         id: 5,
         name: '김동우',
@@ -46,7 +54,8 @@ const teamMembers = [
         image: '/김동우.png',
         detail: `
         • ERD
-        • 게시판 Back 작업`
+        • 게시판 Back 작업
+        • 게시판 Front 작업`
     }
 ];
 
