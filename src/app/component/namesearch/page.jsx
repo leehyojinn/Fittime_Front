@@ -307,9 +307,9 @@ const NameSearch = () => {
 
                                         <div className="center-rating">
                                             <FaStar className="star-icon" />
-                                            {center.review_cnt > 0 &&
+                                            {center.cnt > 0 &&
                                                 <span className="rating">{center.rating > 1 ? center.rating : center.rating.toFixed(1)}</span>}
-                                            <span className="rating-count">({center.review_cnt})</span>
+                                            <span className="rating-count">({center.cnt})</span>
                                         </div>
 
                                         {center.tags && (
