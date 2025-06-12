@@ -37,9 +37,6 @@ function KakaoPaySuccessContent() {
           setResultMsg('결제 승인에 실패했습니다.');
         }
       })
-      .catch(() => {
-        setResultMsg('결제 승인에 실패했습니다.');
-      });
   }, [pg_token, tid, done]);
 
   return (
