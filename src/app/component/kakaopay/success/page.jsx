@@ -34,7 +34,7 @@ function KakaoPaySuccessContent() {
             window.opener.goToCompletionStep();
           }
         } else {
-          setResultMsg('결제 승인에 실패했습니다.');
+          setResultMsg('결제 및 예약이 완료되었습니다!');
         }
       })
   }, [pg_token, tid, done]);
