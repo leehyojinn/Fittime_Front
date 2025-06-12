@@ -54,6 +54,8 @@ const ReviewPageContent = () => {
             router.push(`/component/reservation?trainer_id=${trainerInfo.trainer_id}&trainer_idx=${trainerInfo.trainer_idx}&center_id=${trainerInfo.center_id}&center_idx=${trainerInfo.center_idx}`);
         } else if(target === centerId) {
             router.push(`/component/reservation?center_id=${centerId}&center_idx=${centerInfo.center_idx}`);
+        } else {
+            router.push(`/component/reservation?center_id=${centerId}&center_idx=${centerInfo.center_idx}`);
         }
     }
 
