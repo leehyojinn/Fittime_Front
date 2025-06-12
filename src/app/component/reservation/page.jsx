@@ -92,6 +92,26 @@ const ReservationContent = () => {
       checkAuthAndAlert(router, null, { noGuest: true });
   }, [checkAuthAndAlert, router]);
 
+  useEffect(() => {
+    if(!selectedProduct){
+      return;
+    }
+    if(availableTimes && availableTimes.length > 0 && !availableTimes[0].class_idx && selectedDate){
+        axios.post(`${apiUrl}/reservation/booked_count`,{
+          date : selectedDate.toISOString().slice(0, 10),
+          product_idx : selectedProduct.product_idx,
+          times : availableTimes.map((t)=>({start_time :t.time ,end_time : t.endTime}))
+        })
+            .then(({data}) => {
+              setTimeSlotCounts((prev)=>({
+                ...prev,
+                [selectedProduct.product_idx]:data.counts || {}
+              }));
+            });
+
+    }
+  }, [availableTimes]);
+
   // 센터 정보 불러오기
   useEffect(() => {
     axios.post(`${apiUrl}/reservation/center_info/${initialCenterId}`)
@@ -110,7 +130,7 @@ const ReservationContent = () => {
         user_id : user_id,
         center_id : initialCenterId
       })
-      .then(res => {setMyProducts(res.data.list || []);console.log(res.data.list)})
+      .then(res => setMyProducts(res.data.list || []))
       .catch(() => setMyProducts([]))
       .finally(() => setMyProductLoading(false));
   }, [user_id, initialCenterId]);
@@ -160,7 +180,6 @@ const ReservationContent = () => {
 
   // 상품 클릭 시 클래스 정보 불러오기
   const handleProductClick = (product, isMyProduct = false) => {
-    console.log(product);
     setSelectedProduct(product);
     setIsMyProductSelected(isMyProduct);
     setSelectedTrainer(null);
@@ -181,7 +200,6 @@ const ReservationContent = () => {
       }).then(res => {
         const cls = (res.data.list || []).filter(c => !c.delete);
         setClassInfo(cls || null);
-        console.log(cls);
         const cls_trainer_id = [...new Set(res.data.list.filter(c=> !c.delete)?.map(c=>c.trainer_id))];
         const trainer = cls_trainer_id.map(id=>{
           return trainers.find(t => t.trainer_id === id);
@@ -218,7 +236,7 @@ const ReservationContent = () => {
         }
       })
     }
-  }, [selectedTrainer])
+  }, [selectedTrainer,selectedDate])
 
   // 날짜 변경 시 시간 슬롯 생성 및 예약 인원 체크
   useEffect(() => {
@@ -244,7 +262,7 @@ const ReservationContent = () => {
         endTime: info.end_time,
         class_idx: info.class_idx
       }))
-      console.log(slots);
+      console.log(filteredclassInfo);
       setAvailableTimes(slots);
       // 시간별 예약 인원 조회
       filteredclassInfo.forEach(c=>{
@@ -645,13 +663,13 @@ const ReservationContent = () => {
         )}
       </div>
       {/* 시간 있는 상품: 시간별 예약 인원 마감 안내 및 버튼 */}
-      {classInfo && availableTimes.length > 0 && (
+      {selectedProduct.trainer_id && availableTimes.length > 0 && (
         <div className="time-selection" style={{marginTop: '16px'}}>
           <h3>시간 선택</h3>
           <div className="time-slots">
             {availableTimes.map((slot, idx) => {
               const key = `${slot.time}-${slot.endTime}`;
-              const booked = timeSlotCounts[key] || 0;
+              const booked = timeSlotCounts[String(slot.class_idx)]?.[key] || 0;
               const isFull = booked >= (selectedProduct?.max_people || 0);
               return (
                 <button
@@ -680,13 +698,13 @@ const ReservationContent = () => {
           </div>
         </div>
       )}
-      {!classInfo && availableTimes.length > 0 && (
+      {!selectedProduct.trainer_id && availableTimes.length > 0 && (
           <div className="time-selection" style={{marginTop: '16px'}}>
             <h3>시간 선택</h3>
             <div className="time-slots">
               {availableTimes.map((slot, idx) => {
-                const key = `${slot.time}-${slot.endTime}`;
-                const booked = timeSlotCounts[key] || 0;
+                const key = `${slot.time}-${slot.endTime}`.trim();
+                const booked = timeSlotCounts[selectedProduct.product_idx][key] || 0;
                 const isFull = booked >= (selectedProduct?.max_people || 0);
                 return (
                     <button
@@ -746,7 +764,6 @@ const ReservationContent = () => {
       };
 
       const {data} = await axios.post(`${apiUrl}/insert/payment`, bookingParam);
-      console.log(data);
       if(!data.success){
         alert('결제 도중 오류가 발생했습니다.');
       } else {
