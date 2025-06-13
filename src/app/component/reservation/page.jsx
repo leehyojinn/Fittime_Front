@@ -104,7 +104,7 @@ const ReservationContent = () => {
         })
             .then(({data}) => {
               console.log(data);
-              console.log(selectedDate.toISOString().slice(0, 10));
+              console.log(`${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`);
               setTimeSlotCounts((prev)=>({
                 ...prev,
                 [selectedProduct.product_idx]:data.counts || {}
